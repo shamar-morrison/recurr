@@ -3,9 +3,11 @@
  * Used by the ServicePickerSheet for quick selection.
  */
 
+import { SubscriptionCategory } from '@/src/features/subscriptions/types';
+
 export interface Service {
   name: string;
-  category: 'Streaming' | 'Music' | 'Software' | 'Utilities' | 'Other';
+  category: SubscriptionCategory;
 }
 
 export const SERVICES: Service[] = [
