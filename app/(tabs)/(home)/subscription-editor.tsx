@@ -229,6 +229,7 @@ export default function SubscriptionEditorScreen() {
     <>
       <Stack.Screen
         options={{
+          headerTitle: title,
           title,
           headerBackVisible: false,
           headerLeft,
