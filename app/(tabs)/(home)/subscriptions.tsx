@@ -158,7 +158,7 @@ export default function SubscriptionsHomeScreen() {
             <View style={styles.countCircle}>
               <Text style={styles.countCircleText}>{subscriptionsDueThisMonth.length}</Text>
             </View>
-            <Text style={styles.activeSubsLabel}>Active subscriptions for this month</Text>
+            <Text style={styles.activeSubsLabel}>Active subscriptions this month</Text>
           </View>
 
           {!isPremium ? (
