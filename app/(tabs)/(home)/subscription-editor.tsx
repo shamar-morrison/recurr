@@ -6,6 +6,7 @@ import { ServicePickerSheet } from '@/src/components/ServicePickerSheet';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import { useCustomServices } from '@/src/features/services/useCustomServices';
 import {
   useDeleteSubscriptionMutation,
   useSubscriptionsQuery,
@@ -57,6 +58,7 @@ export default function SubscriptionEditorScreen() {
 
   const { settings, user } = useAuth();
   const userId = user?.uid ?? '';
+  const { customServices, addService: addCustomService } = useCustomServices();
   const subscriptionsQuery = useSubscriptionsQuery();
   const upsertMutation = useUpsertSubscriptionMutation();
   const deleteMutation = useDeleteSubscriptionMutation();
@@ -400,7 +402,7 @@ export default function SubscriptionEditorScreen() {
                   >
                     <TrashIcon color={theme.colors.negative} size={18} />
                     <Text style={[styles.deleteText, { color: theme.colors.negative }]}>
-                      Delete subscription
+                      Delete Subscription
                     </Text>
                   </Pressable>
                 </View>
@@ -431,6 +433,8 @@ export default function SubscriptionEditorScreen() {
                   setServiceName(name);
                   setCategory(cat);
                 }}
+                customServices={customServices}
+                onAddCustomService={addCustomService}
               />
 
               <FrequencyPickerSheet
@@ -664,8 +668,8 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       gap: 10,
     },
     deleteText: {
-      fontSize: 15,
-      fontWeight: '700',
+      fontSize: 17,
+      fontWeight: '600',
     },
     primary: {
       borderRadius: 20,
