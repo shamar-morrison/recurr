@@ -424,14 +424,12 @@ export default function SubscriptionEditorScreen() {
                 />
               </View>
 
+              {/* Picker sheets auto-close after selection via their internal handleSelect */}
               <CurrencyPickerSheet
                 isOpen={showCurrencyPicker}
                 onClose={() => setShowCurrencyPicker(false)}
                 selectedCurrency={currency}
-                onSelect={(code) => {
-                  setCurrency(code);
-                  setShowCurrencyPicker(false);
-                }}
+                onSelect={(code) => setCurrency(code)}
               />
 
               <ServicePickerSheet
@@ -441,7 +439,6 @@ export default function SubscriptionEditorScreen() {
                 onSelect={(name, cat) => {
                   setServiceName(name);
                   setCategory(cat);
-                  setShowServicePicker(false);
                 }}
               />
             </>
