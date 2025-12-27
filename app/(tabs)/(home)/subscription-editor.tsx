@@ -6,6 +6,7 @@ import { ServicePickerSheet } from '@/src/components/ServicePickerSheet';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import { useCustomServices } from '@/src/features/services/useCustomServices';
 import {
   useDeleteSubscriptionMutation,
   useSubscriptionsQuery,
@@ -57,6 +58,7 @@ export default function SubscriptionEditorScreen() {
 
   const { settings, user } = useAuth();
   const userId = user?.uid ?? '';
+  const { customServices, addService: addCustomService } = useCustomServices();
   const subscriptionsQuery = useSubscriptionsQuery();
   const upsertMutation = useUpsertSubscriptionMutation();
   const deleteMutation = useDeleteSubscriptionMutation();
@@ -431,6 +433,8 @@ export default function SubscriptionEditorScreen() {
                   setServiceName(name);
                   setCategory(cat);
                 }}
+                customServices={customServices}
+                onAddCustomService={addCustomService}
               />
 
               <FrequencyPickerSheet
