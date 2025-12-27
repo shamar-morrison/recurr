@@ -1,5 +1,30 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
+import { Button } from '@/src/components/ui/Button';
+import { useAuth } from '@/src/features/auth/AuthProvider';
+import {
+  useDeleteSubscriptionMutation,
+  useSubscriptionsQuery,
+  useUpsertSubscriptionMutation,
+} from '@/src/features/subscriptions/subscriptionsHooks';
+import { clampBillingDay } from '@/src/features/subscriptions/subscriptionsUtils';
+import {
+  BILLING_CYCLES,
+  Subscription,
+  SUBSCRIPTION_CATEGORIES,
+  SubscriptionCategory,
+} from '@/src/features/subscriptions/types';
+import { useAppTheme } from '@/src/theme/useAppTheme';
+import {
+  AppWindowIcon,
+  CaretLeftIcon,
+  CheckIcon,
+  DotsThreeCircleIcon,
+  LightbulbIcon,
+  MusicNotesIcon,
+  PlayCircleIcon,
+  TrashIcon,
+} from 'phosphor-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,33 +38,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {
-  CaretLeftIcon,
-  CheckIcon,
-  MusicNoteIcon,
-  PlayIcon,
-  AppWindowIcon,
-  LightningIcon,
-  DotsThreeCircleIcon,
-  TrashIcon,
-  MusicNotesIcon,
-  PlayCircleIcon,
-} from 'phosphor-react-native';
-import { useAuth } from '@/src/features/auth/AuthProvider';
-import {
-  useDeleteSubscriptionMutation,
-  useSubscriptionsQuery,
-  useUpsertSubscriptionMutation,
-} from '@/src/features/subscriptions/subscriptionsHooks';
-import {
-  BILLING_CYCLES,
-  SUBSCRIPTION_CATEGORIES,
-  Subscription,
-  SubscriptionCategory,
-} from '@/src/features/subscriptions/types';
-import { clampBillingDay } from '@/src/features/subscriptions/subscriptionsUtils';
-import { useAppTheme } from '@/src/theme/useAppTheme';
-import { Button } from '@/src/components/ui/Button';
 
 type RouteParams = {
   id?: string;
@@ -308,7 +306,7 @@ export default function SubscriptionEditorScreen() {
                         {c === 'Music' && <MusicNotesIcon color={iconColor} size={iconSize} />}
                         {c === 'Software' && <AppWindowIcon color={iconColor} size={iconSize} />}
                         {c === 'Utilities' && (
-                          <LightningIcon
+                          <LightbulbIcon
                             color={iconColor}
                             size={iconSize}
                             weight={active ? 'fill' : 'regular'}

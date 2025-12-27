@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Button } from '@/src/components/ui/Button';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   useSubscriptionListItems,
@@ -19,7 +20,6 @@ import {
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 import { useAppTheme } from '@/src/theme/useAppTheme';
-import { Button } from '@/src/components/ui/Button';
 
 const FREE_TIER_LIMIT = 5;
 

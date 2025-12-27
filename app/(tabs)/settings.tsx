@@ -1,4 +1,4 @@
-import { router, Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { Crown, LogOut, Sliders } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -6,7 +6,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { useAppTheme } from '@/src/theme/useAppTheme';
-import { Button } from '@/src/components/ui/Button';
 
 const REMINDER_OPTIONS: number[] = [0, 1, 2, 3, 5, 7, 10, 14];
 

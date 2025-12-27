@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
-import { ChartNoAxesColumn, CreditCard, Settings } from 'lucide-react-native';
 import React from 'react';
 
 import { useAppTheme } from '@/src/theme/useAppTheme';
+import { ChartBarIcon, CreditCardIcon, GearSixIcon } from 'phosphor-react-native';
 
 export default function TabLayout() {
   const theme = useAppTheme();
@@ -23,21 +23,27 @@ export default function TabLayout() {
         name="(home)"
         options={{
           title: 'Subscriptions',
-          tabBarIcon: ({ color, size }) => <CreditCard color={color} size={size} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <CreditCardIcon color={color} size={size} weight={focused ? 'fill' : 'regular'} />
+          ),
         }}
       />
       <Tabs.Screen
         name="insights"
         options={{
           title: 'Insights',
-          tabBarIcon: ({ color, size }) => <ChartNoAxesColumn color={color} size={size} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <ChartBarIcon color={color} size={size} weight={focused ? 'fill' : 'regular'} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color, size }) => <Settings color={color} size={size} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <GearSixIcon color={color} size={size} weight={focused ? 'fill' : 'regular'} />
+          ),
         }}
       />
     </Tabs>
