@@ -139,6 +139,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderRadius: 60, // Pill shape for premium feel
+    // Subtle shadow for depth
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3, // Android shadow
   },
   sm: {
     paddingVertical: 8,

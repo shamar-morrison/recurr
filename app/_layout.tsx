@@ -21,8 +21,8 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
-      staleTime: 15_000,
+      retry: 2,
+      staleTime: 60_000, // 1 minute
     },
   },
 });

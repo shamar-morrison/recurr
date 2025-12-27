@@ -1,36 +1,31 @@
+import { NativeStackHeaderProps } from '@react-navigation/native-stack';
 import { Stack } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 
+import { StackHeader } from '@/src/components/ui/StackHeader';
 import { useAppTheme } from '@/src/theme/useAppTheme';
 
-function SubscriptionsHeaderTitle() {
-  const theme = useAppTheme();
-
+function HomeHeader({ options }: NativeStackHeaderProps) {
   return (
-    <View style={styles.headerTitleContainer}>
-      <Text style={[styles.headerTitle, { color: theme.colors.text }]}>My Subscriptions</Text>
-      <Text style={[styles.headerSubtitle, { color: theme.colors.secondaryText }]}>
-        Manage your recurring payments
-      </Text>
-    </View>
+    <StackHeader
+      title="My Subscriptions"
+      subtitle="Manage your recurring payments"
+      headerRight={options.headerRight?.({ canGoBack: false })}
+    />
   );
 }
 
-const styles = StyleSheet.create({
-  headerTitleContainer: {
-    gap: 2,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: -0.4,
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-});
+function EditorHeader({ options, navigation }: NativeStackHeaderProps) {
+  const title = typeof options.title === 'string' ? options.title : 'Subscription';
+
+  return (
+    <StackHeader
+      title={title}
+      showBack={navigation.canGoBack()}
+      headerLeft={options.headerLeft?.({ canGoBack: navigation.canGoBack() })}
+    />
+  );
+}
 
 export default function HomeStackLayout() {
   const theme = useAppTheme();
@@ -39,17 +34,24 @@ export default function HomeStackLayout() {
     <Stack
       initialRouteName="subscriptions"
       screenOptions={{
-        headerTitle: () => <SubscriptionsHeaderTitle />,
-        headerBackTitle: 'Back',
-        headerStyle: {
-          backgroundColor: theme.colors.background,
-        },
-        headerTintColor: theme.colors.text,
         headerShadowVisible: false,
         contentStyle: {
           backgroundColor: theme.colors.background,
         },
       }}
-    />
+    >
+      <Stack.Screen
+        name="subscriptions"
+        options={{
+          header: (props) => <HomeHeader {...props} />,
+        }}
+      />
+      <Stack.Screen
+        name="subscription-editor"
+        options={{
+          header: (props) => <EditorHeader {...props} />,
+        }}
+      />
+    </Stack>
   );
 }

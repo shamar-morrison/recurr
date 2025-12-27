@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { Crown, TrendingUp } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -58,7 +59,7 @@ export default function InsightsScreen() {
   }, [items]);
 
   return (
-    <View style={styles.container} testID="insightsScreen">
+    <SafeAreaView style={styles.container} edges={['top']} testID="insightsScreen">
       <ScrollView contentContainerStyle={styles.content} testID="insightsScroll">
         <View style={styles.hero}>
           <View style={styles.heroTop}>
@@ -204,7 +205,7 @@ export default function InsightsScreen() {
 
         <View style={styles.footerSpace} />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

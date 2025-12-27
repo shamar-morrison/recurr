@@ -529,6 +529,11 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderColor: theme.colors.border,
       fontSize: 16,
       fontWeight: '600',
+      // Subtle shadow
+      shadowColor: '#000',
+      shadowOpacity: 0.04,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 2 },
     },
     notesInput: {
       minHeight: 100,
@@ -555,6 +560,11 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       justifyContent: 'center',
       alignItems: 'center',
       gap: 7,
+      // Subtle shadow
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 2 },
     },
     chipText: {
       fontSize: 13,

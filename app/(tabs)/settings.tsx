@@ -2,6 +2,7 @@ import { router, Stack } from 'expo-router';
 import { Crown, LogOut, Sliders } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { useAppTheme } from '@/src/theme/useAppTheme';
@@ -18,7 +19,7 @@ export default function SettingsScreen() {
   const reminderValue = settings.remindDaysBeforeBilling;
 
   return (
-    <View style={styles.container} testID="settingsScreen">
+    <SafeAreaView style={styles.container} edges={['top']} testID="settingsScreen">
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.hero}>
           <View style={styles.heroTop}>
@@ -138,7 +139,7 @@ export default function SettingsScreen() {
           )}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
