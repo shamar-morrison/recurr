@@ -166,15 +166,36 @@ export async function addCustomService(
     throw new Error('[customServices] addCustomService: userId is required');
   }
 
+  // Validate and normalize name
+  const trimmedName = input.name?.trim() ?? '';
+  if (!trimmedName) {
+    throw new Error('[customServices] addCustomService: name is required');
+  }
+  const MAX_NAME_LENGTH = 100;
+  if (trimmedName.length > MAX_NAME_LENGTH) {
+    throw new Error(
+      `[customServices] addCustomService: name exceeds max length of ${MAX_NAME_LENGTH} characters`
+    );
+  }
+
+  // Validate and normalize color (hex format: #RGB or #RRGGBB)
+  const HEX_COLOR_REGEX = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+  const normalizedColor = input.color?.toLowerCase() ?? '';
+  if (!HEX_COLOR_REGEX.test(normalizedColor)) {
+    throw new Error(
+      '[customServices] addCustomService: invalid color format (expected hex like #RGB or #RRGGBB)'
+    );
+  }
+
   // Serialize per-user to prevent concurrent writes from clobbering each other
   return withUserLock(userId, async () => {
     const now = nowMillis();
 
     const service: CustomService = {
       id: `local_${now}_${Math.random().toString(16).slice(2)}`,
-      name: input.name,
+      name: trimmedName,
       category: input.category,
-      color: input.color,
+      color: normalizedColor,
       createdAt: now,
     };
 
