@@ -1,5 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
+import { CurrencyPickerSheet } from '@/src/components/CurrencyPickerSheet';
 import { Button } from '@/src/components/ui/Button';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -81,6 +82,8 @@ export default function SubscriptionEditorScreen() {
   const [billingCycle, setBillingCycle] = useState<(typeof BILLING_CYCLES)[number]>('Monthly');
   const [billingDayText, setBillingDayText] = useState<string>('1');
   const [notes, setNotes] = useState<string>('');
+  const [currency, setCurrency] = useState<string>(defaultCurrency);
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
 
   React.useEffect(() => {
     if (!editingId) return;
@@ -91,7 +94,8 @@ export default function SubscriptionEditorScreen() {
     setBillingCycle(existing.billingCycle ?? 'Monthly');
     setBillingDayText(existing.billingDay != null ? String(existing.billingDay) : '1');
     setNotes(existing.notes ?? '');
-  }, [editingId, existing]);
+    setCurrency(existing.currency ?? defaultCurrency);
+  }, [defaultCurrency, editingId, existing]);
 
   const amount = useMemo(() => {
     const n = Number(amountText.replace(/[^0-9.]/g, ''));
@@ -127,7 +131,7 @@ export default function SubscriptionEditorScreen() {
         serviceName: serviceName.trim(),
         category,
         amount,
-        currency: defaultCurrency,
+        currency,
         billingCycle,
         billingDay,
         notes: notes.trim() ? notes.trim() : undefined,
@@ -145,7 +149,7 @@ export default function SubscriptionEditorScreen() {
     billingCycle,
     billingDay,
     category,
-    defaultCurrency,
+    currency,
     existing,
     notes,
     serviceName,
@@ -191,36 +195,6 @@ export default function SubscriptionEditorScreen() {
       </Pressable>
     );
   }, [styles.headerLeft, theme.colors.text]);
-
-  const headerRight = useCallback(() => {
-    const disabled = upsertMutation.isPending || deleteMutation.isPending;
-    return (
-      <Pressable
-        onPress={handleSave}
-        disabled={disabled}
-        style={[
-          styles.headerRight,
-          {
-            backgroundColor: disabled
-              ? theme.isDark
-                ? 'rgba(121,167,255,0.20)'
-                : 'rgba(79,140,255,0.20)'
-              : theme.colors.tint,
-          },
-        ]}
-        testID="subscriptionEditorSave"
-      >
-        {disabled ? <ActivityIndicator color="#fff" /> : <CheckIcon color="#fff" size={18} />}
-      </Pressable>
-    );
-  }, [
-    deleteMutation.isPending,
-    handleSave,
-    styles.headerRight,
-    theme.colors.tint,
-    theme.isDark,
-    upsertMutation.isPending,
-  ]);
 
   const showLoading = Boolean(editingId) && subscriptionsQuery.isLoading;
   const showNotFound = Boolean(editingId) && !subscriptionsQuery.isLoading && !existing;
@@ -280,46 +254,48 @@ export default function SubscriptionEditorScreen() {
               <View style={styles.section}>
                 <Text style={styles.label}>Category</Text>
                 <View style={styles.chipsRow} testID="subscriptionEditorCategories">
-                  {SUBSCRIPTION_CATEGORIES.map((c) => {
-                    const active = c === category;
+                  {SUBSCRIPTION_CATEGORIES.map((cat) => {
+                    const active = cat === category;
                     const iconColor = active ? '#fff' : theme.colors.text;
                     const iconSize = 26;
                     return (
                       <Pressable
-                        key={c}
-                        onPress={() => setCategory(c)}
+                        key={cat}
+                        onPress={() => setCategory(cat)}
                         style={[
                           styles.chip,
                           active
                             ? { backgroundColor: theme.colors.tint, borderColor: theme.colors.tint }
                             : null,
                         ]}
-                        testID={`subscriptionEditorCategory_${c}`}
+                        testID={`subscriptionEditorCategory_${cat}`}
                       >
-                        {c === 'Streaming' && (
+                        {cat === 'Streaming' && (
                           <PlayCircleIcon
                             color={iconColor}
                             size={iconSize}
                             weight={active ? 'fill' : 'regular'}
                           />
                         )}
-                        {c === 'Music' && <MusicNotesIcon color={iconColor} size={iconSize} />}
-                        {c === 'Software' && <AppWindowIcon color={iconColor} size={iconSize} />}
-                        {c === 'Utilities' && (
+                        {cat === 'Music' && <MusicNotesIcon color={iconColor} size={iconSize} />}
+                        {cat === 'Software' && <AppWindowIcon color={iconColor} size={iconSize} />}
+                        {cat === 'Utilities' && (
                           <LightbulbIcon
                             color={iconColor}
                             size={iconSize}
                             weight={active ? 'fill' : 'regular'}
                           />
                         )}
-                        {c === 'Other' && <DotsThreeCircleIcon color={iconColor} size={iconSize} />}
+                        {cat === 'Other' && (
+                          <DotsThreeCircleIcon color={iconColor} size={iconSize} />
+                        )}
                         <Text
                           style={[
                             styles.chipText,
                             active ? { color: '#fff' } : { color: theme.colors.text },
                           ]}
                         >
-                          {c}
+                          {cat}
                         </Text>
                       </Pressable>
                     );
@@ -331,9 +307,13 @@ export default function SubscriptionEditorScreen() {
                 <View style={[styles.section, styles.gridItem]}>
                   <Text style={styles.label}>Amount</Text>
                   <View style={styles.amountRow}>
-                    <View style={styles.currencyPill}>
-                      <Text style={styles.currencyText}>{defaultCurrency}</Text>
-                    </View>
+                    <Pressable
+                      style={styles.currencyPill}
+                      onPress={() => setShowCurrencyPicker(true)}
+                      testID="subscriptionEditorCurrency"
+                    >
+                      <Text style={styles.currencyText}>{currency}</Text>
+                    </Pressable>
                     <TextInput
                       value={amountText}
                       onChangeText={setAmountText}
@@ -442,6 +422,16 @@ export default function SubscriptionEditorScreen() {
                   icon={<CheckIcon color="#fff" size={20} />}
                 />
               </View>
+
+              <CurrencyPickerSheet
+                isOpen={showCurrencyPicker}
+                onClose={() => setShowCurrencyPicker(false)}
+                selectedCurrency={currency}
+                onSelect={(code) => {
+                  setCurrency(code);
+                  setShowCurrencyPicker(false);
+                }}
+              />
             </>
           )}
         </ScrollView>
