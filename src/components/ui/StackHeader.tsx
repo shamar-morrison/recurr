@@ -39,28 +39,34 @@ export function StackHeader({
       ]}
     >
       <View style={styles.content}>
-        {/* Left side */}
-        <View style={styles.leftContainer}>
-          {headerLeft ? (
-            headerLeft
-          ) : showBack ? (
-            <Pressable
-              onPress={handleBack}
-              style={[
-                styles.backButton,
-                {
-                  backgroundColor: theme.isDark ? 'rgba(236,242,255,0.08)' : 'rgba(15,23,42,0.06)',
-                },
-              ]}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <ChevronLeft color={theme.colors.text} size={22} />
-            </Pressable>
-          ) : null}
-        </View>
+        {/* Left side - only render if there's content */}
+        {(showBack || headerLeft) && (
+          <View style={styles.leftContainer}>
+            {headerLeft ? (
+              headerLeft
+            ) : showBack ? (
+              <Pressable
+                onPress={handleBack}
+                style={[
+                  styles.backButton,
+                  {
+                    backgroundColor: theme.isDark
+                      ? 'rgba(236,242,255,0.08)'
+                      : 'rgba(15,23,42,0.06)',
+                  },
+                ]}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <ChevronLeft color={theme.colors.text} size={22} />
+              </Pressable>
+            ) : null}
+          </View>
+        )}
 
         {/* Center - Title */}
-        <View style={styles.titleContainer}>
+        <View
+          style={[styles.titleContainer, !(showBack || headerLeft) && styles.titleContainerNoLeft]}
+        >
           {title && (
             <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
               {title}
@@ -110,6 +116,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingHorizontal: 8,
     gap: 2,
+  },
+  titleContainerNoLeft: {
+    paddingLeft: 0,
   },
   title: {
     fontSize: 20,

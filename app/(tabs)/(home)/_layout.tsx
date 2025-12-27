@@ -17,14 +17,9 @@ function HomeHeader({ options }: NativeStackHeaderProps) {
 
 function EditorHeader({ options, navigation }: NativeStackHeaderProps) {
   const title = typeof options.title === 'string' ? options.title : 'Subscription';
+  const headerLeft = options.headerLeft?.({ canGoBack: navigation.canGoBack() });
 
-  return (
-    <StackHeader
-      title={title}
-      showBack={navigation.canGoBack()}
-      headerLeft={options.headerLeft?.({ canGoBack: navigation.canGoBack() })}
-    />
-  );
+  return <StackHeader title={title} headerLeft={headerLeft} />;
 }
 
 export default function HomeStackLayout() {
