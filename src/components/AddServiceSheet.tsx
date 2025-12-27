@@ -4,8 +4,8 @@
  */
 
 import { CheckIcon } from 'phosphor-react-native';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
   Actionsheet,
@@ -29,22 +29,35 @@ export function AddServiceSheet({ isOpen, onClose, serviceName, onSave }: AddSer
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const [editableName, setEditableName] = useState(serviceName);
   const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Other');
   const [selectedColor, setSelectedColor] = useState<string>(SERVICE_COLORS[1]);
 
+  // Sync editableName when the sheet opens with a new name
+  useEffect(() => {
+    if (isOpen) {
+      setEditableName(serviceName);
+    }
+  }, [isOpen, serviceName]);
+
   const handleSave = useCallback(() => {
+    const trimmedName = editableName.trim();
+    if (!trimmedName) return; // Don't save empty names
+
     onSave({
-      name: serviceName,
+      name: trimmedName,
       category: selectedCategory,
       color: selectedColor,
     });
     // Reset state
+    setEditableName('');
     setSelectedCategory('Other');
     setSelectedColor(SERVICE_COLORS[1]);
     onClose();
-  }, [serviceName, selectedCategory, selectedColor, onSave, onClose]);
+  }, [editableName, selectedCategory, selectedColor, onSave, onClose]);
 
   const handleClose = useCallback(() => {
+    setEditableName('');
     setSelectedCategory('Other');
     setSelectedColor(SERVICE_COLORS[1]);
     onClose();
@@ -60,12 +73,18 @@ export function AddServiceSheet({ isOpen, onClose, serviceName, onSave }: AddSer
 
         <Text style={styles.title}>Add Custom Service</Text>
 
-        {/* Service Name Display */}
+        {/* Service Name Input */}
         <View style={styles.section}>
           <Text style={styles.label}>Service Name</Text>
-          <View style={styles.nameContainer}>
-            <Text style={styles.nameText}>{serviceName}</Text>
-          </View>
+          <TextInput
+            value={editableName}
+            onChangeText={setEditableName}
+            placeholder="Enter service name"
+            placeholderTextColor={theme.colors.secondaryText}
+            style={styles.nameInput}
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
         </View>
 
         {/* Category Picker */}
@@ -146,13 +165,11 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       color: theme.colors.secondaryText,
       marginBottom: 10,
     },
-    nameContainer: {
+    nameInput: {
       backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : 'rgba(15,23,42,0.04)',
       paddingHorizontal: 16,
       paddingVertical: 14,
       borderRadius: 12,
-    },
-    nameText: {
       fontSize: 16,
       fontWeight: '600',
       color: theme.colors.text,
