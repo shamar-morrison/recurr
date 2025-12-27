@@ -1,6 +1,6 @@
 import { CheckIcon, MagnifyingGlassIcon, PlusIcon } from 'phosphor-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
   Actionsheet,
@@ -43,7 +43,7 @@ export function ServicePickerSheet({
   const [search, setSearch] = useState('');
   const [showAddSheet, setShowAddSheet] = useState(false);
 
-  // Combine predefined services with custom services
+  // Combine predefined services with custom services (custom first for better discoverability)
   const allServices = useMemo((): UnifiedService[] => {
     const customAsUnified: UnifiedService[] = customServices.map((cs) => ({
       name: cs.name,
@@ -51,7 +51,7 @@ export function ServicePickerSheet({
       isCustom: true,
       color: cs.color,
     }));
-    return [...SERVICES, ...customAsUnified];
+    return [...customAsUnified, ...SERVICES];
   }, [customServices]);
 
   const filteredServices = useMemo(() => {
@@ -97,6 +97,13 @@ export function ServicePickerSheet({
         setSearch('');
         setShowAddSheet(false);
         onClose();
+      } else {
+        // Keep AddServiceSheet open and show error feedback
+        Alert.alert(
+          'Failed to Create Service',
+          'Something went wrong while creating your custom service. Please try again.',
+          [{ text: 'OK' }]
+        );
       }
     },
     [onAddCustomService, onSelect, onClose]
@@ -109,9 +116,10 @@ export function ServicePickerSheet({
 
   const getItemCount = useCallback((data: unknown) => (data as UnifiedService[]).length, []);
 
-  const keyExtractor = useCallback((item: unknown, index: number) => {
+  const keyExtractor = useCallback((item: unknown) => {
     const service = item as UnifiedService;
-    return `${service.name}-${service.isCustom ? 'custom' : 'predefined'}-${index}`;
+    // Use name + type as stable key (name is unique within each type)
+    return `${service.name}-${service.isCustom ? 'custom' : 'predefined'}`;
   }, []);
 
   const renderItem = useCallback(

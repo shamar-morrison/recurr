@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 
 import { CustomService, CustomServiceInput } from '@/src/constants/customServices';
+import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
 import { firestore, isFirebaseConfigured, timestampToMillis } from '@/src/lib/firebase';
 
 const STORAGE_KEY_PREFIX = 'customServices:v1:';
@@ -28,6 +29,10 @@ function nowMillis() {
   return Date.now();
 }
 
+function isValidCategory(value: string): value is SubscriptionCategory {
+  return SUBSCRIPTION_CATEGORIES.includes(value as SubscriptionCategory);
+}
+
 function normalizeCustomService(raw: unknown): CustomService | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Partial<CustomService> & { id?: unknown };
@@ -37,10 +42,13 @@ function normalizeCustomService(raw: unknown): CustomService | null {
   if (typeof r.category !== 'string') return null;
   if (typeof r.color !== 'string') return null;
 
+  // Validate category against allowed values, fallback to 'Other' if invalid
+  const category: SubscriptionCategory = isValidCategory(r.category) ? r.category : 'Other';
+
   return {
     id: r.id,
     name: r.name,
-    category: r.category as CustomService['category'],
+    category,
     color: r.color,
     createdAt: typeof r.createdAt === 'number' ? r.createdAt : nowMillis(),
   };
@@ -90,11 +98,12 @@ export async function listCustomServices(userId: string): Promise<CustomService[
     const snap = await getDocs(q);
     const out: CustomService[] = snap.docs.map((d) => {
       const data = d.data() as Record<string, unknown>;
+      const rawCategory = String(data.category ?? 'Other');
 
       return {
         id: d.id,
         name: String(data.name ?? ''),
-        category: String(data.category ?? 'Other') as CustomService['category'],
+        category: isValidCategory(rawCategory) ? rawCategory : 'Other',
         color: String(data.color ?? '#4ECDC4'),
         createdAt: timestampToMillis(data.createdAt),
       };
@@ -114,6 +123,10 @@ export async function addCustomService(
   userId: string,
   input: CustomServiceInput
 ): Promise<CustomService> {
+  if (!userId) {
+    throw new Error('[customServices] addCustomService: userId is required');
+  }
+
   const now = nowMillis();
 
   const service: CustomService = {
@@ -154,6 +167,11 @@ export async function addCustomService(
 }
 
 export async function deleteCustomService(userId: string, serviceId: string): Promise<void> {
+  if (!userId) {
+    console.warn('[customServices] deleteCustomService: userId is required');
+    return;
+  }
+
   console.log('[customServices] deleteCustomService', { userId, serviceId });
 
   const local = await readLocal(userId);

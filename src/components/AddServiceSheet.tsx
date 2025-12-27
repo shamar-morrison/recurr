@@ -33,10 +33,14 @@ export function AddServiceSheet({ isOpen, onClose, serviceName, onSave }: AddSer
   const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Other');
   const [selectedColor, setSelectedColor] = useState<string>(SERVICE_COLORS[1]);
 
-  // Sync editableName when the sheet opens with a new name
+  const isValidName = editableName.trim().length > 0;
+
+  // Reset form state when the sheet opens
   useEffect(() => {
     if (isOpen) {
       setEditableName(serviceName);
+      setSelectedCategory('Other');
+      setSelectedColor(SERVICE_COLORS[1]);
     }
   }, [isOpen, serviceName]);
 
@@ -132,7 +136,11 @@ export function AddServiceSheet({ isOpen, onClose, serviceName, onSave }: AddSer
           <Pressable style={styles.cancelButton} onPress={handleClose}>
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </Pressable>
-          <Pressable style={styles.saveButton} onPress={handleSave}>
+          <Pressable
+            style={[styles.saveButton, !isValidName && styles.saveButtonDisabled]}
+            onPress={handleSave}
+            disabled={!isValidName}
+          >
             <Text style={styles.saveButtonText}>Save</Text>
           </Pressable>
         </View>
@@ -233,6 +241,9 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderRadius: 12,
       backgroundColor: theme.colors.tint,
       alignItems: 'center',
+    },
+    saveButtonDisabled: {
+      opacity: 0.5,
     },
     saveButtonText: {
       fontSize: 16,

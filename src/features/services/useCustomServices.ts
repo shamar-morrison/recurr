@@ -20,6 +20,7 @@ export function useCustomServices() {
       return;
     }
 
+    setIsLoading(true);
     try {
       const services = await listCustomServices(user.uid);
       setCustomServices(services);
