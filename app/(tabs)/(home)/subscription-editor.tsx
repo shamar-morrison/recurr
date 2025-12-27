@@ -1,14 +1,5 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import {
-  Check,
-  ChevronLeft,
-  Layers,
-  MessageSquareMore,
-  Music,
-  Play,
-  Trash2,
-  Zap,
-} from 'lucide-react-native';
+
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -22,7 +13,18 @@ import {
   TextInput,
   View,
 } from 'react-native';
-
+import {
+  CaretLeftIcon,
+  CheckIcon,
+  MusicNoteIcon,
+  PlayIcon,
+  AppWindowIcon,
+  LightningIcon,
+  DotsThreeCircleIcon,
+  TrashIcon,
+  MusicNotesIcon,
+  PlayCircleIcon,
+} from 'phosphor-react-native';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   useDeleteSubscriptionMutation,
@@ -187,7 +189,7 @@ export default function SubscriptionEditorScreen() {
         style={styles.headerLeft}
         testID="subscriptionEditorBack"
       >
-        <ChevronLeft color={theme.colors.text} size={22} />
+        <CaretLeftIcon color={theme.colors.text} size={22} />
       </Pressable>
     );
   }, [styles.headerLeft, theme.colors.text]);
@@ -210,7 +212,7 @@ export default function SubscriptionEditorScreen() {
         ]}
         testID="subscriptionEditorSave"
       >
-        {disabled ? <ActivityIndicator color="#fff" /> : <Check color="#fff" size={18} />}
+        {disabled ? <ActivityIndicator color="#fff" /> : <CheckIcon color="#fff" size={18} />}
       </Pressable>
     );
   }, [
@@ -297,22 +299,22 @@ export default function SubscriptionEditorScreen() {
                         testID={`subscriptionEditorCategory_${c}`}
                       >
                         {c === 'Streaming' && (
-                          <Play
+                          <PlayCircleIcon
                             color={iconColor}
                             size={iconSize}
-                            fill={active ? '#fff' : 'transparent'}
+                            weight={active ? 'fill' : 'regular'}
                           />
                         )}
-                        {c === 'Music' && <Music color={iconColor} size={iconSize} />}
-                        {c === 'Software' && <Layers color={iconColor} size={iconSize} />}
+                        {c === 'Music' && <MusicNotesIcon color={iconColor} size={iconSize} />}
+                        {c === 'Software' && <AppWindowIcon color={iconColor} size={iconSize} />}
                         {c === 'Utilities' && (
-                          <Zap
+                          <LightningIcon
                             color={iconColor}
                             size={iconSize}
-                            fill={active ? '#fff' : 'transparent'}
+                            weight={active ? 'fill' : 'regular'}
                           />
                         )}
-                        {c === 'Other' && <MessageSquareMore color={iconColor} size={iconSize} />}
+                        {c === 'Other' && <DotsThreeCircleIcon color={iconColor} size={iconSize} />}
                         <Text
                           style={[
                             styles.chipText,
@@ -424,7 +426,7 @@ export default function SubscriptionEditorScreen() {
                     disabled={deleteMutation.isPending || upsertMutation.isPending}
                     testID="subscriptionEditorDelete"
                   >
-                    <Trash2 color={theme.colors.negative} size={18} />
+                    <TrashIcon color={theme.colors.negative} size={18} />
                     <Text style={[styles.deleteText, { color: theme.colors.negative }]}>
                       Delete subscription
                     </Text>
@@ -439,7 +441,7 @@ export default function SubscriptionEditorScreen() {
                   loading={upsertMutation.isPending}
                   testID="subscriptionEditorSaveBottom"
                   style={{ width: '100%' }}
-                  icon={<Check color="#fff" size={20} />}
+                  icon={<CheckIcon color="#fff" size={20} />}
                 />
               </View>
             </>
