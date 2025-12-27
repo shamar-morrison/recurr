@@ -4,7 +4,7 @@ import {
   ChevronLeft,
   Layers,
   MessageSquareMore,
-  CirclePlay,
+  Music,
   Play,
   Trash2,
   Zap,
@@ -303,7 +303,7 @@ export default function SubscriptionEditorScreen() {
                             fill={active ? '#fff' : 'transparent'}
                           />
                         )}
-                        {c === 'Music' && <CirclePlay color={iconColor} size={iconSize} />}
+                        {c === 'Music' && <Music color={iconColor} size={iconSize} />}
                         {c === 'Software' && <Layers color={iconColor} size={iconSize} />}
                         {c === 'Utilities' && (
                           <Zap
