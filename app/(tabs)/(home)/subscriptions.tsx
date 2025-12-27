@@ -29,7 +29,7 @@ export default function SubscriptionsHomeScreen() {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(theme, insets.bottom), [theme, insets.bottom]);
-  const { isPremium } = useAuth();
+  const { isPremium, settings } = useAuth();
 
   const subscriptionsQuery = useSubscriptionsQuery();
   const items = useSubscriptionListItems(subscriptionsQuery.data);
@@ -45,6 +45,25 @@ export default function SubscriptionsHomeScreen() {
     if (isPremium) return false;
     return items.length >= FREE_TIER_LIMIT;
   }, [isPremium, items.length]);
+
+  // Calculate subscriptions due this month and total spend
+  const { subscriptionsDueThisMonth, totalMonthlySpend } = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const dueThisMonth = items.filter((item) => {
+      const billingDate = new Date(item.nextBillingDateISO);
+      return billingDate.getMonth() === currentMonth && billingDate.getFullYear() === currentYear;
+    });
+
+    const total = dueThisMonth.reduce((sum, item) => sum + item.amount, 0);
+
+    return {
+      subscriptionsDueThisMonth: dueThisMonth,
+      totalMonthlySpend: total,
+    };
+  }, [items]);
 
   const handleAdd = useCallback(() => {
     if (atFreeLimit) {
@@ -109,16 +128,29 @@ export default function SubscriptionsHomeScreen() {
       <View style={styles.top} testID="subscriptionsHeader">
         <View style={styles.hero}>
           <View style={styles.heroTop}>
-            <View style={styles.heroTitleRow}>
-              <Text style={styles.heroTitle}>Your month at a glance</Text>
-              {isPremium ? (
-                <View style={styles.premiumPill} testID="premiumPill">
-                  <Crown color="#fff" size={14} />
-                  <Text style={styles.premiumPillText}>Premium</Text>
-                </View>
-              ) : null}
+            {/* Top row: Label + Currency Badge */}
+            <View style={styles.heroLabelRow}>
+              <Text style={styles.heroLabel}>Total Monthly Spend</Text>
+              <View style={styles.currencyBadge}>
+                <Text style={styles.currencyBadgeText}>{settings.currency}</Text>
+              </View>
             </View>
-            <Text style={styles.heroSubtitle}>Track renewals, keep your budget calm.</Text>
+
+            {/* Amount display */}
+            <View style={styles.heroAmountRow}>
+              <Text style={styles.heroAmount}>
+                {formatMoney(totalMonthlySpend, settings.currency)}
+              </Text>
+              <Text style={styles.heroAmountSuffix}>/ month</Text>
+            </View>
+          </View>
+
+          {/* Active subscriptions pill */}
+          <View style={styles.activeSubsPill}>
+            <View style={styles.countCircle}>
+              <Text style={styles.countCircleText}>{subscriptionsDueThisMonth.length}</Text>
+            </View>
+            <Text style={styles.activeSubsLabel}>Active subscriptions for this month</Text>
           </View>
 
           {!isPremium ? (
@@ -224,13 +256,16 @@ export default function SubscriptionsHomeScreen() {
     handleAdd,
     isPremium,
     items.length,
+    settings,
     styles,
+    subscriptionsDueThisMonth,
     subscriptionsQuery.isError,
     subscriptionsQuery.isLoading,
     filteredItems.length,
     theme.colors.secondaryText,
     theme.colors.text,
     theme.colors.tint,
+    totalMonthlySpend,
   ]);
 
   return (
@@ -326,29 +361,76 @@ function createStyles(theme: ReturnType<typeof useAppTheme>, bottomInset: number
       gap: 16,
     },
     heroTop: {
-      gap: 8,
+      gap: 12,
     },
-    heroTitleRow: {
+    heroLabelRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: 12,
     },
-    heroTitle: {
-      color: '#fff', // White text on primary background
+    heroLabel: {
+      color: '#fff',
       fontSize: 16,
       fontWeight: '600',
       letterSpacing: -0.1,
       opacity: 0.9,
-      flex: 1,
     },
-    heroSubtitle: {
+    currencyBadge: {
+      backgroundColor: 'rgba(255,255,255,0.2)',
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+    },
+    currencyBadgeText: {
       color: '#fff',
-      fontSize: 34,
-      fontWeight: '800',
-      letterSpacing: -1,
-      lineHeight: 40,
+      fontWeight: '700',
+      fontSize: 13,
+      letterSpacing: 0.3,
     },
+    heroAmountRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 8,
+    },
+    heroAmount: {
+      color: '#fff',
+      fontSize: 42,
+      fontWeight: '800',
+      letterSpacing: -1.5,
+    },
+    heroAmountSuffix: {
+      color: 'rgba(255,255,255,0.7)',
+      fontSize: 18,
+      fontWeight: '600',
+    },
+    activeSubsPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      backgroundColor: 'rgba(0,0,0,0.15)',
+      borderRadius: 999,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+    },
+    countCircle: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: '#fff',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    countCircleText: {
+      color: theme.colors.primary,
+      fontSize: 14,
+      fontWeight: '800',
+    },
+    activeSubsLabel: {
+      color: '#fff',
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    // Keep premium pill for potential future use
     premiumPill: {
       flexDirection: 'row',
       alignItems: 'center',
