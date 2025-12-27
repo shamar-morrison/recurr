@@ -90,18 +90,30 @@ export function ServicePickerSheet({
     async (input: CustomServiceInput) => {
       if (!onAddCustomService) return;
 
-      const newService = await onAddCustomService(input);
-      if (newService) {
-        // Auto-select the newly created service
-        onSelect(newService.name, newService.category);
-        setSearch('');
-        setShowAddSheet(false);
-        onClose();
-      } else {
-        // Keep AddServiceSheet open and show error feedback
+      try {
+        const newService = await onAddCustomService(input);
+        if (newService) {
+          // Auto-select the newly created service
+          onSelect(newService.name, newService.category);
+          setSearch('');
+          setShowAddSheet(false);
+          onClose();
+        } else {
+          // Keep AddServiceSheet open and show error feedback
+          Alert.alert(
+            'Failed to Create Service',
+            'Something went wrong while creating your custom service. Please try again.',
+            [{ text: 'OK' }]
+          );
+        }
+      } catch (error) {
+        // Log error and keep sheet open for retry - do not rethrow
+        console.error(error);
         Alert.alert(
           'Failed to Create Service',
-          'Something went wrong while creating your custom service. Please try again.',
+          error instanceof Error
+            ? error.message
+            : 'Something went wrong while creating your custom service. Please try again.',
           [{ text: 'OK' }]
         );
       }
