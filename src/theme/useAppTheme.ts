@@ -25,7 +25,8 @@ export type AppTheme = {
 
 export function useAppTheme(): AppTheme {
   const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
+  // const isDark = scheme === 'dark';
+  const isDark = false; // TODO: Implement theme switcher, forcing light for now as requested
 
   const colors = (isDark ? AppColors.dark : AppColors.light) as unknown as AppThemeColors;
 

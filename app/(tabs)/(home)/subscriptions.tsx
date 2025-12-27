@@ -384,7 +384,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderRadius: 999,
       paddingHorizontal: 10,
       paddingVertical: 6,
-      backgroundColor: '#fff',
+      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#fff',
     },
     limitCtaText: {
       fontWeight: '800',

@@ -495,7 +495,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       paddingHorizontal: 16,
       paddingVertical: 14,
       color: theme.colors.text,
-      backgroundColor: '#fff', // Always white/light for inputs in this design usually, or surface
+      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : '#fff',
       borderWidth: 1,
       borderColor: theme.colors.border,
       fontSize: 16,
