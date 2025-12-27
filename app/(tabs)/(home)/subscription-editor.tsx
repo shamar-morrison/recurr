@@ -1,7 +1,9 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
 import { CurrencyPickerSheet } from '@/src/components/CurrencyPickerSheet';
+import { FrequencyPickerSheet } from '@/src/components/FrequencyPickerSheet';
 import { Button } from '@/src/components/ui/Button';
+import { CURRENCIES } from '@/src/constants/currencies';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   useDeleteSubscriptionMutation,
@@ -10,7 +12,7 @@ import {
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { clampBillingDay } from '@/src/features/subscriptions/subscriptionsUtils';
 import {
-  BILLING_CYCLES,
+  BillingCycle,
   Subscription,
   SUBSCRIPTION_CATEGORIES,
   SubscriptionCategory,
@@ -18,6 +20,7 @@ import {
 import { useAppTheme } from '@/src/theme/useAppTheme';
 import {
   AppWindowIcon,
+  CaretDownIcon,
   CaretLeftIcon,
   CheckIcon,
   DotsThreeCircleIcon,
@@ -79,11 +82,12 @@ export default function SubscriptionEditorScreen() {
   const [serviceName, setServiceName] = useState<string>('');
   const [category, setCategory] = useState<SubscriptionCategory>('Streaming');
   const [amountText, setAmountText] = useState<string>('');
-  const [billingCycle, setBillingCycle] = useState<(typeof BILLING_CYCLES)[number]>('Monthly');
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('Monthly');
   const [billingDayText, setBillingDayText] = useState<string>('1');
   const [notes, setNotes] = useState<string>('');
   const [currency, setCurrency] = useState<string>(defaultCurrency);
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
+  const [showFrequencyPicker, setShowFrequencyPicker] = useState(false);
 
   React.useEffect(() => {
     if (!editingId) return;
@@ -304,62 +308,48 @@ export default function SubscriptionEditorScreen() {
               </View>
 
               <View style={styles.grid}>
+                {/* Cost Column */}
                 <View style={[styles.section, styles.gridItem]}>
-                  <Text style={styles.label}>Amount</Text>
-                  <View style={styles.amountRow}>
-                    <Pressable
-                      style={styles.currencyPill}
-                      onPress={() => setShowCurrencyPicker(true)}
-                      testID="subscriptionEditorCurrency"
-                    >
-                      <Text style={styles.currencyText}>{currency}</Text>
-                    </Pressable>
-                    <TextInput
-                      value={amountText}
-                      onChangeText={setAmountText}
-                      keyboardType={Platform.OS === 'web' ? 'default' : 'decimal-pad'}
-                      placeholder="9.99"
-                      placeholderTextColor={
-                        theme.isDark ? 'rgba(236,242,255,0.45)' : 'rgba(15,23,42,0.35)'
-                      }
-                      style={[styles.input, styles.amountInput]}
-                      testID="subscriptionEditorAmount"
-                    />
-                  </View>
+                  <Text style={styles.label}>Cost</Text>
+                  <TextInput
+                    value={amountText}
+                    onChangeText={setAmountText}
+                    keyboardType={Platform.OS === 'web' ? 'default' : 'decimal-pad'}
+                    placeholder="9.99"
+                    placeholderTextColor={
+                      theme.isDark ? 'rgba(236,242,255,0.45)' : 'rgba(15,23,42,0.35)'
+                    }
+                    style={styles.input}
+                    testID="subscriptionEditorAmount"
+                  />
                 </View>
 
+                {/* Currency Column */}
                 <View style={[styles.section, styles.gridItem]}>
-                  <Text style={styles.label}>Cycle</Text>
-                  <View style={styles.cycleRow} testID="subscriptionEditorCycles">
-                    {BILLING_CYCLES.map((cycle) => {
-                      const active = cycle === billingCycle;
-                      return (
-                        <Pressable
-                          key={cycle}
-                          onPress={() => setBillingCycle(cycle)}
-                          style={[
-                            styles.cycle,
-                            active
-                              ? {
-                                  backgroundColor: theme.colors.tint,
-                                  borderColor: theme.colors.tint,
-                                }
-                              : null,
-                          ]}
-                          testID={`subscriptionEditorCycle_${cycle}`}
-                        >
-                          <Text
-                            style={[
-                              styles.cycleText,
-                              active ? { color: '#fff' } : { color: theme.colors.text },
-                            ]}
-                          >
-                            {cycle}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
+                  <Text style={styles.label}>Currency</Text>
+                  <Pressable
+                    style={styles.dropdownButton}
+                    onPress={() => setShowCurrencyPicker(true)}
+                    testID="subscriptionEditorCurrency"
+                  >
+                    <Text style={styles.dropdownText}>
+                      {currency} ({CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$'})
+                    </Text>
+                    <CaretDownIcon color={theme.colors.secondaryText} size={16} />
+                  </Pressable>
+                </View>
+
+                {/* Frequency Column */}
+                <View style={[styles.section, styles.gridItem]}>
+                  <Text style={styles.label}>Frequency</Text>
+                  <Pressable
+                    style={styles.dropdownButton}
+                    onPress={() => setShowFrequencyPicker(true)}
+                    testID="subscriptionEditorFrequency"
+                  >
+                    <Text style={styles.dropdownText}>{billingCycle}</Text>
+                    <CaretDownIcon color={theme.colors.secondaryText} size={16} />
+                  </Pressable>
                 </View>
               </View>
 
@@ -430,6 +420,16 @@ export default function SubscriptionEditorScreen() {
                 onSelect={(code) => {
                   setCurrency(code);
                   setShowCurrencyPicker(false);
+                }}
+              />
+
+              <FrequencyPickerSheet
+                isOpen={showFrequencyPicker}
+                onClose={() => setShowFrequencyPicker(false)}
+                selectedFrequency={billingCycle}
+                onSelect={(freq) => {
+                  setBillingCycle(freq);
+                  setShowFrequencyPicker(false);
                 }}
               />
             </>
@@ -585,6 +585,28 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
     currencyText: {
       color: theme.colors.text,
       fontWeight: '700',
+      fontSize: 14,
+    },
+    dropdownButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      minHeight: 56,
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : '#fff',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      shadowColor: '#000',
+      shadowOpacity: 0.04,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 2 },
+    },
+    dropdownText: {
+      color: theme.colors.text,
+      fontWeight: '600',
       fontSize: 14,
     },
     amountInput: {
