@@ -237,8 +237,7 @@ export async function addCustomService(
 
 export async function deleteCustomService(userId: string, serviceId: string): Promise<void> {
   if (!userId) {
-    console.warn('[customServices] deleteCustomService: userId is required');
-    return;
+    throw new Error('[customServices] deleteCustomService: userId is required');
   }
 
   console.log('[customServices] deleteCustomService', {
