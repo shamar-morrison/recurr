@@ -18,7 +18,7 @@ import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 import { useAppTheme } from '@/src/theme/useAppTheme';
 
 // Union type for both predefined and custom services
-type UnifiedService = Service & { isCustom?: boolean; color?: string };
+type UnifiedService = Service & { isCustom?: boolean; color?: string; id?: string };
 
 interface ServicePickerSheetProps {
   isOpen: boolean;
@@ -46,6 +46,7 @@ export function ServicePickerSheet({
   // Combine predefined services with custom services (custom first for better discoverability)
   const allServices = useMemo((): UnifiedService[] => {
     const customAsUnified: UnifiedService[] = customServices.map((cs) => ({
+      id: cs.id,
       name: cs.name,
       category: cs.category,
       isCustom: true,
@@ -130,8 +131,11 @@ export function ServicePickerSheet({
 
   const keyExtractor = useCallback((item: unknown) => {
     const service = item as UnifiedService;
-    // Use name + type as stable key (name is unique within each type)
-    return `${service.name}-${service.isCustom ? 'custom' : 'predefined'}`;
+    // Use id for custom services (guaranteed unique), name for predefined
+    if (service.isCustom && service.id) {
+      return `${service.name}-${service.id}-custom`;
+    }
+    return `${service.name}-predefined`;
   }, []);
 
   const renderItem = useCallback(
