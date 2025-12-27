@@ -246,9 +246,12 @@ export async function deleteCustomService(userId: string, serviceId: string): Pr
     serviceId,
   });
 
-  const local = await readLocal(userId);
-  const nextLocal = local.filter((s) => s.id !== serviceId);
-  await writeLocal(userId, nextLocal);
+  // Serialize per-user to prevent concurrent deletes from racing on local storage
+  await withUserLock(userId, async () => {
+    const local = await readLocal(userId);
+    const nextLocal = local.filter((s) => s.id !== serviceId);
+    await writeLocal(userId, nextLocal);
+  });
 
   if (!isFirebaseConfigured()) return;
 
