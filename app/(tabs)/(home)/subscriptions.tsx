@@ -416,8 +416,9 @@ function createStyles(theme: ReturnType<typeof useAppTheme>, bottomInset: number
       gap: 10,
     },
     chip: {
+      width: '31%', // Exactly 3 per row: (100% - 2*gap) / 3
+      minWidth: 0, // Prevent content from expanding
       borderRadius: 999,
-      paddingHorizontal: 16,
       paddingVertical: 10,
       backgroundColor: theme.colors.card,
       borderWidth: 1,
@@ -426,6 +427,8 @@ function createStyles(theme: ReturnType<typeof useAppTheme>, bottomInset: number
       shadowOpacity: 0.05,
       shadowRadius: 4,
       shadowOffset: { width: 0, height: 2 },
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     chipText: {
       fontSize: 13,

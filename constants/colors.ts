@@ -1,17 +1,3 @@
-const palette = {
-  ink: '#0B1220',
-  slate: '#243043',
-  muted: '#667085',
-  line: 'rgba(15, 23, 42, 0.10)',
-  surface: '#FFFFFF',
-  surface2: '#F7F8FA',
-  sky: '#4F8CFF',
-  mint: '#1FD6A4',
-  coral: '#FF6B6B',
-  amber: '#FFB020',
-  navy: '#0B1220',
-} as const;
-
 export const AppColors = {
   light: {
     background: '#F2F4F7', // Lighter, clean background
