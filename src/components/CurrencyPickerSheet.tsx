@@ -71,6 +71,7 @@ export function CurrencyPickerSheet({
         <ActionsheetItem
           onPress={() => handleSelect(currency)}
           style={[styles.item, isSelected && styles.itemSelected]}
+          className="active:bg-transparent hover:bg-transparent"
         >
           <View style={styles.currencyInfo}>
             <Text style={styles.currencyCode}>{currency.code}</Text>
