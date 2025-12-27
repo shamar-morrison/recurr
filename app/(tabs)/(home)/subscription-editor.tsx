@@ -1,5 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
+import { CurrencyPickerSheet } from '@/src/components/CurrencyPickerSheet';
 import { Button } from '@/src/components/ui/Button';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -81,6 +82,8 @@ export default function SubscriptionEditorScreen() {
   const [billingCycle, setBillingCycle] = useState<(typeof BILLING_CYCLES)[number]>('Monthly');
   const [billingDayText, setBillingDayText] = useState<string>('1');
   const [notes, setNotes] = useState<string>('');
+  const [currency, setCurrency] = useState<string>(defaultCurrency);
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
 
   React.useEffect(() => {
     if (!editingId) return;
@@ -91,7 +94,8 @@ export default function SubscriptionEditorScreen() {
     setBillingCycle(existing.billingCycle ?? 'Monthly');
     setBillingDayText(existing.billingDay != null ? String(existing.billingDay) : '1');
     setNotes(existing.notes ?? '');
-  }, [editingId, existing]);
+    setCurrency(existing.currency ?? defaultCurrency);
+  }, [defaultCurrency, editingId, existing]);
 
   const amount = useMemo(() => {
     const n = Number(amountText.replace(/[^0-9.]/g, ''));
@@ -127,7 +131,7 @@ export default function SubscriptionEditorScreen() {
         serviceName: serviceName.trim(),
         category,
         amount,
-        currency: defaultCurrency,
+        currency,
         billingCycle,
         billingDay,
         notes: notes.trim() ? notes.trim() : undefined,
@@ -145,7 +149,7 @@ export default function SubscriptionEditorScreen() {
     billingCycle,
     billingDay,
     category,
-    defaultCurrency,
+    currency,
     existing,
     notes,
     serviceName,
@@ -331,9 +335,13 @@ export default function SubscriptionEditorScreen() {
                 <View style={[styles.section, styles.gridItem]}>
                   <Text style={styles.label}>Amount</Text>
                   <View style={styles.amountRow}>
-                    <View style={styles.currencyPill}>
-                      <Text style={styles.currencyText}>{defaultCurrency}</Text>
-                    </View>
+                    <Pressable
+                      style={styles.currencyPill}
+                      onPress={() => setShowCurrencyPicker(true)}
+                      testID="subscriptionEditorCurrency"
+                    >
+                      <Text style={styles.currencyText}>{currency}</Text>
+                    </Pressable>
                     <TextInput
                       value={amountText}
                       onChangeText={setAmountText}
@@ -442,6 +450,16 @@ export default function SubscriptionEditorScreen() {
                   icon={<CheckIcon color="#fff" size={20} />}
                 />
               </View>
+
+              <CurrencyPickerSheet
+                isOpen={showCurrencyPicker}
+                onClose={() => setShowCurrencyPicker(false)}
+                selectedCurrency={currency}
+                onSelect={(code) => {
+                  setCurrency(code);
+                  setShowCurrencyPicker(false);
+                }}
+              />
             </>
           )}
         </ScrollView>

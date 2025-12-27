@@ -16,6 +16,9 @@ import { AppErrorBoundary } from '@/src/components/AppErrorBoundary';
 import { AuthProvider } from '@/src/features/auth/AuthProvider';
 import { useAppTheme } from '@/src/theme/useAppTheme';
 
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import '@/global.css';
+
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
@@ -31,7 +34,9 @@ function RootLayoutNav() {
   const theme = useAppTheme();
 
   return (
-    <>
+    
+    <GluestackUIProvider mode="dark">
+      <>
       <StatusBar style={theme.isDark ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerBackTitle: 'Back' }}>
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
@@ -40,6 +45,8 @@ function RootLayoutNav() {
         <Stack.Screen name="paywall" options={{ presentation: 'modal', headerShown: false }} />
       </Stack>
     </>
+    </GluestackUIProvider>
+  
   );
 }
 
