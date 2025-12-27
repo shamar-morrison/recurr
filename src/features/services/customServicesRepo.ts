@@ -21,6 +21,43 @@ import { firestore, isFirebaseConfigured, timestampToMillis } from '@/src/lib/fi
 
 const STORAGE_KEY_PREFIX = 'customServices:v1:';
 
+/**
+ * Per-user mutex to serialize local cache writes.
+ * Prevents race conditions during concurrent addCustomService calls.
+ */
+const userWriteLocks = new Map<string, Promise<unknown>>();
+
+async function withUserLock<T>(userId: string, fn: () => Promise<T>): Promise<T> {
+  // Wait for any pending operation for this user
+  const pending = userWriteLocks.get(userId) ?? Promise.resolve();
+
+  // Chain our operation after the pending one
+  const operation = pending.then(fn, fn); // Run fn regardless of prior success/failure
+
+  // Update the lock to include our operation (ignore its result for chaining)
+  userWriteLocks.set(
+    userId,
+    operation.catch(() => {
+      /* swallow to prevent unhandled rejection in chain */
+    })
+  );
+
+  try {
+    return await operation;
+  } finally {
+    // Cleanup if we're the last operation
+    const current = userWriteLocks.get(userId);
+    if (
+      current ===
+      operation.catch(() => {
+        /* match reference */
+      })
+    ) {
+      userWriteLocks.delete(userId);
+    }
+  }
+}
+
 function storageKey(userId: string) {
   return `${STORAGE_KEY_PREFIX}${userId}`;
 }
@@ -90,7 +127,9 @@ export async function listCustomServices(userId: string): Promise<CustomService[
   }
 
   try {
-    console.log('[customServices] listCustomServices from Firestore', { userId });
+    console.log('[customServices] listCustomServices from Firestore', {
+      userIdSuffix: userId.slice(-4),
+    });
     const servicesCol = collection(firestore, 'users', userId, 'customServices');
 
     const q = query(servicesCol, orderBy('name', 'asc'));
@@ -127,43 +166,57 @@ export async function addCustomService(
     throw new Error('[customServices] addCustomService: userId is required');
   }
 
-  const now = nowMillis();
+  // Serialize per-user to prevent concurrent writes from clobbering each other
+  return withUserLock(userId, async () => {
+    const now = nowMillis();
 
-  const service: CustomService = {
-    id: `local_${now}_${Math.random().toString(16).slice(2)}`,
-    name: input.name,
-    category: input.category,
-    color: input.color,
-    createdAt: now,
-  };
+    const service: CustomService = {
+      id: `local_${now}_${Math.random().toString(16).slice(2)}`,
+      name: input.name,
+      category: input.category,
+      color: input.color,
+      createdAt: now,
+    };
 
-  const local = await readLocal(userId);
-  const nextLocal = [service, ...local];
-  await writeLocal(userId, nextLocal);
+    // Read and write atomically within the lock
+    const local = await readLocal(userId);
+    const nextLocal = [service, ...local];
+    await writeLocal(userId, nextLocal);
 
-  if (!isFirebaseConfigured()) {
-    console.log('[customServices] addCustomService local-only', { userId, id: service.id });
-    return service;
-  }
+    if (!isFirebaseConfigured()) {
+      console.log('[customServices] addCustomService local-only', {
+        userIdSuffix: userId.slice(-4),
+        id: service.id,
+      });
+      return service;
+    }
 
-  try {
-    console.log('[customServices] addCustomService Firestore', { userId, name: service.name });
-    const servicesCol = collection(firestore, 'users', userId, 'customServices');
-    const docRef = await addDoc(servicesCol, {
-      name: service.name,
-      category: service.category,
-      color: service.color,
-      createdAt: serverTimestamp(),
-    });
+    try {
+      console.log('[customServices] addCustomService Firestore', {
+        userIdSuffix: userId.slice(-4),
+        name: service.name,
+      });
+      const servicesCol = collection(firestore, 'users', userId, 'customServices');
+      const docRef = await addDoc(servicesCol, {
+        name: service.name,
+        category: service.category,
+        color: service.color,
+        createdAt: serverTimestamp(),
+      });
 
-    const saved: CustomService = { ...service, id: docRef.id };
-    const replaced = nextLocal.map((s) => (s.id === service.id ? saved : s));
-    await writeLocal(userId, replaced);
-    return saved;
-  } catch (e) {
-    console.log('[customServices] addCustomService Firestore failed (local kept)', e);
-    return service;
-  }
+      const saved: CustomService = { ...service, id: docRef.id };
+
+      // Re-read the freshest local list to avoid clobbering concurrent adds
+      const freshLocal = await readLocal(userId);
+      const replaced = freshLocal.map((s) => (s.id === service.id ? saved : s));
+      await writeLocal(userId, replaced);
+
+      return saved;
+    } catch (e) {
+      console.log('[customServices] addCustomService Firestore failed (local kept)', e);
+      return service;
+    }
+  });
 }
 
 export async function deleteCustomService(userId: string, serviceId: string): Promise<void> {
@@ -172,7 +225,10 @@ export async function deleteCustomService(userId: string, serviceId: string): Pr
     return;
   }
 
-  console.log('[customServices] deleteCustomService', { userId, serviceId });
+  console.log('[customServices] deleteCustomService', {
+    userIdSuffix: userId.slice(-4),
+    serviceId,
+  });
 
   const local = await readLocal(userId);
   const nextLocal = local.filter((s) => s.id !== serviceId);
