@@ -12,7 +12,7 @@ import {
   ViewStyle,
 } from 'react-native';
 
-import { AppColors } from '@/constants/colors';
+import { AppThemeColors, useAppTheme } from '@/src/theme/useAppTheme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -28,13 +28,17 @@ interface ButtonProps extends Omit<PressableProps, 'style'> {
   haptic?: boolean;
 }
 
-const VARIANT_COLORS = {
-  primary: { bg: AppColors.light.tint, text: '#FFFFFF' },
-  secondary: { bg: AppColors.light.cardAlt, text: AppColors.light.text },
-  outline: { bg: 'transparent', text: AppColors.light.text },
-  ghost: { bg: 'transparent', text: AppColors.light.text },
-  danger: { bg: AppColors.light.negative, text: '#FFFFFF' },
-} as const;
+type VariantColors = Record<ButtonVariant, { bg: string; text: string }>;
+
+function getVariantColors(colors: AppThemeColors): VariantColors {
+  return {
+    primary: { bg: colors.tint, text: '#FFFFFF' },
+    secondary: { bg: colors.cardAlt, text: colors.text },
+    outline: { bg: 'transparent', text: colors.text },
+    ghost: { bg: 'transparent', text: colors.text },
+    danger: { bg: colors.negative, text: '#FFFFFF' },
+  };
+}
 
 const SIZE_STYLES = {
   sm: { paddingVertical: 8, paddingHorizontal: 16, minHeight: 36, fontSize: 13 },
@@ -55,7 +59,9 @@ export function Button({
   haptic = true,
   ...props
 }: ButtonProps) {
-  const colors = VARIANT_COLORS[variant];
+  const { colors: themeColors } = useAppTheme();
+  const variantColors = getVariantColors(themeColors);
+  const colors = variantColors[variant];
   const sizeStyle = SIZE_STYLES[size];
 
   const handlePress = (e: any) => {
@@ -80,7 +86,7 @@ export function Button({
           paddingHorizontal: sizeStyle.paddingHorizontal,
           minHeight: sizeStyle.minHeight,
           borderWidth: variant === 'outline' ? 1.5 : 0,
-          borderColor: variant === 'outline' ? AppColors.light.border : 'transparent',
+          borderColor: variant === 'outline' ? themeColors.border : 'transparent',
         },
         style,
       ]}
