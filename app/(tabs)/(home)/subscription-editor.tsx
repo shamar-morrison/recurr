@@ -407,7 +407,7 @@ export default function SubscriptionEditorScreen() {
               ) : null}
 
               <Button
-                title="Save Subscription"
+                title={existing ? 'Update Subscription' : 'Save Subscription'}
                 onPress={handleSave}
                 loading={upsertMutation.isPending}
                 testID="subscriptionEditorSaveBottom"
