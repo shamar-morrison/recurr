@@ -86,6 +86,9 @@ export default function SubscriptionEditorScreen() {
   const [billingDayText, setBillingDayText] = useState<string>('1');
   const [notes, setNotes] = useState<string>('');
   const [currency, setCurrency] = useState<string>(defaultCurrency);
+  const currencySymbol = useMemo(() => {
+    return CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$';
+  }, [currency]);
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [showFrequencyPicker, setShowFrequencyPicker] = useState(false);
 
@@ -333,7 +336,7 @@ export default function SubscriptionEditorScreen() {
                     testID="subscriptionEditorCurrency"
                   >
                     <Text style={styles.dropdownText}>
-                      {currency} ({CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$'})
+                      {currency} ({currencySymbol})
                     </Text>
                     <CaretDownIcon color={theme.colors.secondaryText} size={16} />
                   </Pressable>
