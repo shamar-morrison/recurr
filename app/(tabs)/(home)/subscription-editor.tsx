@@ -138,7 +138,7 @@ export default function SubscriptionEditorScreen() {
     } catch (e) {
       console.log('[subscription-editor] save failed', e);
       const msg = e instanceof Error ? e.message : 'Unknown error';
-      Alert.alert('Couldn’t save', msg);
+      Alert.alert(`Couldn't Save`, msg);
     }
   }, [
     amount,
@@ -172,7 +172,7 @@ export default function SubscriptionEditorScreen() {
             } catch (e) {
               console.log('[subscription-editor] delete failed', e);
               const msg = e instanceof Error ? e.message : 'Unknown error';
-              Alert.alert('Couldn’t delete', msg);
+              Alert.alert(`Couldn't Delete`, msg);
             }
           },
         },
