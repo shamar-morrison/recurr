@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
 import { CurrencyPickerSheet } from '@/src/components/CurrencyPickerSheet';
+import { ServicePickerSheet } from '@/src/components/ServicePickerSheet';
 import { Button } from '@/src/components/ui/Button';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -84,6 +85,7 @@ export default function SubscriptionEditorScreen() {
   const [notes, setNotes] = useState<string>('');
   const [currency, setCurrency] = useState<string>(defaultCurrency);
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
+  const [showServicePicker, setShowServicePicker] = useState(false);
 
   React.useEffect(() => {
     if (!editingId) return;
@@ -239,16 +241,15 @@ export default function SubscriptionEditorScreen() {
             <>
               <View style={styles.section}>
                 <Text style={styles.label}>Service</Text>
-                <TextInput
-                  value={serviceName}
-                  onChangeText={setServiceName}
-                  placeholder="Netflix, Spotify, iCloud…"
-                  placeholderTextColor={
-                    theme.isDark ? 'rgba(236,242,255,0.45)' : 'rgba(15,23,42,0.35)'
-                  }
+                <Pressable
+                  onPress={() => setShowServicePicker(true)}
                   style={styles.input}
                   testID="subscriptionEditorServiceName"
-                />
+                >
+                  <Text style={[styles.inputText, !serviceName && styles.placeholderText]}>
+                    {serviceName || 'Netflix, Spotify, iCloud…'}
+                  </Text>
+                </Pressable>
               </View>
 
               <View style={styles.section}>
@@ -432,6 +433,17 @@ export default function SubscriptionEditorScreen() {
                   setShowCurrencyPicker(false);
                 }}
               />
+
+              <ServicePickerSheet
+                isOpen={showServicePicker}
+                onClose={() => setShowServicePicker(false)}
+                selectedService={serviceName}
+                onSelect={(name, cat) => {
+                  setServiceName(name);
+                  setCategory(cat);
+                  setShowServicePicker(false);
+                }}
+              />
             </>
           )}
         </ScrollView>
@@ -524,6 +536,15 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       shadowOpacity: 0.04,
       shadowRadius: 6,
       shadowOffset: { width: 0, height: 2 },
+      justifyContent: 'center',
+    },
+    inputText: {
+      color: theme.colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    placeholderText: {
+      color: theme.isDark ? 'rgba(236,242,255,0.45)' : 'rgba(15,23,42,0.35)',
     },
     notesInput: {
       minHeight: 100,
