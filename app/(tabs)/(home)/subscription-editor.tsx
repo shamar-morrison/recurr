@@ -406,16 +406,14 @@ export default function SubscriptionEditorScreen() {
                 </View>
               ) : null}
 
-              <View style={styles.footerSpace}>
-                <Button
-                  title="Save Subscription"
-                  onPress={handleSave}
-                  loading={upsertMutation.isPending}
-                  testID="subscriptionEditorSaveBottom"
-                  style={{ width: '100%' }}
-                  icon={<CheckIcon color="#fff" size={20} />}
-                />
-              </View>
+              <Button
+                title="Save Subscription"
+                onPress={handleSave}
+                loading={upsertMutation.isPending}
+                testID="subscriptionEditorSaveBottom"
+                style={{ width: '100%' }}
+                icon={<CheckIcon color="#fff" size={20} />}
+              />
 
               {/* Picker sheets auto-close after selection via their internal handleSelect */}
               <CurrencyPickerSheet
@@ -653,7 +651,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
     },
     dangerZone: {
       marginTop: 10,
-      borderRadius: 24,
+      borderRadius: 9999,
       padding: 16,
       backgroundColor: 'rgba(255,68,56,0.05)',
       borderWidth: 1,
@@ -664,7 +662,6 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: 10,
-      paddingVertical: 8,
     },
     deleteText: {
       fontSize: 15,
@@ -712,10 +709,6 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       fontSize: 14,
       lineHeight: 20,
       textAlign: 'center',
-    },
-    footerSpace: {
-      marginTop: 20,
-      paddingTop: 10,
     },
   });
 }
