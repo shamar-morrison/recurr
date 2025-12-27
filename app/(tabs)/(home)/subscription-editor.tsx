@@ -2,6 +2,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 
 import { CurrencyPickerSheet } from '@/src/components/CurrencyPickerSheet';
 import { FrequencyPickerSheet } from '@/src/components/FrequencyPickerSheet';
+import { ServicePickerSheet } from '@/src/components/ServicePickerSheet';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
 import { useAuth } from '@/src/features/auth/AuthProvider';
@@ -91,6 +92,7 @@ export default function SubscriptionEditorScreen() {
   }, [currency]);
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [showFrequencyPicker, setShowFrequencyPicker] = useState(false);
+  const [showServicePicker, setShowServicePicker] = useState(false);
 
   React.useEffect(() => {
     if (!editingId) return;
@@ -246,16 +248,15 @@ export default function SubscriptionEditorScreen() {
             <>
               <View style={styles.section}>
                 <Text style={styles.label}>Service</Text>
-                <TextInput
-                  value={serviceName}
-                  onChangeText={setServiceName}
-                  placeholder="Netflix, Spotify, iCloud…"
-                  placeholderTextColor={
-                    theme.isDark ? 'rgba(236,242,255,0.45)' : 'rgba(15,23,42,0.35)'
-                  }
+                <Pressable
+                  onPress={() => setShowServicePicker(true)}
                   style={styles.input}
                   testID="subscriptionEditorServiceName"
-                />
+                >
+                  <Text style={[styles.inputText, !serviceName && styles.placeholderText]}>
+                    {serviceName || 'Netflix, Spotify, iCloud…'}
+                  </Text>
+                </Pressable>
               </View>
 
               <View style={styles.section}>
@@ -416,13 +417,21 @@ export default function SubscriptionEditorScreen() {
                 />
               </View>
 
+              {/* Picker sheets auto-close after selection via their internal handleSelect */}
               <CurrencyPickerSheet
                 isOpen={showCurrencyPicker}
                 onClose={() => setShowCurrencyPicker(false)}
                 selectedCurrency={currency}
-                onSelect={(code) => {
-                  setCurrency(code);
-                  setShowCurrencyPicker(false);
+                onSelect={(code) => setCurrency(code)}
+              />
+
+              <ServicePickerSheet
+                isOpen={showServicePicker}
+                onClose={() => setShowServicePicker(false)}
+                selectedService={serviceName}
+                onSelect={(name, cat) => {
+                  setServiceName(name);
+                  setCategory(cat);
                 }}
               />
 
@@ -527,6 +536,15 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       shadowOpacity: 0.04,
       shadowRadius: 6,
       shadowOffset: { width: 0, height: 2 },
+      justifyContent: 'center',
+    },
+    inputText: {
+      color: theme.colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    placeholderText: {
+      color: theme.isDark ? 'rgba(236,242,255,0.45)' : 'rgba(15,23,42,0.35)',
     },
     notesInput: {
       minHeight: 100,
