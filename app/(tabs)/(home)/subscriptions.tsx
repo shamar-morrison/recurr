@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -26,7 +27,8 @@ type FilterChip = SubscriptionCategory | 'All';
 
 export default function SubscriptionsHomeScreen() {
   const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
+  const styles = useMemo(() => createStyles(theme, insets.bottom), [theme, insets.bottom]);
   const { isPremium } = useAuth();
 
   const subscriptionsQuery = useSubscriptionsQuery();
@@ -288,7 +290,7 @@ function formatShortDate(iso: string): string {
   }
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>) {
+function createStyles(theme: ReturnType<typeof useAppTheme>, bottomInset: number) {
   const shadowColor = theme.isDark ? 'rgba(0,0,0,0.65)' : 'rgba(15,23,42,0.12)';
 
   return StyleSheet.create({
@@ -574,7 +576,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
     fab: {
       position: 'absolute',
       right: 20,
-      bottom: 24,
+      bottom: Math.max(24, bottomInset + 8),
       width: 60,
       height: 60,
       borderRadius: 20,

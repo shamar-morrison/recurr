@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { Crown, TrendingUp } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -58,156 +59,153 @@ export default function InsightsScreen() {
   }, [items]);
 
   return (
-    <>
-      <Stack.Screen options={{ title: 'Insights' }} />
-      <View style={styles.container} testID="insightsScreen">
-        <ScrollView contentContainerStyle={styles.content} testID="insightsScroll">
-          <View style={styles.hero}>
-            <View style={styles.heroTop}>
-              <View style={styles.heroTitleRow}>
-                <Text style={styles.heroTitle}>Spending</Text>
-                {isPremium ? (
-                  <View style={styles.premiumPill} testID="insightsPremiumPill">
-                    <Crown color="#fff" size={14} />
-                    <Text style={styles.premiumPillText}>Premium</Text>
-                  </View>
-                ) : null}
-              </View>
-              <Text style={styles.heroSubtitle}>Know your baseline before the bills hit.</Text>
+    <SafeAreaView style={styles.container} edges={['top']} testID="insightsScreen">
+      <ScrollView contentContainerStyle={styles.content} testID="insightsScroll">
+        <View style={styles.hero}>
+          <View style={styles.heroTop}>
+            <View style={styles.heroTitleRow}>
+              <Text style={styles.heroTitle}>Spending</Text>
+              {isPremium ? (
+                <View style={styles.premiumPill} testID="insightsPremiumPill">
+                  <Crown color="#fff" size={14} />
+                  <Text style={styles.premiumPillText}>Premium</Text>
+                </View>
+              ) : null}
             </View>
-
-            {subscriptionsQuery.isLoading ? (
-              <View style={styles.loadingRow} testID="insightsLoading">
-                <ActivityIndicator color={theme.colors.tint} />
-                <Text style={styles.loadingText}>Calculating…</Text>
-              </View>
-            ) : (
-              <View style={styles.totals}>
-                <View style={styles.totalCard} testID="insightsMonthlyTotal">
-                  <Text style={styles.totalLabel}>Monthly</Text>
-                  <Text style={styles.totalValue}>
-                    {formatMoney(insights.monthlyTotal, items[0]?.currency ?? 'USD')}
-                  </Text>
-                </View>
-                <View style={styles.totalCard} testID="insightsYearlyTotal">
-                  <Text style={styles.totalLabel}>Yearly</Text>
-                  <Text style={styles.totalValue}>
-                    {formatMoney(insights.yearlyTotal, items[0]?.currency ?? 'USD')}
-                  </Text>
-                </View>
-              </View>
-            )}
+            <Text style={styles.heroSubtitle}>Know your baseline before the bills hit.</Text>
           </View>
 
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardHeaderLeft}>
-                <TrendingUp color={theme.colors.text} size={18} />
-                <Text style={styles.cardTitle}>Highlights</Text>
+          {subscriptionsQuery.isLoading ? (
+            <View style={styles.loadingRow} testID="insightsLoading">
+              <ActivityIndicator color={theme.colors.tint} />
+              <Text style={styles.loadingText}>Calculating…</Text>
+            </View>
+          ) : (
+            <View style={styles.totals}>
+              <View style={styles.totalCard} testID="insightsMonthlyTotal">
+                <Text style={styles.totalLabel}>Monthly</Text>
+                <Text style={styles.totalValue}>
+                  {formatMoney(insights.monthlyTotal, items[0]?.currency ?? 'USD')}
+                </Text>
+              </View>
+              <View style={styles.totalCard} testID="insightsYearlyTotal">
+                <Text style={styles.totalLabel}>Yearly</Text>
+                <Text style={styles.totalValue}>
+                  {formatMoney(insights.yearlyTotal, items[0]?.currency ?? 'USD')}
+                </Text>
               </View>
             </View>
+          )}
+        </View>
 
-            {items.length === 0 ? (
-              <Text style={styles.subtitle} testID="insightsEmpty">
-                Add a few subscriptions to see totals, breakdowns, and upcoming charges.
-              </Text>
-            ) : (
-              <View style={styles.highlights}>
-                <View style={styles.highlightRow} testID="insightsMostExpensive">
-                  <Text style={styles.highlightLabel}>Most expensive</Text>
-                  <Text style={styles.highlightValue} numberOfLines={1}>
-                    {insights.mostExpensive?.serviceName ?? '—'} ·{' '}
-                    {formatMoney(
-                      insights.mostExpensive?.monthlyEquivalent ?? 0,
-                      insights.mostExpensive?.currency ?? 'USD'
-                    )}
-                    /mo
-                  </Text>
-                </View>
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderLeft}>
+              <TrendingUp color={theme.colors.text} size={18} />
+              <Text style={styles.cardTitle}>Highlights</Text>
+            </View>
+          </View>
 
-                <View style={styles.divider} />
+          {items.length === 0 ? (
+            <Text style={styles.subtitle} testID="insightsEmpty">
+              Add a few subscriptions to see totals, breakdowns, and upcoming charges.
+            </Text>
+          ) : (
+            <View style={styles.highlights}>
+              <View style={styles.highlightRow} testID="insightsMostExpensive">
+                <Text style={styles.highlightLabel}>Most expensive</Text>
+                <Text style={styles.highlightValue} numberOfLines={1}>
+                  {insights.mostExpensive?.serviceName ?? '—'} ·{' '}
+                  {formatMoney(
+                    insights.mostExpensive?.monthlyEquivalent ?? 0,
+                    insights.mostExpensive?.currency ?? 'USD'
+                  )}
+                  /mo
+                </Text>
+              </View>
 
-                <View style={styles.highlightRow} testID="insightsUpcoming">
-                  <Text style={styles.highlightLabel}>Upcoming charge</Text>
-                  <Text style={styles.highlightValue} numberOfLines={1}>
-                    {insights.upcoming?.serviceName ?? '—'}
-                    {insights.upcoming
-                      ? ` · ${formatShortDate(insights.upcoming.nextBillingDateISO)} (${Math.max(
-                          0,
-                          insights.upcoming.nextBillingInDays
-                        )}d)`
-                      : ''}
-                  </Text>
-                </View>
+              <View style={styles.divider} />
 
-                {insights.next7Days.length ? (
-                  <>
-                    <View style={styles.divider} />
-                    <View style={styles.highlightRow} testID="insightsNext7Days">
-                      <Text style={styles.highlightLabel}>Next 7 days</Text>
-                      <Text style={styles.highlightValue}>
-                        {insights.next7Days.length} charge
-                        {insights.next7Days.length === 1 ? '' : 's'}
+              <View style={styles.highlightRow} testID="insightsUpcoming">
+                <Text style={styles.highlightLabel}>Upcoming charge</Text>
+                <Text style={styles.highlightValue} numberOfLines={1}>
+                  {insights.upcoming?.serviceName ?? '—'}
+                  {insights.upcoming
+                    ? ` · ${formatShortDate(insights.upcoming.nextBillingDateISO)} (${Math.max(
+                        0,
+                        insights.upcoming.nextBillingInDays
+                      )}d)`
+                    : ''}
+                </Text>
+              </View>
+
+              {insights.next7Days.length ? (
+                <>
+                  <View style={styles.divider} />
+                  <View style={styles.highlightRow} testID="insightsNext7Days">
+                    <Text style={styles.highlightLabel}>Next 7 days</Text>
+                    <Text style={styles.highlightValue}>
+                      {insights.next7Days.length} charge
+                      {insights.next7Days.length === 1 ? '' : 's'}
+                    </Text>
+                  </View>
+                </>
+              ) : null}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>By category</Text>
+          {items.length === 0 ? (
+            <Text style={styles.subtitle}>—</Text>
+          ) : (
+            <View style={styles.bars} testID="insightsCategoryBreakdown">
+              {insights.categoryRows.map((row) => {
+                const pct =
+                  insights.monthlyTotal <= 0 ? 0 : row.monthlyTotal / insights.monthlyTotal;
+                return (
+                  <View
+                    key={row.category}
+                    style={styles.barRow}
+                    testID={`insightsCategory_${row.category}`}
+                  >
+                    <View style={styles.barTop}>
+                      <Text style={styles.barLabel}>{row.category}</Text>
+                      <Text style={styles.barValue}>
+                        {formatMoney(row.monthlyTotal, items[0]?.currency ?? 'USD')}
                       </Text>
                     </View>
-                  </>
-                ) : null}
-              </View>
-            )}
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>By category</Text>
-            {items.length === 0 ? (
-              <Text style={styles.subtitle}>—</Text>
-            ) : (
-              <View style={styles.bars} testID="insightsCategoryBreakdown">
-                {insights.categoryRows.map((row) => {
-                  const pct =
-                    insights.monthlyTotal <= 0 ? 0 : row.monthlyTotal / insights.monthlyTotal;
-                  return (
-                    <View
-                      key={row.category}
-                      style={styles.barRow}
-                      testID={`insightsCategory_${row.category}`}
-                    >
-                      <View style={styles.barTop}>
-                        <Text style={styles.barLabel}>{row.category}</Text>
-                        <Text style={styles.barValue}>
-                          {formatMoney(row.monthlyTotal, items[0]?.currency ?? 'USD')}
-                        </Text>
-                      </View>
-                      <View style={styles.track}>
-                        <View
-                          style={[
-                            styles.fill,
-                            {
-                              width: `${Math.max(0, Math.min(1, pct)) * 100}%`,
-                              backgroundColor: theme.colors.tint,
-                            },
-                          ]}
-                        />
-                      </View>
+                    <View style={styles.track}>
+                      <View
+                        style={[
+                          styles.fill,
+                          {
+                            width: `${Math.max(0, Math.min(1, pct)) * 100}%`,
+                            backgroundColor: theme.colors.tint,
+                          },
+                        ]}
+                      />
                     </View>
-                  );
-                })}
-              </View>
-            )}
-          </View>
-
-          {!isPremium ? (
-            <View style={styles.locked} testID="insightsLocked">
-              <Text style={styles.lockedTitle}>Premium unlocks deeper insights</Text>
-              <Text style={styles.lockedText}>
-                Next: trends over time, spend alerts, and smarter reminders.
-              </Text>
+                  </View>
+                );
+              })}
             </View>
-          ) : null}
+          )}
+        </View>
 
-          <View style={styles.footerSpace} />
-        </ScrollView>
-      </View>
-    </>
+        {!isPremium ? (
+          <View style={styles.locked} testID="insightsLocked">
+            <Text style={styles.lockedTitle}>Premium unlocks deeper insights</Text>
+            <Text style={styles.lockedText}>
+              Next: trends over time, spend alerts, and smarter reminders.
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={styles.footerSpace} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

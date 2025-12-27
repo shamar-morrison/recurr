@@ -2,6 +2,7 @@ import { router, Stack } from 'expo-router';
 import { ArrowRight, Check, ShieldCheck, Sparkles, Wallet } from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { useAppTheme } from '@/src/theme/useAppTheme';
@@ -82,7 +83,7 @@ export default function OnboardingScreen() {
       <View style={styles.root} testID="onboardingScreen">
         <FloatingIconsBackground />
 
-        <View style={styles.overlay}>
+        <SafeAreaView style={styles.overlay}>
           <View style={styles.topBar}>
             <View style={styles.brandPill} testID="onboardingBrand">
               <Text style={styles.brandText}>SubSense</Text>
@@ -146,7 +147,7 @@ export default function OnboardingScreen() {
               />
             )}
           </View>
-        </View>
+        </SafeAreaView>
       </View>
     </>
   );
@@ -396,7 +397,6 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
     },
     overlay: {
       flex: 1,
-      paddingTop: 18,
     },
     topBar: {
       paddingHorizontal: 16,

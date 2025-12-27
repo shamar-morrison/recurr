@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { useAppTheme } from '@/src/theme/useAppTheme';
@@ -70,7 +71,7 @@ export default function AuthScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={styles.container} testID="authScreen">
+      <SafeAreaView style={styles.container} testID="authScreen">
         <Text style={styles.title}>{mode === 'signin' ? 'Welcome back' : 'Create account'}</Text>
         <Text style={styles.subtitle}>
           {mode === 'signin'
@@ -140,7 +141,7 @@ export default function AuthScreen() {
             <Text style={styles.googleText}>Continue with Google (mock)</Text>
           </Pressable>
         </View>
-      </View>
+      </SafeAreaView>
     </>
   );
 }
@@ -150,7 +151,6 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
     container: {
       flex: 1,
       padding: 16,
-      paddingTop: 48,
       backgroundColor: theme.colors.background,
     },
     title: {
