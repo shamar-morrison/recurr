@@ -196,36 +196,6 @@ export default function SubscriptionEditorScreen() {
     );
   }, [styles.headerLeft, theme.colors.text]);
 
-  const headerRight = useCallback(() => {
-    const disabled = upsertMutation.isPending || deleteMutation.isPending;
-    return (
-      <Pressable
-        onPress={handleSave}
-        disabled={disabled}
-        style={[
-          styles.headerRight,
-          {
-            backgroundColor: disabled
-              ? theme.isDark
-                ? 'rgba(121,167,255,0.20)'
-                : 'rgba(79,140,255,0.20)'
-              : theme.colors.tint,
-          },
-        ]}
-        testID="subscriptionEditorSave"
-      >
-        {disabled ? <ActivityIndicator color="#fff" /> : <CheckIcon color="#fff" size={18} />}
-      </Pressable>
-    );
-  }, [
-    deleteMutation.isPending,
-    handleSave,
-    styles.headerRight,
-    theme.colors.tint,
-    theme.isDark,
-    upsertMutation.isPending,
-  ]);
-
   const showLoading = Boolean(editingId) && subscriptionsQuery.isLoading;
   const showNotFound = Boolean(editingId) && !subscriptionsQuery.isLoading && !existing;
 
@@ -284,46 +254,48 @@ export default function SubscriptionEditorScreen() {
               <View style={styles.section}>
                 <Text style={styles.label}>Category</Text>
                 <View style={styles.chipsRow} testID="subscriptionEditorCategories">
-                  {SUBSCRIPTION_CATEGORIES.map((c) => {
-                    const active = c === category;
+                  {SUBSCRIPTION_CATEGORIES.map((cat) => {
+                    const active = cat === category;
                     const iconColor = active ? '#fff' : theme.colors.text;
                     const iconSize = 26;
                     return (
                       <Pressable
-                        key={c}
-                        onPress={() => setCategory(c)}
+                        key={cat}
+                        onPress={() => setCategory(cat)}
                         style={[
                           styles.chip,
                           active
                             ? { backgroundColor: theme.colors.tint, borderColor: theme.colors.tint }
                             : null,
                         ]}
-                        testID={`subscriptionEditorCategory_${c}`}
+                        testID={`subscriptionEditorCategory_${cat}`}
                       >
-                        {c === 'Streaming' && (
+                        {cat === 'Streaming' && (
                           <PlayCircleIcon
                             color={iconColor}
                             size={iconSize}
                             weight={active ? 'fill' : 'regular'}
                           />
                         )}
-                        {c === 'Music' && <MusicNotesIcon color={iconColor} size={iconSize} />}
-                        {c === 'Software' && <AppWindowIcon color={iconColor} size={iconSize} />}
-                        {c === 'Utilities' && (
+                        {cat === 'Music' && <MusicNotesIcon color={iconColor} size={iconSize} />}
+                        {cat === 'Software' && <AppWindowIcon color={iconColor} size={iconSize} />}
+                        {cat === 'Utilities' && (
                           <LightbulbIcon
                             color={iconColor}
                             size={iconSize}
                             weight={active ? 'fill' : 'regular'}
                           />
                         )}
-                        {c === 'Other' && <DotsThreeCircleIcon color={iconColor} size={iconSize} />}
+                        {cat === 'Other' && (
+                          <DotsThreeCircleIcon color={iconColor} size={iconSize} />
+                        )}
                         <Text
                           style={[
                             styles.chipText,
                             active ? { color: '#fff' } : { color: theme.colors.text },
                           ]}
                         >
-                          {c}
+                          {cat}
                         </Text>
                       </Pressable>
                     );

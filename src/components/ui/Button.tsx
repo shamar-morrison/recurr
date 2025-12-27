@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -10,9 +11,8 @@ import {
   TextStyle,
   ViewStyle,
 } from 'react-native';
-import * as Haptics from 'expo-haptics';
 
-import { useAppTheme } from '@/src/theme/useAppTheme';
+import { AppColors } from '@/constants/colors';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -28,6 +28,20 @@ interface ButtonProps extends Omit<PressableProps, 'style'> {
   haptic?: boolean;
 }
 
+const VARIANT_COLORS = {
+  primary: { bg: AppColors.light.tint, text: '#FFFFFF' },
+  secondary: { bg: AppColors.light.cardAlt, text: AppColors.light.text },
+  outline: { bg: 'transparent', text: AppColors.light.text },
+  ghost: { bg: 'transparent', text: AppColors.light.text },
+  danger: { bg: AppColors.light.negative, text: '#FFFFFF' },
+} as const;
+
+const SIZE_STYLES = {
+  sm: { paddingVertical: 8, paddingHorizontal: 16, minHeight: 36, fontSize: 13 },
+  md: { paddingVertical: 14, paddingHorizontal: 24, minHeight: 52, fontSize: 16 },
+  lg: { paddingVertical: 18, paddingHorizontal: 32, minHeight: 60, fontSize: 18 },
+} as const;
+
 export function Button({
   title,
   variant = 'primary',
@@ -41,7 +55,8 @@ export function Button({
   haptic = true,
   ...props
 }: ButtonProps) {
-  const theme = useAppTheme();
+  const colors = VARIANT_COLORS[variant];
+  const sizeStyle = SIZE_STYLES[size];
 
   const handlePress = (e: any) => {
     if (haptic && Platform.OS !== 'web') {
@@ -50,78 +65,35 @@ export function Button({
     onPress?.(e);
   };
 
-  const getBackgroundColor = (pressed: boolean) => {
-    if (disabled) return theme.isDark ? '#2C2C35' : '#E4E7EC';
-
-    switch (variant) {
-      case 'primary':
-        return pressed ? theme.colors.tint + 'E6' : theme.colors.tint;
-      case 'secondary':
-        return pressed ? theme.colors.cardAlt + 'E6' : theme.colors.cardAlt;
-      case 'outline':
-      case 'ghost':
-        return 'transparent';
-      case 'danger':
-        return pressed ? theme.colors.negative + 'E6' : theme.colors.negative;
-      default:
-        return theme.colors.tint;
-    }
-  };
-
-  const getTextColor = () => {
-    if (disabled) return theme.colors.secondaryText;
-
-    switch (variant) {
-      case 'primary':
-        return '#FFFFFF';
-      case 'secondary':
-        return theme.colors.text;
-      case 'outline':
-      case 'ghost':
-        return theme.colors.text;
-      case 'danger':
-        return '#FFFFFF';
-      default:
-        return '#FFFFFF';
-    }
-  };
-
-  const getBorderColor = () => {
-    if (variant === 'outline') {
-      return disabled ? theme.colors.border : theme.colors.border;
-    }
-    return 'transparent';
-  };
+  const bgColor = disabled ? '#E4E7EC' : colors.bg;
+  const txtColor = disabled ? '#667085' : colors.text;
 
   return (
     <Pressable
       onPress={handlePress}
       disabled={disabled || loading}
-      style={({ pressed }) => [
+      style={[
         styles.base,
-        styles[size],
         {
-          backgroundColor: getBackgroundColor(pressed),
-          borderColor: getBorderColor(),
+          backgroundColor: bgColor,
+          paddingVertical: sizeStyle.paddingVertical,
+          paddingHorizontal: sizeStyle.paddingHorizontal,
+          minHeight: sizeStyle.minHeight,
           borderWidth: variant === 'outline' ? 1.5 : 0,
+          borderColor: variant === 'outline' ? AppColors.light.border : 'transparent',
         },
         style,
       ]}
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={getTextColor()} size="small" />
+        <ActivityIndicator color={txtColor} size="small" />
       ) : (
         <>
-          {icon && icon}
+          {icon}
           {title && (
             <Text
-              style={[
-                styles.text,
-                styles[`text_${size}`],
-                { color: getTextColor(), fontFamily: 'Inter_600SemiBold' },
-                textStyle,
-              ]}
+              style={[styles.text, { color: txtColor, fontSize: sizeStyle.fontSize }, textStyle]}
             >
               {title}
             </Text>
@@ -138,40 +110,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    borderRadius: 60, // Pill shape for premium feel
-    // Subtle shadow for depth
+    borderRadius: 60,
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 3 },
-    elevation: 3, // Android shadow
-  },
-  sm: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    minHeight: 36,
-  },
-  md: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    minHeight: 52,
-  },
-  lg: {
-    paddingVertical: 18,
-    paddingHorizontal: 32,
-    minHeight: 60,
+    elevation: 3,
   },
   text: {
     fontWeight: '600',
     textAlign: 'center',
-  },
-  text_sm: {
-    fontSize: 13,
-  },
-  text_md: {
-    fontSize: 16,
-  },
-  text_lg: {
-    fontSize: 18,
+    fontFamily: 'Inter_600SemiBold',
   },
 });
