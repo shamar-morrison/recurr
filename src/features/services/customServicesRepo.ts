@@ -34,25 +34,20 @@ async function withUserLock<T>(userId: string, fn: () => Promise<T>): Promise<T>
   // Chain our operation after the pending one
   const operation = pending.then(fn, fn); // Run fn regardless of prior success/failure
 
-  // Update the lock to include our operation (ignore its result for chaining)
-  userWriteLocks.set(
-    userId,
-    operation.catch(() => {
-      /* swallow to prevent unhandled rejection in chain */
-    })
-  );
+  // Create a single caught promise to use for both storing and comparison
+  // (calling .catch() twice would create different Promise references)
+  const caught = operation.catch(() => {
+    /* swallow to prevent unhandled rejection in chain */
+  });
+
+  // Update the lock to include our operation
+  userWriteLocks.set(userId, caught);
 
   try {
     return await operation;
   } finally {
-    // Cleanup if we're the last operation
-    const current = userWriteLocks.get(userId);
-    if (
-      current ===
-      operation.catch(() => {
-        /* match reference */
-      })
-    ) {
+    // Cleanup if we're the last operation (same reference as what we stored)
+    if (userWriteLocks.get(userId) === caught) {
       userWriteLocks.delete(userId);
     }
   }
