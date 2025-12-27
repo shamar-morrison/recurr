@@ -1,5 +1,14 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { Check, ChevronLeft, Trash2 } from 'lucide-react-native';
+import {
+  Check,
+  ChevronLeft,
+  Layers,
+  MessageSquareMore,
+  CirclePlay,
+  Play,
+  Trash2,
+  Zap,
+} from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -272,6 +281,8 @@ export default function SubscriptionEditorScreen() {
                 <View style={styles.chipsRow} testID="subscriptionEditorCategories">
                   {SUBSCRIPTION_CATEGORIES.map((c) => {
                     const active = c === category;
+                    const iconColor = active ? '#fff' : theme.colors.text;
+                    const iconSize = 26;
                     return (
                       <Pressable
                         key={c}
@@ -284,6 +295,23 @@ export default function SubscriptionEditorScreen() {
                         ]}
                         testID={`subscriptionEditorCategory_${c}`}
                       >
+                        {c === 'Streaming' && (
+                          <Play
+                            color={iconColor}
+                            size={iconSize}
+                            fill={active ? '#fff' : 'transparent'}
+                          />
+                        )}
+                        {c === 'Music' && <CirclePlay color={iconColor} size={iconSize} />}
+                        {c === 'Software' && <Layers color={iconColor} size={iconSize} />}
+                        {c === 'Utilities' && (
+                          <Zap
+                            color={iconColor}
+                            size={iconSize}
+                            fill={active ? '#fff' : 'transparent'}
+                          />
+                        )}
+                        {c === 'Other' && <MessageSquareMore color={iconColor} size={iconSize} />}
                         <Text
                           style={[
                             styles.chipText,
@@ -509,23 +537,27 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
     chipsRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 10,
+      gap: 6,
+      justifyContent: 'flex-start',
     },
     chip: {
-      borderRadius: 16,
+      borderRadius: 20,
       paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingVertical: 20,
       backgroundColor: theme.colors.card,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: theme.colors.border,
-      minWidth: '30%',
+      flexBasis: '30%',
+      flexGrow: 1,
+      maxWidth: '32%',
+      minHeight: 70,
       justifyContent: 'center',
       alignItems: 'center',
-      flexGrow: 1,
+      gap: 7,
     },
     chipText: {
-      fontSize: 14,
-      fontWeight: '600',
+      fontSize: 13,
+      fontWeight: '700',
     },
     grid: {
       flexDirection: 'row',
