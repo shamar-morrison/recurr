@@ -1,9 +1,9 @@
-import { Stack } from 'expo-router';
 import { Crown, TrendingUp } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CATEGORY_COLORS } from '@/constants/colors';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   useSubscriptionListItems,
@@ -164,6 +164,7 @@ export default function InsightsScreen() {
               {insights.categoryRows.map((row) => {
                 const pct =
                   insights.monthlyTotal <= 0 ? 0 : row.monthlyTotal / insights.monthlyTotal;
+                const categoryColors = CATEGORY_COLORS[row.category] || CATEGORY_COLORS.Other;
                 return (
                   <View
                     key={row.category}
@@ -171,7 +172,11 @@ export default function InsightsScreen() {
                     testID={`insightsCategory_${row.category}`}
                   >
                     <View style={styles.barTop}>
-                      <Text style={styles.barLabel}>{row.category}</Text>
+                      <View style={[styles.categoryBadge, { backgroundColor: categoryColors.bg }]}>
+                        <Text style={[styles.categoryBadgeText, { color: categoryColors.text }]}>
+                          {row.category.toUpperCase()}
+                        </Text>
+                      </View>
                       <Text style={styles.barValue}>
                         {formatMoney(row.monthlyTotal, items[0]?.currency ?? 'USD')}
                       </Text>
@@ -182,7 +187,7 @@ export default function InsightsScreen() {
                           styles.fill,
                           {
                             width: `${Math.max(0, Math.min(1, pct)) * 100}%`,
-                            backgroundColor: theme.colors.tint,
+                            backgroundColor: categoryColors.text,
                           },
                         ]}
                       />
@@ -425,11 +430,16 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       justifyContent: 'space-between',
       gap: 10,
     },
-    barLabel: {
-      color: theme.colors.text,
-      fontSize: 14,
-      fontWeight: '600',
-      letterSpacing: -0.1,
+    categoryBadge: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    categoryBadgeText: {
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 0.5,
     },
     barValue: {
       color: theme.colors.text,
