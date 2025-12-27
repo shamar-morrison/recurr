@@ -402,7 +402,7 @@ export default function SubscriptionEditorScreen() {
                   >
                     <TrashIcon color={theme.colors.negative} size={18} />
                     <Text style={[styles.deleteText, { color: theme.colors.negative }]}>
-                      Delete subscription
+                      Delete Subscription
                     </Text>
                   </Pressable>
                 </View>
@@ -668,8 +668,8 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       gap: 10,
     },
     deleteText: {
-      fontSize: 15,
-      fontWeight: '700',
+      fontSize: 17,
+      fontWeight: '600',
     },
     primary: {
       borderRadius: 20,
