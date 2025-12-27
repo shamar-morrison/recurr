@@ -35,6 +35,17 @@ export const AppColors = {
 
 export type AppColorScheme = keyof typeof AppColors;
 
+// Category-specific colors for badges
+import { SubscriptionCategory } from '@/src/features/subscriptions/types';
+
+export const CATEGORY_COLORS: Record<SubscriptionCategory, { bg: string; text: string }> = {
+  Streaming: { bg: 'rgba(99, 102, 241, 0.12)', text: '#6366F1' }, // Indigo
+  Music: { bg: 'rgba(34, 197, 94, 0.12)', text: '#16A34A' }, // Green
+  Software: { bg: 'rgba(59, 130, 246, 0.12)', text: '#3B82F6' }, // Blue
+  Utilities: { bg: 'rgba(245, 158, 11, 0.12)', text: '#D97706' }, // Amber
+  Other: { bg: 'rgba(168, 85, 247, 0.12)', text: '#9333EA' }, // Purple
+};
+
 export default {
   light: {
     text: AppColors.light.text,

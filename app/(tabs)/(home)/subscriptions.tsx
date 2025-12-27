@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CATEGORY_COLORS } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -83,6 +84,15 @@ export default function SubscriptionsHomeScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof filteredItems)[number] }) => {
+      const categoryColors = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Other;
+      const daysUntilBilling = Math.max(0, item.nextBillingInDays);
+      const billingText =
+        daysUntilBilling === 0
+          ? 'Today'
+          : daysUntilBilling === 1
+            ? 'Tomorrow'
+            : `in ${daysUntilBilling} days`;
+
       return (
         <Pressable
           onPress={() =>
@@ -99,21 +109,19 @@ export default function SubscriptionsHomeScreen() {
           </View>
 
           <View style={styles.rowMain}>
-            <View style={styles.rowTop}>
-              <Text style={styles.rowTitle} numberOfLines={1}>
-                {item.serviceName}
-              </Text>
-              <Text style={styles.rowAmount}>
-                {formatMoney(item.monthlyEquivalent, item.currency)}/mo
+            <Text style={styles.rowTitle} numberOfLines={1}>
+              {item.serviceName}
+            </Text>
+            <View style={[styles.categoryBadge, { backgroundColor: categoryColors.bg }]}>
+              <Text style={[styles.categoryBadgeText, { color: categoryColors.text }]}>
+                {item.category.toUpperCase()}
               </Text>
             </View>
+          </View>
 
-            <View style={styles.rowBottom}>
-              <Text style={styles.rowMeta} numberOfLines={1}>
-                {item.category} • Bills in {Math.max(0, item.nextBillingInDays)}d
-              </Text>
-              <Text style={styles.rowMetaRight}>{formatShortDate(item.nextBillingDateISO)}</Text>
-            </View>
+          <View style={styles.rowRight}>
+            <Text style={styles.rowAmount}>{formatMoney(item.amount, item.currency)}</Text>
+            <Text style={styles.rowBillingDate}>{billingText}</Text>
           </View>
         </Pressable>
       );
@@ -217,7 +225,7 @@ export default function SubscriptionsHomeScreen() {
 
         {subscriptionsQuery.isError ? (
           <View style={styles.errorBox} testID="subscriptionsError">
-            <Text style={styles.errorTitle}>Couldn’t load subscriptions</Text>
+            <Text style={styles.errorTitle}>{`Couldn't`} load subscriptions</Text>
             <Text style={styles.errorText}>
               Pull to refresh. If it keeps happening, try signing out and back in.
             </Text>
@@ -234,7 +242,7 @@ export default function SubscriptionsHomeScreen() {
             </Text>
             <Text style={styles.emptyText}>
               {filter === 'All'
-                ? 'Start with your top 3. We’ll estimate your monthly spend automatically.'
+                ? `Start with your top 3. We'll estimate your monthly spend automatically.`
                 : 'Try another category filter.'}
             </Text>
 
@@ -621,42 +629,39 @@ function createStyles(theme: ReturnType<typeof useAppTheme>, bottomInset: number
     },
     rowMain: {
       flex: 1,
-      gap: 4,
-    },
-    rowTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 10,
+      gap: 6,
     },
     rowTitle: {
       color: theme.colors.text,
-      fontSize: 16,
+      fontSize: 17,
       fontWeight: '700',
-      letterSpacing: -0.2,
-      flex: 1,
+      letterSpacing: -0.3,
+    },
+    categoryBadge: {
+      alignSelf: 'flex-start',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    categoryBadgeText: {
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+    },
+    rowRight: {
+      alignItems: 'flex-end',
+      gap: 2,
     },
     rowAmount: {
       color: theme.colors.text,
-      fontSize: 16,
+      fontSize: 20,
       fontWeight: '800',
+      letterSpacing: -0.5,
     },
-    rowBottom: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 10,
-    },
-    rowMeta: {
+    rowBillingDate: {
       color: theme.colors.secondaryText,
       fontSize: 13,
       fontWeight: '500',
-      flex: 1,
-    },
-    rowMetaRight: {
-      color: theme.colors.secondaryText,
-      fontSize: 13,
-      fontWeight: '600',
     },
     fab: {
       position: 'absolute',
