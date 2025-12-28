@@ -95,6 +95,26 @@ const STATIC_RATES_FROM_USD: Record<string, number> = {
 // In-memory rates, updated by initCurrencyRates
 let liveRates: Record<string, number> | null = null;
 
+/**
+ * Currency rate source indicates where the current rates came from.
+ */
+export type CurrencyRateSource = 'pending' | 'live' | 'cached' | 'static';
+
+/**
+ * Initialization state for currency rates.
+ */
+interface InitializationState {
+  initialized: boolean;
+  source: CurrencyRateSource;
+  initializedAt: number | null;
+}
+
+let initState: InitializationState = {
+  initialized: false,
+  source: 'pending',
+  initializedAt: null,
+};
+
 interface ExchangeApiResponse {
   date: string;
   usd: Record<string, number>;
@@ -217,6 +237,7 @@ export async function initCurrencyRates(): Promise<void> {
   const cached = await loadCachedRates();
   if (cached) {
     liveRates = cached;
+    initState = { initialized: true, source: 'cached', initializedAt: Date.now() };
     return;
   }
 
@@ -225,10 +246,38 @@ export async function initCurrencyRates(): Promise<void> {
   if (fetched) {
     liveRates = fetched;
     await cacheRates(fetched);
+    initState = { initialized: true, source: 'live', initializedAt: Date.now() };
   } else {
     console.log('[currencyConversion] Using static fallback rates');
     // Keep liveRates as null, convertFromUSD will use static rates
+    initState = { initialized: true, source: 'static', initializedAt: Date.now() };
   }
+}
+
+/**
+ * Check if currency rates have been initialized.
+ * Returns true once initCurrencyRates() has completed (regardless of success/failure).
+ */
+export function isRatesInitialized(): boolean {
+  return initState.initialized;
+}
+
+/**
+ * Get the current rate source.
+ * - 'pending': initCurrencyRates() has not yet completed
+ * - 'live': Using freshly fetched rates from the API
+ * - 'cached': Using previously cached rates from AsyncStorage
+ * - 'static': Using static fallback rates (API/cache unavailable)
+ */
+export function getRateSource(): CurrencyRateSource {
+  return initState.source;
+}
+
+/**
+ * Get full initialization state for debugging or advanced use cases.
+ */
+export function getInitializationState(): Readonly<InitializationState> {
+  return { ...initState };
 }
 
 /**
