@@ -12,6 +12,7 @@ export function clampBillingDay(day: number): number {
 export function monthlyEquivalent(amount: number, cycle: BillingCycle): number {
   const safeAmount = Number.isFinite(amount) ? amount : 0;
   if (cycle === 'Yearly') return safeAmount / 12;
+  if (cycle === 'One-Time') return 0;
   return safeAmount;
 }
 
@@ -45,7 +46,13 @@ export function diffDays(from: Date, to: Date): number {
 }
 
 export function toListItem(sub: Subscription, now: Date = new Date()): SubscriptionListItem {
-  const next = nextBillingDate(now, sub.billingDay);
+  let next: Date;
+  if (sub.billingCycle === 'One-Time') {
+    // For one-time payments, use the startDate (payment date) as the "next billing date"
+    next = sub.startDate ? new Date(sub.startDate) : now;
+  } else {
+    next = nextBillingDate(now, sub.billingDay);
+  }
   return {
     id: sub.id,
     serviceName: sub.serviceName,

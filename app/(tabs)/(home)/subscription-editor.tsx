@@ -236,11 +236,14 @@ export default function SubscriptionEditorScreen() {
   const validate = useCallback((): string | null => {
     if (!serviceName.trim()) return 'Service name is required.';
     if (!Number.isFinite(amount) || amount <= 0) return 'Enter a billing amount greater than 0.';
-    if (!Number.isFinite(billingDay) || billingDay < 1 || billingDay > 31)
-      return 'Billing day must be between 1 and 31.';
-    if (dateError) return dateError;
+    // Skip billingDay validation for One-Time payments
+    if (billingCycle !== 'One-Time') {
+      if (!Number.isFinite(billingDay) || billingDay < 1 || billingDay > 31)
+        return 'Billing day must be between 1 and 31.';
+      if (dateError) return dateError;
+    }
     return null;
-  }, [amount, billingDay, dateError, serviceName]);
+  }, [amount, billingCycle, billingDay, dateError, serviceName]);
 
   const handleSave = useCallback(async () => {
     const error = validate();
@@ -250,16 +253,21 @@ export default function SubscriptionEditorScreen() {
     }
 
     try {
+      // For One-Time payments, derive billingDay from startDate and clear endDate
+      const isOneTime = billingCycle === 'One-Time';
+      const effectiveBillingDay = isOneTime ? startDate.getDate() : billingDay;
+      const effectiveEndDate = isOneTime ? undefined : endDate ? endDate.getTime() : undefined;
+
       const payload = buildSubscriptionPayload(existing, userId, {
         serviceName: serviceName.trim(),
         category,
         amount,
         currency,
         billingCycle,
-        billingDay,
+        billingDay: effectiveBillingDay,
         notes: notes.trim() ? notes.trim() : undefined,
         startDate: startDate.getTime(),
-        endDate: endDate ? endDate.getTime() : undefined,
+        endDate: effectiveEndDate,
         paymentMethod: paymentMethod,
       });
 
@@ -499,102 +507,136 @@ export default function SubscriptionEditorScreen() {
                 </View>
               </View>
 
-              <View style={styles.section}>
-                <Text style={styles.label}>Billing day</Text>
-                <Text style={styles.helper}>
-                  Day of month (1–31). We’ll calculate the next renewal date.
-                </Text>
-                <TextInput
-                  value={billingDayText}
-                  onChangeText={setBillingDayText}
-                  keyboardType={Platform.OS === 'web' ? 'default' : 'number-pad'}
-                  placeholder="1"
-                  placeholderTextColor="rgba(15,23,42,0.35)"
-                  style={[styles.input, isSaving && styles.disabledInput]}
-                  editable={!isSaving}
-                  testID="subscriptionEditorBillingDay"
-                />
-              </View>
-
-              {/* Start Date */}
-              <View style={styles.section}>
-                <Text style={styles.label}>Start date</Text>
-                <Pressable
-                  style={[styles.dateInput, isSaving && styles.disabledInput]}
-                  onPress={() => setShowStartDatePicker(true)}
-                  disabled={isSaving}
-                  testID="subscriptionEditorStartDate"
-                >
-                  <Text style={styles.dateText}>{formatDate(startDate)}</Text>
-                </Pressable>
-                {showStartDatePicker && (
-                  <DateTimePicker
-                    value={startDate}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={(event, selectedDate) => {
-                      setShowStartDatePicker(Platform.OS === 'ios');
-                      if (event.type === 'dismissed') {
-                        return;
-                      }
-                      if (selectedDate) {
-                        setStartDate(normalizeToMidnight(selectedDate));
-                      }
-                    }}
-                  />
-                )}
-              </View>
-
-              {/* End Date (optional) */}
-              <View style={styles.section}>
-                <Text style={styles.label}>End date</Text>
-                {endDate ? (
-                  <View style={styles.dateRow}>
-                    <Pressable
-                      style={[styles.dateInput, { flex: 1 }, isSaving && styles.disabledInput]}
-                      onPress={() => setShowEndDatePicker(true)}
-                      disabled={isSaving}
-                      testID="subscriptionEditorEndDate"
-                    >
-                      <Text style={styles.dateText}>{formatDate(endDate)}</Text>
-                    </Pressable>
-                    <Pressable
-                      style={[styles.clearButton, isSaving && styles.disabledInput]}
-                      onPress={() => setEndDate(null)}
-                      disabled={isSaving}
-                      testID="subscriptionEditorClearEndDate"
-                    >
-                      <XIcon color={AppColors.secondaryText} size={18} />
-                    </Pressable>
-                  </View>
-                ) : (
+              {billingCycle === 'One-Time' ? (
+                /* Payment Date for One-Time payments */
+                <View style={styles.section}>
+                  <Text style={styles.label}>Payment date</Text>
                   <Pressable
                     style={[styles.dateInput, isSaving && styles.disabledInput]}
-                    onPress={() => setShowEndDatePicker(true)}
+                    onPress={() => setShowStartDatePicker(true)}
                     disabled={isSaving}
-                    testID="subscriptionEditorAddEndDate"
+                    testID="subscriptionEditorPaymentDate"
                   >
-                    <Text style={styles.placeholderText}>Add end date (optional)</Text>
+                    <Text style={styles.dateText}>{formatDate(startDate)}</Text>
                   </Pressable>
-                )}
-                {showEndDatePicker && (
-                  <DateTimePicker
-                    value={endDate || new Date()}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={(event, selectedDate) => {
-                      setShowEndDatePicker(Platform.OS === 'ios');
-                      if (event.type === 'dismissed') {
-                        return;
-                      }
-                      if (selectedDate) {
-                        setEndDate(normalizeToMidnight(selectedDate));
-                      }
-                    }}
-                  />
-                )}
-                {dateError && <Text style={styles.errorText}>{dateError}</Text>}
-              </View>
+                  {showStartDatePicker && (
+                    <DateTimePicker
+                      value={startDate}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={(event, selectedDate) => {
+                        setShowStartDatePicker(Platform.OS === 'ios');
+                        if (event.type === 'dismissed') {
+                          return;
+                        }
+                        if (selectedDate) {
+                          setStartDate(normalizeToMidnight(selectedDate));
+                        }
+                      }}
+                    />
+                  )}
+                </View>
+              ) : (
+                /* Billing day, Start date, End date for recurring payments */
+                <>
+                  <View style={styles.section}>
+                    <Text style={styles.label}>Billing day</Text>
+                    <Text style={styles.helper}>
+                      Day of month (1–31). We'll calculate the next renewal date.
+                    </Text>
+                    <TextInput
+                      value={billingDayText}
+                      onChangeText={setBillingDayText}
+                      keyboardType={Platform.OS === 'web' ? 'default' : 'number-pad'}
+                      placeholder="1"
+                      placeholderTextColor="rgba(15,23,42,0.35)"
+                      style={[styles.input, isSaving && styles.disabledInput]}
+                      editable={!isSaving}
+                      testID="subscriptionEditorBillingDay"
+                    />
+                  </View>
+
+                  {/* Start Date */}
+                  <View style={styles.section}>
+                    <Text style={styles.label}>Start date</Text>
+                    <Pressable
+                      style={[styles.dateInput, isSaving && styles.disabledInput]}
+                      onPress={() => setShowStartDatePicker(true)}
+                      disabled={isSaving}
+                      testID="subscriptionEditorStartDate"
+                    >
+                      <Text style={styles.dateText}>{formatDate(startDate)}</Text>
+                    </Pressable>
+                    {showStartDatePicker && (
+                      <DateTimePicker
+                        value={startDate}
+                        mode="date"
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        onChange={(event, selectedDate) => {
+                          setShowStartDatePicker(Platform.OS === 'ios');
+                          if (event.type === 'dismissed') {
+                            return;
+                          }
+                          if (selectedDate) {
+                            setStartDate(normalizeToMidnight(selectedDate));
+                          }
+                        }}
+                      />
+                    )}
+                  </View>
+
+                  {/* End Date (optional) */}
+                  <View style={styles.section}>
+                    <Text style={styles.label}>End date</Text>
+                    {endDate ? (
+                      <View style={styles.dateRow}>
+                        <Pressable
+                          style={[styles.dateInput, { flex: 1 }, isSaving && styles.disabledInput]}
+                          onPress={() => setShowEndDatePicker(true)}
+                          disabled={isSaving}
+                          testID="subscriptionEditorEndDate"
+                        >
+                          <Text style={styles.dateText}>{formatDate(endDate)}</Text>
+                        </Pressable>
+                        <Pressable
+                          style={[styles.clearButton, isSaving && styles.disabledInput]}
+                          onPress={() => setEndDate(null)}
+                          disabled={isSaving}
+                          testID="subscriptionEditorClearEndDate"
+                        >
+                          <XIcon color={AppColors.secondaryText} size={18} />
+                        </Pressable>
+                      </View>
+                    ) : (
+                      <Pressable
+                        style={[styles.dateInput, isSaving && styles.disabledInput]}
+                        onPress={() => setShowEndDatePicker(true)}
+                        disabled={isSaving}
+                        testID="subscriptionEditorAddEndDate"
+                      >
+                        <Text style={styles.placeholderText}>Add end date (optional)</Text>
+                      </Pressable>
+                    )}
+                    {showEndDatePicker && (
+                      <DateTimePicker
+                        value={endDate || new Date()}
+                        mode="date"
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        onChange={(event, selectedDate) => {
+                          setShowEndDatePicker(Platform.OS === 'ios');
+                          if (event.type === 'dismissed') {
+                            return;
+                          }
+                          if (selectedDate) {
+                            setEndDate(normalizeToMidnight(selectedDate));
+                          }
+                        }}
+                      />
+                    )}
+                    {dateError && <Text style={styles.errorText}>{dateError}</Text>}
+                  </View>
+                </>
+              )}
 
               {/* Payment Method */}
               <View style={styles.section}>
@@ -872,7 +914,7 @@ const styles = StyleSheet.create({
   },
   grid: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 5,
   },
   gridItem: {
     flex: 1,

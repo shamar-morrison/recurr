@@ -1,6 +1,6 @@
 export type SubscriptionCategory = 'Streaming' | 'Music' | 'Software' | 'Utilities' | 'Other';
 
-export type BillingCycle = 'Monthly' | 'Yearly';
+export type BillingCycle = 'Monthly' | 'Yearly' | 'One-Time';
 
 export type CurrencyCode = string;
 
@@ -58,7 +58,7 @@ export const SUBSCRIPTION_CATEGORIES: SubscriptionCategory[] = [
   'Other',
 ];
 
-export const BILLING_CYCLES: BillingCycle[] = ['Monthly', 'Yearly'];
+export const BILLING_CYCLES: BillingCycle[] = ['Monthly', 'Yearly', 'One-Time'];
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
   'Credit Card',
