@@ -179,6 +179,15 @@ export default function SubscriptionEditorScreen() {
     setShowPaymentMethodModal(false);
   }, []);
 
+  // Memoize payment method icon lookup for cleaner JSX
+  const PaymentMethodIcon = useMemo(() => {
+    if (!paymentMethod) return null;
+    const config = PAYMENT_METHOD_CONFIG.find((c) => c.label === paymentMethod);
+    if (!config) return null;
+    const IconComponent = config.icon;
+    return <IconComponent color={AppColors.text} size={20} />;
+  }, [paymentMethod]);
+
   React.useEffect(() => {
     if (!editingId) return;
     if (!existing) return;
@@ -515,6 +524,9 @@ export default function SubscriptionEditorScreen() {
                     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                     onChange={(event, selectedDate) => {
                       setShowStartDatePicker(Platform.OS === 'ios');
+                      if (event.type === 'dismissed') {
+                        return;
+                      }
                       if (selectedDate) {
                         setStartDate(selectedDate);
                       }
@@ -562,6 +574,9 @@ export default function SubscriptionEditorScreen() {
                     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                     onChange={(event, selectedDate) => {
                       setShowEndDatePicker(Platform.OS === 'ios');
+                      if (event.type === 'dismissed') {
+                        return;
+                      }
                       if (selectedDate) {
                         setEndDate(selectedDate);
                       }
@@ -582,14 +597,7 @@ export default function SubscriptionEditorScreen() {
                 >
                   {paymentMethod ? (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                      {(() => {
-                        const config = PAYMENT_METHOD_CONFIG.find((c) => c.label === paymentMethod);
-                        if (config) {
-                          const IconComponent = config.icon;
-                          return <IconComponent color={AppColors.text} size={20} />;
-                        }
-                        return null;
-                      })()}
+                      {PaymentMethodIcon}
                       <Text style={styles.dropdownText}>{paymentMethod}</Text>
                     </View>
                   ) : (
