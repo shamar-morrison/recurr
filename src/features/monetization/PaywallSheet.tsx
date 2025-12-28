@@ -87,7 +87,7 @@ export function PaywallSheet({ variant = 'screen' }: Props) {
             style={[
               styles.primaryButton,
               {
-                backgroundColor: canPurchase ? AppColors.tint : 'rgba(79,140,255,0.25)',
+                backgroundColor: canPurchase ? AppColors.tint : AppColors.disabledTint,
               },
             ]}
             testID="paywallPurchase"

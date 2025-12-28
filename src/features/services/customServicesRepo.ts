@@ -228,7 +228,7 @@ export function subscribeToCustomServices(
         })
         .catch((e) => {
           console.log('[customServices] subscribe: local read failed', e);
-          onData([]);
+          if (onError) onError(e);
         });
     }
   );

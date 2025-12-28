@@ -13,6 +13,7 @@ export const AppColors = {
   primary: '#5E38F8',
   onPrimary: '#FFFFFF',
   surface: '#FFFFFF',
+  disabledTint: 'rgba(94, 56, 248, 0.35)',
 } as const;
 
 // Category-specific colors for badges
