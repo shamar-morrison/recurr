@@ -3,8 +3,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppColors } from '@/constants/colors';
 import { CURRENCIES, Currency } from '@/src/constants/currencies';
-import { lightTheme } from '@/src/theme/useAppTheme';
 
 type Props = {
   visible: boolean;
@@ -19,7 +19,7 @@ export function CurrencySelectorModal({
   onSelect,
   onClose,
 }: Props) {
-  const theme = lightTheme;
+  const theme = { colors: AppColors };
   const styles = useMemo(() => createStyles(), []);
 
   const [search, setSearch] = useState('');
@@ -116,7 +116,7 @@ export function CurrencySelectorModal({
 }
 
 function createStyles() {
-  const theme = lightTheme;
+  const theme = { colors: AppColors };
 
   return StyleSheet.create({
     container: {

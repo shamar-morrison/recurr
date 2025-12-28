@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { useAppTheme } from '@/src/theme/useAppTheme';
+import { AppColors } from '@/constants/colors';
 
 type Props = {
   children: React.ReactNode;
@@ -38,7 +38,7 @@ export class AppErrorBoundary extends React.PureComponent<Props, State> {
 }
 
 function ErrorFallback({ onReset }: { onReset: () => void }) {
-  const theme = useAppTheme();
+  const theme = { colors: AppColors };
 
   return (
     <View

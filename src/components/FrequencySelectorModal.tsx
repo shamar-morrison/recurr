@@ -3,8 +3,8 @@ import React, { useCallback, useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppColors } from '@/constants/colors';
 import { BILLING_CYCLES, BillingCycle } from '@/src/features/subscriptions/types';
-import { lightTheme } from '@/src/theme/useAppTheme';
 
 type Props = {
   visible: boolean;
@@ -19,7 +19,7 @@ export function FrequencySelectorModal({
   onSelect,
   onClose,
 }: Props) {
-  const theme = lightTheme;
+  const theme = { colors: AppColors };
   const styles = useMemo(() => createStyles(), []);
 
   const handleSelect = useCallback(
@@ -68,7 +68,7 @@ export function FrequencySelectorModal({
 }
 
 function createStyles() {
-  const theme = lightTheme;
+  const theme = { colors: AppColors };
 
   return StyleSheet.create({
     container: {

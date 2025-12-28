@@ -2,11 +2,11 @@ import { Link, Stack } from 'expo-router';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { useAppTheme } from '@/src/theme/useAppTheme';
+import { AppColors } from '@/constants/colors';
 
 export default function NotFoundScreen() {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const theme = { colors: AppColors };
+  const styles = useMemo(() => createStyles(), []);
 
   return (
     <>
@@ -25,7 +25,8 @@ export default function NotFoundScreen() {
   );
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>) {
+function createStyles() {
+  const theme = { colors: AppColors };
   return StyleSheet.create({
     container: {
       flex: 1,

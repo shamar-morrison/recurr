@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppColors } from '@/constants/colors';
 import { PaywallSheet } from '@/src/features/monetization/PaywallSheet';
-import { useAppTheme } from '@/src/theme/useAppTheme';
 
 export default function ModalScreen() {
-  const theme = useAppTheme();
+  const theme = { colors: AppColors };
 
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createStyles(), []);
 
   return (
     <Modal transparent animationType="fade" visible>
@@ -22,11 +22,12 @@ export default function ModalScreen() {
   );
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>) {
+function createStyles() {
+  const theme = { colors: AppColors };
   return StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: theme.isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.45)',
+      backgroundColor: 'rgba(0,0,0,0.45)',
       padding: 16,
       justifyContent: 'flex-end',
     },

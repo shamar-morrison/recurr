@@ -12,7 +12,7 @@ import {
   ViewStyle,
 } from 'react-native';
 
-import { AppThemeColors, useAppTheme } from '@/src/theme/useAppTheme';
+import { AppColors } from '@/constants/colors';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -30,7 +30,7 @@ interface ButtonProps extends Omit<PressableProps, 'style'> {
 
 type VariantColors = Record<ButtonVariant, { bg: string; text: string }>;
 
-function getVariantColors(colors: AppThemeColors): VariantColors {
+function getVariantColors(colors: typeof AppColors): VariantColors {
   return {
     primary: { bg: colors.tint, text: '#FFFFFF' },
     secondary: { bg: colors.cardAlt, text: colors.text },
@@ -59,7 +59,7 @@ export function Button({
   haptic = true,
   ...props
 }: ButtonProps) {
-  const { colors: themeColors } = useAppTheme();
+  const themeColors = AppColors;
   const variantColors = getVariantColors(themeColors);
   const colors = variantColors[variant];
   const sizeStyle = SIZE_STYLES[size];

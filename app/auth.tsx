@@ -11,12 +11,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppColors } from '@/constants/colors';
 import { useAuth } from '@/src/features/auth/AuthProvider';
-import { useAppTheme } from '@/src/theme/useAppTheme';
 
 export default function AuthScreen() {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const theme = { colors: AppColors };
+  const styles = useMemo(() => createStyles(), []);
   const router = useRouter();
   const { signInEmail, signUpEmail, signInWithGoogleMock, isFirebaseReady, user, isReady } =
     useAuth();
@@ -85,7 +85,7 @@ export default function AuthScreen() {
             value={email}
             onChangeText={setEmail}
             placeholder="you@domain.com"
-            placeholderTextColor={theme.isDark ? 'rgba(236,242,255,0.5)' : 'rgba(15,23,42,0.35)'}
+            placeholderTextColor="rgba(15,23,42,0.35)"
             autoCapitalize="none"
             keyboardType="email-address"
             style={styles.input}
@@ -97,7 +97,7 @@ export default function AuthScreen() {
             value={password}
             onChangeText={setPassword}
             placeholder="••••••••"
-            placeholderTextColor={theme.isDark ? 'rgba(236,242,255,0.5)' : 'rgba(15,23,42,0.35)'}
+            placeholderTextColor="rgba(15,23,42,0.35)"
             secureTextEntry
             style={styles.input}
             testID="authPassword"
@@ -146,7 +146,8 @@ export default function AuthScreen() {
   );
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>) {
+function createStyles() {
+  const theme = { colors: AppColors };
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -188,7 +189,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderRadius: 16,
       paddingHorizontal: 14,
       color: theme.colors.text,
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : 'rgba(15,23,42,0.05)',
+      backgroundColor: 'rgba(15,23,42,0.05)',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.colors.border,
     },
@@ -221,7 +222,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderRadius: 18,
       paddingVertical: 14,
       alignItems: 'center',
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.08)' : 'rgba(15,23,42,0.06)',
+      backgroundColor: 'rgba(15,23,42,0.06)',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.colors.border,
     },

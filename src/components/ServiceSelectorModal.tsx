@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  BackHandler,
   Modal,
   Pressable,
   ScrollView,
@@ -16,12 +15,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppColors } from '@/constants/colors';
 import { SERVICE_COLORS } from '@/src/constants/customServices';
 import { Service, SERVICES } from '@/src/constants/services';
 import { useCustomServices } from '@/src/features/services/useCustomServices';
 import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
 import { getFirestoreErrorMessage } from '@/src/lib/firestore';
-import { lightTheme } from '@/src/theme/useAppTheme';
 
 // Union type for both predefined and custom services
 type UnifiedService = Service & { isCustom?: boolean; color?: string; id?: string };
@@ -39,7 +38,7 @@ type Props = {
 };
 
 export function ServiceSelectorModal({ visible, selectedService = '', onSelect, onClose }: Props) {
-  const theme = lightTheme;
+  const theme = { colors: AppColors };
   const styles = useMemo(() => createStyles(), []);
 
   const {
@@ -340,7 +339,7 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
 }
 
 function createStyles() {
-  const theme = lightTheme;
+  const theme = { colors: AppColors };
 
   return StyleSheet.create({
     container: {

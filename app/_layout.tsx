@@ -14,7 +14,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AppErrorBoundary } from '@/src/components/AppErrorBoundary';
 import { AuthProvider } from '@/src/features/auth/AuthProvider';
-import { useAppTheme } from '@/src/theme/useAppTheme';
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
@@ -31,12 +30,10 @@ const queryClient = new QueryClient({
 });
 
 function RootLayoutNav() {
-  const theme = useAppTheme();
-
   return (
     <GluestackUIProvider>
       <>
-        <StatusBar style={theme.isDark ? 'light' : 'dark'} />
+        <StatusBar style="dark" />
         <Stack screenOptions={{ headerBackTitle: 'Back' }}>
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="auth" options={{ headerShown: false }} />

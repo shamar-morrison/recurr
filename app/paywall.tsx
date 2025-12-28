@@ -1,14 +1,14 @@
 import { Stack } from 'expo-router';
 import React, { useMemo } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppColors } from '@/constants/colors';
 import { PaywallSheet } from '@/src/features/monetization/PaywallSheet';
-import { useAppTheme } from '@/src/theme/useAppTheme';
 
 export default function PaywallScreen() {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const theme = { colors: AppColors };
+  const styles = useMemo(() => createStyles(), []);
 
   return (
     <>
@@ -32,7 +32,8 @@ export default function PaywallScreen() {
   );
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>) {
+function createStyles() {
+  const theme = { colors: AppColors };
   return StyleSheet.create({
     bg: { flex: 1, backgroundColor: theme.colors.background },
     safe: { flex: 1, padding: 16, gap: 14 },

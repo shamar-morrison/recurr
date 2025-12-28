@@ -1,5 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
+import { AppColors } from '@/constants/colors';
 import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { FrequencySelectorModal } from '@/src/components/FrequencySelectorModal';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
@@ -18,7 +19,6 @@ import {
   SUBSCRIPTION_CATEGORIES,
   SubscriptionCategory,
 } from '@/src/features/subscriptions/types';
-import { useAppTheme } from '@/src/theme/useAppTheme';
 import {
   AppWindowIcon,
   CaretDownIcon,
@@ -49,8 +49,8 @@ type RouteParams = {
 };
 
 export default function SubscriptionEditorScreen() {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const theme = { colors: AppColors };
+  const styles = useMemo(() => createStyles(), []);
 
   const params = useLocalSearchParams<RouteParams>();
   const editingId = typeof params.id === 'string' ? params.id : undefined;
@@ -342,9 +342,7 @@ export default function SubscriptionEditorScreen() {
                     onChangeText={setAmountText}
                     keyboardType={Platform.OS === 'web' ? 'default' : 'decimal-pad'}
                     placeholder="9.99"
-                    placeholderTextColor={
-                      theme.isDark ? 'rgba(236,242,255,0.45)' : 'rgba(15,23,42,0.35)'
-                    }
+                    placeholderTextColor="rgba(15,23,42,0.35)"
                     style={styles.input}
                     testID="subscriptionEditorAmount"
                   />
@@ -389,9 +387,7 @@ export default function SubscriptionEditorScreen() {
                   onChangeText={setBillingDayText}
                   keyboardType={Platform.OS === 'web' ? 'default' : 'number-pad'}
                   placeholder="1"
-                  placeholderTextColor={
-                    theme.isDark ? 'rgba(236,242,255,0.45)' : 'rgba(15,23,42,0.35)'
-                  }
+                  placeholderTextColor="rgba(15,23,42,0.35)"
                   style={styles.input}
                   testID="subscriptionEditorBillingDay"
                 />
@@ -403,9 +399,7 @@ export default function SubscriptionEditorScreen() {
                   value={notes}
                   onChangeText={setNotes}
                   placeholder="e.g. Family plan, billed through Google Play"
-                  placeholderTextColor={
-                    theme.isDark ? 'rgba(236,242,255,0.45)' : 'rgba(15,23,42,0.35)'
-                  }
+                  placeholderTextColor="rgba(15,23,42,0.35)"
                   multiline
                   style={[styles.input, styles.notesInput]}
                   testID="subscriptionEditorNotes"
@@ -490,7 +484,9 @@ function toInput(
   };
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>) {
+function createStyles() {
+  const theme = { colors: AppColors };
+
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -507,7 +503,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.08)' : 'rgba(15,23,42,0.06)',
+      backgroundColor: 'rgba(15,23,42,0.06)',
     },
     headerRight: {
       // Unused now
@@ -537,7 +533,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       paddingHorizontal: 16,
       paddingVertical: 14,
       color: theme.colors.text,
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : '#fff',
+      backgroundColor: '#fff',
       borderWidth: 1,
       borderColor: theme.colors.border,
       fontSize: 16,
@@ -555,7 +551,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       fontWeight: '600',
     },
     placeholderText: {
-      color: theme.isDark ? 'rgba(236,242,255,0.45)' : 'rgba(15,23,42,0.35)',
+      color: 'rgba(15,23,42,0.35)',
     },
     notesInput: {
       minHeight: 100,
@@ -628,7 +624,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderRadius: 20,
       paddingHorizontal: 16,
       paddingVertical: 14,
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : '#fff',
+      backgroundColor: '#fff',
       borderWidth: 1,
       borderColor: theme.colors.border,
       shadowColor: '#000',

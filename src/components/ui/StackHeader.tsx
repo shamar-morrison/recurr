@@ -4,7 +4,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useAppTheme } from '@/src/theme/useAppTheme';
+import { AppColors } from '@/constants/colors';
 
 interface StackHeaderProps {
   title?: string;
@@ -21,7 +21,6 @@ export function StackHeader({
   headerRight,
   headerLeft,
 }: StackHeaderProps) {
-  const theme = useAppTheme();
   const insets = useSafeAreaInsets();
 
   const handleBack = () => {
@@ -34,7 +33,7 @@ export function StackHeader({
         styles.container,
         {
           paddingTop: insets.top + 8,
-          backgroundColor: theme.colors.background,
+          backgroundColor: AppColors.background,
         },
       ]}
     >
@@ -50,14 +49,12 @@ export function StackHeader({
                 style={[
                   styles.backButton,
                   {
-                    backgroundColor: theme.isDark
-                      ? 'rgba(236,242,255,0.08)'
-                      : 'rgba(15,23,42,0.06)',
+                    backgroundColor: 'rgba(15,23,42,0.06)',
                   },
                 ]}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <ChevronLeft color={theme.colors.text} size={22} />
+                <ChevronLeft color={AppColors.text} size={22} />
               </Pressable>
             ) : null}
           </View>
@@ -68,15 +65,12 @@ export function StackHeader({
           style={[styles.titleContainer, !(showBack || headerLeft) && styles.titleContainerNoLeft]}
         >
           {title && (
-            <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
+            <Text style={[styles.title, { color: AppColors.text }]} numberOfLines={1}>
               {title}
             </Text>
           )}
           {subtitle && (
-            <Text
-              style={[styles.subtitle, { color: theme.colors.secondaryText }]}
-              numberOfLines={1}
-            >
+            <Text style={[styles.subtitle, { color: AppColors.secondaryText }]} numberOfLines={1}>
               {subtitle}
             </Text>
           )}

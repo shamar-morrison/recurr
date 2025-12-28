@@ -2,19 +2,19 @@ import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppColors } from '@/constants/colors';
 import { useAuth } from '@/src/features/auth/AuthProvider';
-import { useAppTheme } from '@/src/theme/useAppTheme';
 
 type Props = {
   variant?: 'screen' | 'inline';
 };
 
 export function PaywallSheet({ variant = 'screen' }: Props) {
-  const theme = useAppTheme();
+  const theme = { colors: AppColors, isDark: false };
   const { isPremium, setPremiumMock, user } = useAuth();
   const [isWorking, setIsWorking] = useState<boolean>(false);
 
-  const styles = useMemo(() => createStyles(theme, variant), [theme, variant]);
+  const styles = useMemo(() => createStyles(variant), [variant]);
 
   const canPurchase = Boolean(user);
 
@@ -88,11 +88,7 @@ export function PaywallSheet({ variant = 'screen' }: Props) {
             style={[
               styles.primaryButton,
               {
-                backgroundColor: canPurchase
-                  ? theme.colors.tint
-                  : theme.isDark
-                    ? 'rgba(121,167,255,0.25)'
-                    : 'rgba(79,140,255,0.25)',
+                backgroundColor: canPurchase ? theme.colors.tint : 'rgba(79,140,255,0.25)',
               },
             ]}
             testID="paywallPurchase"
@@ -122,8 +118,9 @@ export function PaywallSheet({ variant = 'screen' }: Props) {
   );
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>, variant: Props['variant']) {
+function createStyles(variant: Props['variant']) {
   const isInline = variant === 'inline';
+  const theme = { colors: AppColors, isDark: false };
 
   return StyleSheet.create({
     container: {
@@ -139,10 +136,10 @@ function createStyles(theme: ReturnType<typeof useAppTheme>, variant: Props['var
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: 999,
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.12)' : 'rgba(15,23,42,0.08)',
+      backgroundColor: 'rgba(15,23,42,0.08)',
     },
     badgeText: {
-      color: theme.isDark ? '#ECF2FF' : '#0B1220',
+      color: '#0B1220',
       fontSize: 12,
       fontWeight: '900',
       letterSpacing: 0.8,
