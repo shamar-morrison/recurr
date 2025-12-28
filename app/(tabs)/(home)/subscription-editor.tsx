@@ -192,6 +192,8 @@ export default function SubscriptionEditorScreen() {
     setStartDate(existing.startDate ? new Date(existing.startDate) : new Date());
     setEndDate(existing.endDate ? new Date(existing.endDate) : null);
     setPaymentMethod(existing.paymentMethod);
+    // Reset manual edit flag for clean state when loading existing data
+    setHasManuallyEditedAmount(false);
   }, [defaultCurrency, editingId, existing]);
 
   const amount = useMemo(() => {
