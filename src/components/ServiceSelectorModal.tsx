@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
+import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { SERVICE_COLORS } from '@/src/constants/customServices';
 import { Service, SERVICES } from '@/src/constants/services';
 import { useCustomServices } from '@/src/features/services/useCustomServices';
@@ -153,9 +154,7 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
           style={[styles.item, isSelected && styles.itemSelected]}
         >
           <View style={styles.serviceInfo}>
-            {item.isCustom && item.color && (
-              <View style={[styles.colorDot, { backgroundColor: item.color }]} />
-            )}
+            <ServiceLogo serviceName={item.name} domain={item.domain} size={32} borderRadius={8} />
             <Text style={styles.serviceName}>{item.name}</Text>
             <Text style={styles.serviceCategory}>{item.category}</Text>
             {item.isCustom && <Text style={styles.customBadge}>Custom</Text>}

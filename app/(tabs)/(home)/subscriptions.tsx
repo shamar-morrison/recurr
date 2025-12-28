@@ -13,7 +13,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppColors, CATEGORY_COLORS } from '@/constants/colors';
+import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { Button } from '@/src/components/ui/Button';
+import { getServiceDomain } from '@/src/constants/services';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   useSubscriptionListItems,
@@ -102,9 +104,12 @@ export default function SubscriptionsHomeScreen() {
           style={styles.row}
           testID={`subscriptionRow_${item.id}`}
         >
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>{(item.serviceName[0] ?? '?').toUpperCase()}</Text>
-          </View>
+          <ServiceLogo
+            serviceName={item.serviceName}
+            domain={getServiceDomain(item.serviceName)}
+            size={52}
+            borderRadius={16}
+          />
 
           <View style={styles.rowMain}>
             <Text style={styles.rowTitle} numberOfLines={1}>
