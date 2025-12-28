@@ -5,9 +5,11 @@ import { AppColors } from '@/constants/colors';
 import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { FrequencySelectorModal } from '@/src/components/FrequencySelectorModal';
 import { PAYMENT_METHOD_CONFIG, PaymentMethodModal } from '@/src/components/PaymentMethodModal';
+import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
+import { getServiceDomain } from '@/src/constants/services';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   useDeleteSubscriptionMutation,
@@ -322,9 +324,19 @@ export default function SubscriptionEditorScreen() {
                   style={styles.input}
                   testID="subscriptionEditorServiceName"
                 >
-                  <Text style={[styles.inputText, !serviceName && styles.placeholderText]}>
-                    {serviceName || 'Netflix, Spotify, iCloud…'}
-                  </Text>
+                  <View style={styles.serviceRow}>
+                    {serviceName ? (
+                      <ServiceLogo
+                        serviceName={serviceName}
+                        domain={getServiceDomain(serviceName)}
+                        size={32}
+                        borderRadius={8}
+                      />
+                    ) : null}
+                    <Text style={[styles.inputText, !serviceName && styles.placeholderText]}>
+                      {serviceName || 'Netflix, Spotify, iCloud…'}
+                    </Text>
+                  </View>
                 </Pressable>
               </View>
 
@@ -705,6 +717,11 @@ const styles = StyleSheet.create({
     color: AppColors.text,
     fontSize: 16,
     fontWeight: '600',
+  },
+  serviceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   placeholderText: {
     color: 'rgba(15,23,42,0.35)',
