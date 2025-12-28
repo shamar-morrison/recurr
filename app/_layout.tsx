@@ -12,12 +12,10 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import '@/global.css';
 import { AppErrorBoundary } from '@/src/components/AppErrorBoundary';
 import { AuthProvider } from '@/src/features/auth/AuthProvider';
 import { RemoteConfigProvider } from '@/src/features/config/RemoteConfigContext';
-
-import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import '@/global.css';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -32,25 +30,23 @@ const queryClient = new QueryClient({
 
 function RootLayoutNav() {
   return (
-    <GluestackUIProvider>
-      <>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerBackTitle: 'Back' }}>
-          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-          <Stack.Screen name="auth" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="paywall" options={{ presentation: 'modal', headerShown: false }} />
-          <Stack.Screen
-            name="select-currency"
-            options={{ presentation: 'modal', headerShown: false }}
-          />
-          <Stack.Screen
-            name="select-frequency"
-            options={{ presentation: 'modal', headerShown: false }}
-          />
-        </Stack>
-      </>
-    </GluestackUIProvider>
+    <>
+      <StatusBar style="dark" />
+      <Stack screenOptions={{ headerBackTitle: 'Back' }}>
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="paywall" options={{ presentation: 'modal', headerShown: false }} />
+        <Stack.Screen
+          name="select-currency"
+          options={{ presentation: 'modal', headerShown: false }}
+        />
+        <Stack.Screen
+          name="select-frequency"
+          options={{ presentation: 'modal', headerShown: false }}
+        />
+      </Stack>
+    </>
   );
 }
 
