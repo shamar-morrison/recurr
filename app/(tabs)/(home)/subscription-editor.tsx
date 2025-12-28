@@ -1,3 +1,4 @@
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
 import { AppColors } from '@/constants/colors';
@@ -29,6 +30,7 @@ import {
   MusicNotesIcon,
   PlayCircleIcon,
   TrashIcon,
+  XIcon,
 } from 'phosphor-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -91,6 +93,25 @@ export default function SubscriptionEditorScreen() {
     return CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$';
   }, [currency]);
 
+  // State for start/end dates
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+
+  // Format date for display
+  const formatDate = useCallback((date: Date) => {
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const day = date.getDate();
+    const year = date.getFullYear();
+
+    const suffix = ['th', 'st', 'nd', 'rd'];
+    const v = day % 100;
+    const ord = suffix[(v - 20) % 10] || suffix[v] || suffix[0];
+
+    return `${month}. ${day}${ord}, ${year}`;
+  }, []);
+
   // State for service selector modal
   const [showServiceModal, setShowServiceModal] = useState(false);
 
@@ -126,6 +147,8 @@ export default function SubscriptionEditorScreen() {
     setBillingDayText(existing.billingDay != null ? String(existing.billingDay) : '1');
     setNotes(existing.notes ?? '');
     setCurrency(existing.currency ?? defaultCurrency);
+    setStartDate(existing.startDate ? new Date(existing.startDate) : new Date());
+    setEndDate(existing.endDate ? new Date(existing.endDate) : null);
   }, [defaultCurrency, editingId, existing]);
 
   const amount = useMemo(() => {
@@ -142,13 +165,22 @@ export default function SubscriptionEditorScreen() {
 
   const title = existing ? 'Edit Subscription' : 'New Subscription';
 
+  // Validation for dates
+  const dateError = useMemo(() => {
+    if (startDate && endDate && endDate < startDate) {
+      return 'End date cannot be before start date.';
+    }
+    return null;
+  }, [startDate, endDate]);
+
   const validate = useCallback((): string | null => {
     if (!serviceName.trim()) return 'Service name is required.';
     if (!Number.isFinite(amount) || amount <= 0) return 'Enter a billing amount greater than 0.';
     if (!Number.isFinite(billingDay) || billingDay < 1 || billingDay > 31)
       return 'Billing day must be between 1 and 31.';
+    if (dateError) return dateError;
     return null;
-  }, [amount, billingDay, serviceName]);
+  }, [amount, billingDay, dateError, serviceName]);
 
   const handleSave = useCallback(async () => {
     const error = validate();
@@ -166,6 +198,8 @@ export default function SubscriptionEditorScreen() {
         billingCycle,
         billingDay,
         notes: notes.trim() ? notes.trim() : undefined,
+        startDate: startDate.getTime(),
+        endDate: endDate ? endDate.getTime() : undefined,
       });
 
       await upsertMutation.mutateAsync(payload);
@@ -181,9 +215,11 @@ export default function SubscriptionEditorScreen() {
     billingDay,
     category,
     currency,
+    endDate,
     existing,
     notes,
     serviceName,
+    startDate,
     upsertMutation,
     userId,
     validate,
@@ -393,6 +429,79 @@ export default function SubscriptionEditorScreen() {
                 />
               </View>
 
+              {/* Start Date */}
+              <View style={styles.section}>
+                <Text style={styles.label}>Start date</Text>
+                <Pressable
+                  style={styles.dateInput}
+                  onPress={() => setShowStartDatePicker(true)}
+                  testID="subscriptionEditorStartDate"
+                >
+                  <Text style={styles.dateText}>{formatDate(startDate)}</Text>
+                </Pressable>
+                {showStartDatePicker && (
+                  <DateTimePicker
+                    value={startDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(event, selectedDate) => {
+                      setShowStartDatePicker(Platform.OS === 'ios');
+                      if (selectedDate) {
+                        setStartDate(selectedDate);
+                      }
+                    }}
+                  />
+                )}
+              </View>
+
+              {/* End Date (optional) */}
+              <View style={styles.section}>
+                <Text style={styles.label}>End date</Text>
+                {endDate ? (
+                  <View style={styles.dateRow}>
+                    <Pressable
+                      style={[styles.dateInput, { flex: 1 }]}
+                      onPress={() => setShowEndDatePicker(true)}
+                      testID="subscriptionEditorEndDate"
+                    >
+                      <Text style={styles.dateText}>{formatDate(endDate)}</Text>
+                    </Pressable>
+                    <Pressable
+                      style={styles.clearButton}
+                      onPress={() => setEndDate(null)}
+                      testID="subscriptionEditorClearEndDate"
+                    >
+                      <XIcon color={theme.colors.secondaryText} size={18} />
+                    </Pressable>
+                  </View>
+                ) : (
+                  <Pressable
+                    style={styles.dateInput}
+                    onPress={() => {
+                      setEndDate(new Date());
+                      setShowEndDatePicker(true);
+                    }}
+                    testID="subscriptionEditorAddEndDate"
+                  >
+                    <Text style={styles.placeholderText}>Add end date (optional)</Text>
+                  </Pressable>
+                )}
+                {showEndDatePicker && endDate && (
+                  <DateTimePicker
+                    value={endDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(event, selectedDate) => {
+                      setShowEndDatePicker(Platform.OS === 'ios');
+                      if (selectedDate) {
+                        setEndDate(selectedDate);
+                      }
+                    }}
+                  />
+                )}
+                {dateError && <Text style={styles.errorText}>{dateError}</Text>}
+              </View>
+
               <View style={styles.section}>
                 <Text style={styles.label}>Notes (optional)</Text>
                 <TextInput
@@ -468,6 +577,8 @@ function toInput(
     billingCycle: Subscription['billingCycle'];
     billingDay: number;
     notes?: string;
+    startDate?: number;
+    endDate?: number;
   }
 ) {
   return {
@@ -480,6 +591,8 @@ function toInput(
     billingCycle: base.billingCycle,
     billingDay: base.billingDay,
     notes: base.notes,
+    startDate: base.startDate,
+    endDate: base.endDate,
     isArchived: false,
   };
 }
@@ -552,6 +665,45 @@ function createStyles() {
     },
     placeholderText: {
       color: 'rgba(15,23,42,0.35)',
+    },
+    errorText: {
+      color: theme.colors.negative,
+      fontSize: 13,
+      fontWeight: '600',
+      marginTop: 6,
+      marginLeft: 4,
+    },
+    dateInput: {
+      minHeight: 56,
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      backgroundColor: '#fff',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOpacity: 0.04,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 2 },
+    },
+    dateText: {
+      color: theme.colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    dateRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    clearButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(15,23,42,0.06)',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     notesInput: {
       minHeight: 100,

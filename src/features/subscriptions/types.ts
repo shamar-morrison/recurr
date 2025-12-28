@@ -13,6 +13,8 @@ export type Subscription = {
   currency: CurrencyCode;
   billingCycle: BillingCycle;
   billingDay: number;
+  startDate?: number;
+  endDate?: number;
   notes?: string;
   isArchived?: boolean;
   createdAt: number;
