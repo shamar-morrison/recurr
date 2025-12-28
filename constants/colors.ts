@@ -10,9 +10,9 @@ export const AppColors = {
   negative: '#F04438', // Modern vibrant red
   warning: '#F79009',
   // New sematic tokens
-  primary: '#5E38F8',
+  primary: '#5E38F8', // Alias for tint, used in semantic contexts
   onPrimary: '#FFFFFF',
-  surface: '#FFFFFF',
+  surface: '#FFFFFF', // Alias for card, used in semantic contexts
   disabledTint: 'rgba(94, 56, 248, 0.35)',
   badge: 'rgba(15, 23, 42, 0.08)',
   badgeText: '#0B1220',
