@@ -224,7 +224,12 @@ export default function SubscriptionEditorScreen() {
 
   const canDelete = Boolean(existing);
 
-  const title = existing ? 'Edit Subscription' : 'New Subscription';
+  const title = useMemo(() => {
+    if (billingCycle === 'One-Time') {
+      return existing ? 'Edit One-Time Payment' : 'New One-Time Payment';
+    }
+    return existing ? 'Edit Subscription' : 'New Subscription';
+  }, [billingCycle, existing]);
 
   const dateError = useMemo(() => {
     if (startDate && endDate && endDate < startDate) {
