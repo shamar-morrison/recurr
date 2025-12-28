@@ -127,20 +127,23 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
           setIsPremium(false);
           setSettings(DEFAULT_SETTINGS);
         } else {
-          const data = snap.data() as unknown as {
+          const data = snap.data() as {
             isPremium?: boolean;
             settings?: Partial<UserSettings>;
+            displayName?: string;
+            photoURL?: string;
+            email?: string;
           };
 
           // Update profile data if it has changed (e.g., user updated their Google profile)
           const updates: Record<string, unknown> = {};
-          if (u.displayName && snap.data().displayName !== u.displayName) {
+          if (u.displayName && data.displayName !== u.displayName) {
             updates.displayName = u.displayName;
           }
-          if (u.photoURL && snap.data().photoURL !== u.photoURL) {
+          if (u.photoURL && data.photoURL !== u.photoURL) {
             updates.photoURL = u.photoURL;
           }
-          if (u.email && snap.data().email !== u.email) {
+          if (u.email && data.email !== u.email) {
             updates.email = u.email;
           }
           if (Object.keys(updates).length > 0) {
