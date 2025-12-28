@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(15,23,42,0.04)',
+    backgroundColor: AppColors.inputBackground,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderRadius: 14,
-    backgroundColor: 'rgba(15,23,42,0.04)',
+    backgroundColor: AppColors.inputBackground,
     marginBottom: 12,
   },
   searchInput: {
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   itemSelected: {
-    backgroundColor: 'rgba(79,140,255,0.08)',
+    backgroundColor: AppColors.selectedBackground,
   },
   serviceInfo: {
     flexDirection: 'row',
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
     color: AppColors.tint,
-    backgroundColor: 'rgba(79,140,255,0.1)',
+    backgroundColor: AppColors.badgeBackground,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   nameInput: {
-    backgroundColor: 'rgba(15,23,42,0.04)',
+    backgroundColor: AppColors.inputBackground,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: 'rgba(15,23,42,0.04)',
+    backgroundColor: AppColors.inputBackground,
   },
   categoryChipSelected: {
     backgroundColor: AppColors.tint,
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: 'rgba(15,23,42,0.04)',
+    backgroundColor: AppColors.inputBackground,
     alignItems: 'center',
   },
   cancelButtonText: {

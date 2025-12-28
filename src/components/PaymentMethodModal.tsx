@@ -4,6 +4,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
+import { PaymentMethod } from '@/src/features/subscriptions/types';
 import {
   AppleLogoIcon,
   BankIcon,
@@ -14,27 +15,6 @@ import {
   PaypalLogoIcon,
   WalletIcon,
 } from 'phosphor-react-native';
-
-export type PaymentMethod =
-  | 'Credit Card'
-  | 'Debit Card'
-  | 'PayPal'
-  | 'Apple Pay'
-  | 'Google Pay'
-  | 'Bank Transfer'
-  | 'Cash'
-  | 'Other';
-
-export const PAYMENT_METHODS: PaymentMethod[] = [
-  'Credit Card',
-  'Debit Card',
-  'PayPal',
-  'Apple Pay',
-  'Google Pay',
-  'Bank Transfer',
-  'Cash',
-  'Other',
-];
 
 type PaymentMethodConfig = {
   label: PaymentMethod;

@@ -4,11 +4,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { AppColors } from '@/constants/colors';
 import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { FrequencySelectorModal } from '@/src/components/FrequencySelectorModal';
-import {
-  PAYMENT_METHOD_CONFIG,
-  PaymentMethod,
-  PaymentMethodModal,
-} from '@/src/components/PaymentMethodModal';
+import { PAYMENT_METHOD_CONFIG, PaymentMethodModal } from '@/src/components/PaymentMethodModal';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
@@ -21,6 +17,7 @@ import {
 import { clampBillingDay } from '@/src/features/subscriptions/subscriptionsUtils';
 import {
   BillingCycle,
+  PaymentMethod,
   Subscription,
   SUBSCRIPTION_CATEGORIES,
   SubscriptionCategory,
@@ -160,7 +157,7 @@ export default function SubscriptionEditorScreen() {
     setCurrency(existing.currency ?? defaultCurrency);
     setStartDate(existing.startDate ? new Date(existing.startDate) : new Date());
     setEndDate(existing.endDate ? new Date(existing.endDate) : null);
-    setPaymentMethod(existing.paymentMethod as PaymentMethod | undefined);
+    setPaymentMethod(existing.paymentMethod);
   }, [defaultCurrency, editingId, existing]);
 
   const amount = useMemo(() => {
@@ -628,7 +625,7 @@ function buildSubscriptionPayload(
     notes?: string;
     startDate?: number;
     endDate?: number;
-    paymentMethod?: string;
+    paymentMethod?: PaymentMethod;
   }
 ) {
   return {

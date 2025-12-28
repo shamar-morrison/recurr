@@ -12,8 +12,8 @@ import {
   where,
 } from 'firebase/firestore';
 
-import { firestore, isFirebaseConfigured, timestampToMillis } from '@/src/lib/firebase';
 import { Subscription, SubscriptionInput } from '@/src/features/subscriptions/types';
+import { firestore, isFirebaseConfigured, timestampToMillis } from '@/src/lib/firebase';
 
 const STORAGE_KEY_PREFIX = 'subscriptions:v1:';
 
@@ -48,6 +48,12 @@ function normalizeSubscription(raw: unknown): Subscription | null {
     billingCycle: r.billingCycle as Subscription['billingCycle'],
     billingDay: r.billingDay,
     notes: typeof r.notes === 'string' ? r.notes : undefined,
+    startDate: typeof r.startDate === 'number' ? r.startDate : undefined,
+    endDate: typeof r.endDate === 'number' ? r.endDate : undefined,
+    paymentMethod:
+      typeof r.paymentMethod === 'string'
+        ? (r.paymentMethod as Subscription['paymentMethod'])
+        : undefined,
     isArchived: Boolean(r.isArchived),
     createdAt: typeof r.createdAt === 'number' ? r.createdAt : nowMillis(),
     updatedAt: typeof r.updatedAt === 'number' ? r.updatedAt : nowMillis(),
@@ -116,6 +122,12 @@ export async function listSubscriptions(userId: string): Promise<Subscription[]>
         billingCycle: String(data.billingCycle ?? 'Monthly') as Subscription['billingCycle'],
         billingDay: typeof data.billingDay === 'number' ? data.billingDay : 1,
         notes: typeof data.notes === 'string' ? data.notes : undefined,
+        startDate: typeof data.startDate === 'number' ? data.startDate : undefined,
+        endDate: typeof data.endDate === 'number' ? data.endDate : undefined,
+        paymentMethod:
+          typeof data.paymentMethod === 'string'
+            ? (data.paymentMethod as Subscription['paymentMethod'])
+            : undefined,
         isArchived: Boolean(data.isArchived),
         createdAt: timestampToMillis(data.createdAt),
         updatedAt: timestampToMillis(data.updatedAt),
@@ -150,6 +162,9 @@ export async function upsertSubscription(
     billingCycle: input.billingCycle,
     billingDay: input.billingDay,
     notes: input.notes,
+    startDate: input.startDate,
+    endDate: input.endDate,
+    paymentMethod: input.paymentMethod,
     isArchived: Boolean(input.isArchived),
     createdAt: (input as Partial<Subscription>).createdAt ?? now,
     updatedAt: now,
@@ -178,6 +193,9 @@ export async function upsertSubscription(
         billingCycle: sub.billingCycle,
         billingDay: sub.billingDay,
         notes: sub.notes ?? null,
+        startDate: sub.startDate ?? null,
+        endDate: sub.endDate ?? null,
+        paymentMethod: sub.paymentMethod ?? null,
         isArchived: sub.isArchived ?? false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -199,6 +217,9 @@ export async function upsertSubscription(
         billingCycle: sub.billingCycle,
         billingDay: sub.billingDay,
         notes: sub.notes ?? null,
+        startDate: sub.startDate ?? null,
+        endDate: sub.endDate ?? null,
+        paymentMethod: sub.paymentMethod ?? null,
         isArchived: sub.isArchived ?? false,
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),

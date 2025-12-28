@@ -268,9 +268,6 @@ export default function SubscriptionsHomeScreen() {
     subscriptionsQuery.isError,
     subscriptionsQuery.isLoading,
     filteredItems.length,
-    AppColors.secondaryText,
-    AppColors.text,
-    AppColors.tint,
     totalMonthlySpend,
   ]);
 
