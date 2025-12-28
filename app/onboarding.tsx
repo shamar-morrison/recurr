@@ -1,67 +1,60 @@
 import { router, Stack } from 'expo-router';
-import { ArrowRight, Check, ShieldCheck, Sparkles, Wallet } from 'lucide-react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import { ArrowRight, Bell, Check, Globe, ShieldAlert, Sparkles, Zap } from 'lucide-react-native';
+import React, { useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 import { AppColors } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 
+const { width, height } = Dimensions.get('window');
+
 type OnboardingPage = {
   key: string;
   title: string;
   description: string;
-  icon: 'sparkles' | 'wallet' | 'shield' | 'check';
+  color: string;
+  accent: string;
 };
 
 const PAGES: OnboardingPage[] = [
   {
     key: 'track',
-    title: 'Track every subscription',
-    description: 'Keep Netflix, Spotify, utilities, and everything else in one clean list.',
-    icon: 'sparkles',
+    title: 'Track every\nsubscription',
+    description:
+      'Netflix, Spotify, Gym, Utilities. Keep everything in one beautiful, organized list.',
+    color: '#8B5CF6', // Violet
+    accent: '#A78BFA',
   },
   {
-    key: 'avoid',
-    title: 'Avoid forgotten charges',
-    description: 'See what renews next and how soon — so surprises don’t hit your bank account.',
-    icon: 'shield',
+    key: 'alerts',
+    title: 'Never miss a\nrenewal date',
+    description: 'Get notified before you pay. We’ll tell you exactly what’s due and when.',
+    color: '#F59E0B', // Amber
+    accent: '#FCD34D',
   },
   {
-    key: 'understand',
-    title: 'Understand monthly spend',
-    description: 'We automatically convert yearly plans into monthly equivalents for clarity.',
-    icon: 'wallet',
+    key: 'insights',
+    title: 'Know where your\nmoney goes',
+    description: 'Spot rising costs and unused services. Take back control of your monthly spend.',
+    color: '#10B981', // Emerald
+    accent: '#34D399',
   },
   {
     key: 'start',
-    title: 'Ready when you are',
-    description: 'Add a few subscriptions and you’ll instantly see totals and category breakdowns.',
-    icon: 'check',
+    title: 'Ready to take\ncontrol?',
+    description: 'Join thousands of users saving money with Recurr today.',
+    color: AppColors.tint,
+    accent: '#818CF8',
   },
 ];
 
-const FLOATERS = [
-  { label: 'N', color: '#E50914' },
-  { label: 'S', color: '#1DB954' },
-  { label: 'H', color: '#1CE783' },
-  { label: 'D+', color: '#0A1E5D' },
-  { label: 'YT', color: '#FF0033' },
-  { label: 'AM', color: '#FA243C' },
-  { label: 'PS', color: '#0070D1' },
-  { label: 'HB', color: '#6B4CFF' },
-] as const;
-
 export default function OnboardingScreen() {
   const { markOnboardingComplete } = useAuth();
-
-  const screen = Dimensions.get('window');
-  const width = Math.max(320, screen.width);
-
   const scrollX = useRef(new Animated.Value(0)).current;
   const listRef = useRef<Animated.FlatList<OnboardingPage> | null>(null);
-
   const [pageIndex, setPageIndex] = useState<number>(0);
 
   const finish = async () => {
@@ -71,34 +64,48 @@ export default function OnboardingScreen() {
 
   const next = () => {
     const nextIndex = Math.min(PAGES.length - 1, pageIndex + 1);
-    if (nextIndex === pageIndex) return;
+    if (nextIndex === pageIndex) {
+      if (pageIndex === PAGES.length - 1) finish();
+      return;
+    }
     listRef.current?.scrollToOffset({ offset: nextIndex * width, animated: true });
   };
+
+  const skip = async () => {
+    finish();
+  };
+
+  // Background Color Animation
+  const backgroundColor = scrollX.interpolate({
+    inputRange: PAGES.map((_, i) => i * width),
+    outputRange: PAGES.map((p) => p.color),
+  });
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.root} testID="onboardingScreen">
-        <FloatingIconsBackground />
+        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor, opacity: 0.1 }]} />
+
+        {/* Decorative Background Elements */}
+        <AnimatedBackground pageIndex={pageIndex} scrollX={scrollX} />
 
         <SafeAreaView style={styles.overlay}>
           <View style={styles.topBar}>
-            <View style={styles.brandPill} testID="onboardingBrand">
-              <Text style={styles.brandText}>SubSense</Text>
-            </View>
+            {/* Brand pill removed as per request */}
+            <View />
             <Button
               title="Skip"
               variant="ghost"
               size="sm"
-              onPress={finish}
+              onPress={skip}
+              style={{ shadowOpacity: 0, elevation: 0 }}
               testID="onboardingSkip"
             />
           </View>
 
           <Animated.FlatList
-            ref={(r) => {
-              listRef.current = r;
-            }}
+            ref={listRef}
             data={PAGES}
             keyExtractor={(i) => i.key}
             horizontal
@@ -106,44 +113,33 @@ export default function OnboardingScreen() {
             showsHorizontalScrollIndicator={false}
             bounces={false}
             onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
-              useNativeDriver: false,
-              listener: (e) => {
-                const x = (e as unknown as { nativeEvent?: { contentOffset?: { x?: number } } })
-                  .nativeEvent?.contentOffset?.x;
-                if (typeof x !== 'number') return;
+              useNativeDriver: false, // backgroundColor interpolation needs false
+              listener: (e: any) => {
+                const x = e.nativeEvent.contentOffset.x;
                 const idx = Math.round(x / width);
-                if (idx !== pageIndex && idx >= 0 && idx < PAGES.length) {
-                  setPageIndex(idx);
-                }
+                if (idx !== pageIndex) setPageIndex(idx);
               },
             })}
             scrollEventThrottle={16}
             renderItem={({ item, index }) => (
-              <OnboardingPageCard page={item} index={index} width={width} scrollX={scrollX} />
+              <OnboardingPageContent item={item} index={index} scrollX={scrollX} />
             )}
-            testID="onboardingPager"
           />
 
           <View style={styles.bottomBar}>
-            <PaginationDots count={PAGES.length} width={width} scrollX={scrollX} />
+            <PaginationDots count={PAGES.length} scrollX={scrollX} />
 
-            {pageIndex === PAGES.length - 1 ? (
+            <View style={styles.buttonContainer}>
               <Button
-                title="Get Started"
-                onPress={finish}
-                testID="onboardingGetStarted"
-                icon={<ArrowRight color="#fff" size={18} />}
-                style={{ flexDirection: 'row-reverse' }} // Icon on right
-              />
-            ) : (
-              <Button
-                title="Next"
+                title={pageIndex === PAGES.length - 1 ? 'Get Started' : 'Next'}
                 onPress={next}
-                testID="onboardingNext"
-                icon={<ArrowRight color="#fff" size={18} />}
-                style={{ flexDirection: 'row-reverse' }}
+                variant="primary"
+                size="lg"
+                style={[styles.mainButton, { backgroundColor: PAGES[pageIndex].color }]}
+                textStyle={{ fontSize: 16 }}
+                icon={<ArrowRight color="#fff" size={20} />}
               />
-            )}
+            </View>
           </View>
         </SafeAreaView>
       </View>
@@ -151,230 +147,236 @@ export default function OnboardingScreen() {
   );
 }
 
-function FloatingIconsBackground() {
-  const { width, height } = Dimensions.get('window');
-  const useNativeDriver = Platform.OS !== 'web';
-
-  const anims = useRef<
-    { y: Animated.Value; x: number; size: number; label: string; color: string; opacity: number }[]
-  >([]).current;
-
-  if (anims.length === 0) {
-    for (let i = 0; i < FLOATERS.length; i += 1) {
-      const f = FLOATERS[i];
-      const size = 44 + ((i * 7) % 18);
-      const x = ((i * 97) % Math.max(1, width - size)) + 8;
-      const startY = height + 40 + i * 26;
-      anims.push({
-        y: new Animated.Value(startY),
-        x,
-        size,
-        label: f.label,
-        color: f.color,
-        opacity: 0.18 + ((i * 3) % 10) / 100,
-      });
-    }
-  }
-
-  useEffect(() => {
-    const loops: Animated.CompositeAnimation[] = [];
-
-    for (let i = 0; i < anims.length; i += 1) {
-      const { y, size } = anims[i];
-      const startY = height + 60 + i * 26;
-      const endY = -120 - size;
-
-      y.setValue(startY);
-
-      const duration = 14_000 + (i % 4) * 2_200;
-      const delay = (i % 6) * 700;
-
-      const loop = Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(y, {
-            toValue: endY,
-            duration,
-            useNativeDriver,
-          }),
-        ])
-      );
-
-      loop.start();
-      loops.push(loop);
-    }
-
-    return () => {
-      for (const l of loops) l.stop();
-    };
-  }, [anims, height, useNativeDriver]);
+function AnimatedBackground({
+  pageIndex,
+  scrollX,
+}: {
+  pageIndex: number;
+  scrollX: Animated.Value;
+}) {
+  // Helper to interpolate opacity for each page's background elements
+  const getOpacity = (index: number) => {
+    const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
+    return scrollX.interpolate({
+      inputRange,
+      outputRange: [0, 1, 0],
+      extrapolate: 'clamp',
+    });
+  };
 
   return (
-    <View style={bgStyles.bg} pointerEvents="none" testID="onboardingBg">
-      <View style={bgStyles.glowA} />
-      <View style={bgStyles.glowB} />
-
-      {anims.map((a, idx) => (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {/* Dynamic gradient bubbles or shapes could act as background here that change per page */}
+      {PAGES.map((page, index) => (
         <Animated.View
-          key={`${a.label}_${idx}`}
-          style={[
-            bgStyles.floater,
-            {
-              width: a.size,
-              height: a.size,
-              borderRadius: Math.round(a.size / 3),
-              left: a.x,
-              transform: [{ translateY: a.y }],
-              opacity: a.opacity,
-              backgroundColor: a.color,
-            },
-          ]}
+          key={`bg-${index}`}
+          style={[StyleSheet.absoluteFill, { opacity: getOpacity(index) }]}
         >
-          <Text style={bgStyles.floaterText}>{a.label}</Text>
+          <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
+            <Defs>
+              <LinearGradient id={`grad-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <Stop offset="0%" stopColor={page.color} stopOpacity="0.05" />
+                <Stop offset="100%" stopColor={page.accent} stopOpacity="0.2" />
+              </LinearGradient>
+            </Defs>
+            <Circle
+              cx={width * 0.8}
+              cy={height * 0.2}
+              r={width * 0.6}
+              fill={`url(#grad-${index})`}
+            />
+            <Circle
+              cx={width * 0.1}
+              cy={height * 0.6}
+              r={width * 0.4}
+              fill={`url(#grad-${index})`}
+            />
+          </Svg>
         </Animated.View>
       ))}
     </View>
   );
 }
 
-function OnboardingPageCard({
-  page,
+function OnboardingPageContent({
+  item,
   index,
-  width,
   scrollX,
 }: {
-  page: OnboardingPage;
+  item: OnboardingPage;
   index: number;
-  width: number;
   scrollX: Animated.Value;
 }) {
   const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
 
-  const titleOpacity = scrollX.interpolate({
+  const scale = scrollX.interpolate({
     inputRange,
-    outputRange: [0.0, 1.0, 0.0],
+    outputRange: [0.8, 1, 0.8],
     extrapolate: 'clamp',
   });
 
-  const titleTranslate = scrollX.interpolate({
+  const opacity = scrollX.interpolate({
     inputRange,
-    outputRange: [20, 0, -20],
+    outputRange: [0, 1, 0],
+    extrapolate: 'clamp',
+  });
+
+  const translateText = scrollX.interpolate({
+    inputRange,
+    outputRange: [50, 0, -50],
     extrapolate: 'clamp',
   });
 
   return (
-    <View style={[styles.page, { width }]} testID={`onboardingPage_${page.key}`}>
-      <View style={styles.card}>
-        <Animated.View
-          style={{ opacity: titleOpacity, transform: [{ translateY: titleTranslate }] }}
-        >
-          <View
-            style={[
-              styles.bigIcon,
-              {
-                backgroundColor: 'rgba(79,140,255,0.12)',
-              },
-            ]}
-          >
-            {page.icon === 'sparkles' ? (
-              <Sparkles color={AppColors.tint} size={26} />
-            ) : page.icon === 'wallet' ? (
-              <Wallet color={AppColors.tint} size={26} />
-            ) : page.icon === 'shield' ? (
-              <ShieldCheck color={AppColors.tint} size={26} />
-            ) : (
-              <Check color={AppColors.tint} size={26} />
-            )}
-          </View>
+    <View style={[styles.pageContainer]}>
+      <Animated.View style={[styles.visualContainer, { transform: [{ scale }], opacity }]}>
+        {item.key === 'track' && <VisualTrack />}
+        {item.key === 'alerts' && <VisualAlerts />}
+        {item.key === 'insights' && <VisualInsights />}
+        {item.key === 'start' && <VisualStart />}
+      </Animated.View>
 
-          <Text style={styles.h1}>{page.title}</Text>
-          <Text style={styles.p}>{page.description}</Text>
-        </Animated.View>
+      <Animated.View
+        style={[styles.textContainer, { opacity, transform: [{ translateX: translateText }] }]}
+      >
+        <Text style={[styles.title, { color: item.color }]}>{item.title}</Text>
+        <Text style={styles.description}>{item.description}</Text>
+      </Animated.View>
+    </View>
+  );
+}
+
+// --- VISUALS ---
+
+function VisualTrack() {
+  return (
+    <View style={styles.visualCard}>
+      <View style={styles.row}>
+        <View style={[styles.iconBox, { backgroundColor: '#E50914' }]}>
+          <Text style={styles.iconText}>N</Text>
+        </View>
+        <View style={styles.rowText}>
+          <Text style={styles.rowTitle}>Netflix Premium</Text>
+          <Text style={styles.rowSubtitle}>$22.99 • Monthly</Text>
+        </View>
+      </View>
+      <View style={styles.row}>
+        <View style={[styles.iconBox, { backgroundColor: '#1DB954' }]}>
+          <Text style={styles.iconText}>S</Text>
+        </View>
+        <View style={styles.rowText}>
+          <Text style={styles.rowTitle}>Spotify Duo</Text>
+          <Text style={styles.rowSubtitle}>$14.99 • Monthly</Text>
+        </View>
+      </View>
+      <View style={styles.row}>
+        <View style={[styles.iconBox, { backgroundColor: '#0070D1' }]}>
+          <Text style={styles.iconText}>P</Text>
+        </View>
+        <View style={styles.rowText}>
+          <Text style={styles.rowTitle}>PlayStation Plus</Text>
+          <Text style={styles.rowSubtitle}>$79.99 • Yearly</Text>
+        </View>
+      </View>
+
+      <View style={styles.floatBadge}>
+        <Check size={14} color="#fff" strokeWidth={3} />
+        <Text style={styles.floatBadgeText}>Tracking 12 apps</Text>
       </View>
     </View>
   );
 }
 
-function PaginationDots({
-  count,
-  width,
-  scrollX,
-}: {
-  count: number;
-  width: number;
-  scrollX: Animated.Value;
-}) {
+function VisualAlerts() {
   return (
-    <View style={styles.dots} testID="onboardingDots">
+    <View style={styles.visualCard}>
+      <View style={styles.alertCard}>
+        <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
+          <Bell size={24} color="#D97706" fill="#D97706" />
+        </View>
+        <Text style={styles.alertTitle}>Payment Reminder</Text>
+        <Text style={styles.alertDesc}>Netflix is due tomorrow!</Text>
+        <View style={styles.alertAmount}>
+          <Text style={styles.alertAmountText}>$22.99</Text>
+        </View>
+      </View>
+      <View style={[styles.alertCard, styles.alertCardBack]}></View>
+    </View>
+  );
+}
+
+function VisualInsights() {
+  return (
+    <View style={styles.visualCard}>
+      <View style={styles.chartContainer}>
+        <View style={styles.chartBarGroup}>
+          <View style={[styles.chartBar, { height: 60, backgroundColor: '#E5E7EB' }]} />
+          <View style={[styles.chartBar, { height: 85, backgroundColor: '#E5E7EB' }]} />
+          <View style={[styles.chartBar, { height: 120, backgroundColor: '#10B981' }]} />
+          <View style={[styles.chartBar, { height: 90, backgroundColor: '#E5E7EB' }]} />
+        </View>
+        <View style={styles.doughnut}>
+          <View style={styles.doughnutInner}>
+            <Text style={styles.doughnutText}>$142</Text>
+            <Text style={styles.doughnutLabel}>/mo</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function VisualStart() {
+  return (
+    <View style={styles.visualCard}>
+      <View style={styles.logoContainer}>
+        <Zap size={64} color={AppColors.tint} fill={AppColors.tint} />
+      </View>
+
+      <View style={styles.bulletList}>
+        <View style={styles.bulletRow}>
+          <Sparkles size={20} color={AppColors.tint} />
+          <Text style={styles.bulletText}>Smart Insights</Text>
+        </View>
+        <View style={styles.bulletRow}>
+          <ShieldAlert size={20} color={AppColors.tint} />
+          <Text style={styles.bulletText}>Secure Data</Text>
+        </View>
+        <View style={styles.bulletRow}>
+          <Globe size={20} color={AppColors.tint} />
+          <Text style={styles.bulletText}>Global Currencies</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function PaginationDots({ count, scrollX }: { count: number; scrollX: Animated.Value }) {
+  return (
+    <View style={styles.dots}>
       {Array.from({ length: count }).map((_, i) => {
         const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
-        const dotW = scrollX.interpolate({
+        const dotWidth = scrollX.interpolate({
           inputRange,
-          outputRange: [8, 22, 8],
+          outputRange: [8, 24, 8],
           extrapolate: 'clamp',
         });
-        const dotOpacity = scrollX.interpolate({
+        const dotColor = scrollX.interpolate({
           inputRange,
-          outputRange: [0.35, 1, 0.35],
+          outputRange: ['#D1D5DB', '#4B5563', '#D1D5DB'],
           extrapolate: 'clamp',
         });
+
         return (
           <Animated.View
             key={i}
-            style={[
-              styles.dot,
-              {
-                width: dotW,
-                opacity: dotOpacity,
-                backgroundColor: 'rgba(15,23,42,0.45)',
-              },
-            ]}
+            style={[styles.dot, { width: dotWidth, backgroundColor: dotColor }]}
           />
         );
       })}
     </View>
   );
 }
-
-const bgStyles = StyleSheet.create({
-  bg: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: AppColors.background,
-  },
-  glowA: {
-    position: 'absolute',
-    top: -120,
-    left: -120,
-    width: 320,
-    height: 320,
-    borderRadius: 999,
-    backgroundColor: 'rgba(79,140,255,0.14)',
-  },
-  glowB: {
-    position: 'absolute',
-    bottom: -160,
-    right: -140,
-    width: 380,
-    height: 380,
-    borderRadius: 999,
-    backgroundColor: 'rgba(31,214,164,0.12)',
-  },
-  floater: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(15,23,42,0.12)',
-  },
-  floaterText: {
-    color: '#fff',
-    fontWeight: '900',
-    letterSpacing: -0.2,
-    fontSize: 12,
-  },
-});
-
-const shadowColor = 'rgba(15,23,42,0.18)';
 
 const styles = StyleSheet.create({
   root: {
@@ -385,112 +387,265 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topBar: {
-    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 16,
   },
-  brandPill: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(15,23,42,0.06)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: AppColors.border,
-  },
-  brandText: {
-    color: AppColors.text,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-    fontSize: 12,
-    textTransform: 'uppercase',
-  },
-  skip: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(15,23,42,0.06)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: AppColors.border,
-  },
-  skipText: {
-    color: AppColors.text,
-    fontWeight: '900',
-    fontSize: 12,
-    letterSpacing: -0.1,
-  },
-  page: {
-    paddingHorizontal: 16,
-    paddingTop: 26,
-    paddingBottom: 16,
-  },
-  card: {
-    flex: 1,
-    borderRadius: 30,
-    padding: 18,
-    backgroundColor: AppColors.cardAlt,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: AppColors.border,
-    shadowColor,
-    shadowOpacity: 1,
-    shadowRadius: 22,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 2,
-    justifyContent: 'center',
-    gap: 12,
-  },
-  bigIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
+  pageContainer: {
+    width,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: AppColors.border,
+    paddingHorizontal: 24,
   },
-  h1: {
-    color: AppColors.text,
-    fontSize: 30,
+  visualContainer: {
+    width: width * 0.85,
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 40,
+  },
+  visualCard: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.08,
+    shadowRadius: 30,
+    elevation: 5,
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  textContainer: {
+    alignItems: 'center',
+    gap: 16,
+    paddingHorizontal: 16,
+  },
+  title: {
+    fontSize: 36,
     fontWeight: '900',
-    letterSpacing: -1.0,
-    lineHeight: 34,
-    maxWidth: 320,
+    textAlign: 'center',
+    lineHeight: 40,
+    letterSpacing: -1,
   },
-  p: {
+  description: {
+    fontSize: 17,
     color: AppColors.secondaryText,
-    fontSize: 14,
-    lineHeight: 19,
-    maxWidth: 340,
+    textAlign: 'center',
+    lineHeight: 24,
+    maxWidth: 280,
   },
   bottomBar: {
-    paddingHorizontal: 16,
-    paddingBottom: 18,
-    gap: 12,
+    paddingHorizontal: 32,
+    paddingBottom: Platform.OS === 'ios' ? 0 : 24,
+    height: 130,
+    justifyContent: 'flex-start',
+    gap: 32,
   },
   dots: {
     flexDirection: 'row',
     gap: 8,
     justifyContent: 'center',
-    alignItems: 'center',
-    height: 16,
+    height: 8,
   },
   dot: {
     height: 8,
-    borderRadius: 999,
+    borderRadius: 4,
   },
-  primary: {
-    borderRadius: 18,
-    paddingVertical: 14,
+  buttonContainer: {
+    width: '100%',
+  },
+  mainButton: {
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 4,
+  },
+
+  // Visual Track Styles
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    width: '100%',
+    backgroundColor: '#F9FAFB',
+    padding: 12,
+    borderRadius: 20,
+    marginBottom: 12,
+  },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 10,
   },
-  primaryText: {
+  iconText: {
     color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 20,
+  },
+  rowText: {
+    flex: 1,
+  },
+  rowTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  rowSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  floatBadge: {
+    position: 'absolute',
+    bottom: 24,
+    borderRadius: 20,
+    backgroundColor: '#111827',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+  },
+  floatBadgeText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+
+  // Visual Alerts Styles
+  alertCard: {
+    width: '85%',
+    aspectRatio: 0.8,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  alertCardBack: {
+    position: 'absolute',
+    top: 32,
+    transform: [{ scale: 0.9 }, { translateY: 10 }],
+    zIndex: 1,
+    backgroundColor: '#F9FAFB',
+    opacity: 0.5,
+  },
+  iconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  alertTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  alertDesc: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  alertAmount: {
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  alertAmountText: {
+    color: '#EF4444',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+
+  // Visual Insights Styles
+  chartContainer: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chartBarGroup: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 16,
+    marginBottom: 32,
+    height: 120,
+  },
+  chartBar: {
+    width: 24,
+    borderRadius: 8,
+  },
+  doughnut: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 12,
+    borderColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderLeftColor: '#E5E7EB', // mock 'segment'
+    transform: [{ rotate: '45deg' }],
+  },
+  doughnutInner: {
+    transform: [{ rotate: '-45deg' }],
+    alignItems: 'center',
+  },
+  doughnutText: {
+    fontSize: 32,
     fontWeight: '900',
-    fontSize: 15,
-    letterSpacing: -0.1,
+    color: '#1F2937',
+    lineHeight: 32,
+  },
+  doughnutLabel: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '600',
+  },
+
+  // Visual Start
+  logoContainer: {
+    width: 96,
+    height: 96,
+    backgroundColor: 'rgba(94, 56, 248, 0.1)',
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 32,
+  },
+  bulletList: {
+    gap: 16,
+    alignItems: 'flex-start',
+  },
+  bulletRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  bulletText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
   },
 });
