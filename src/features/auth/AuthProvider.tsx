@@ -1,12 +1,9 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  createUserWithEmailAndPassword,
   GoogleAuthProvider,
   onAuthStateChanged,
-  signInAnonymously,
   signInWithCredential,
-  signInWithEmailAndPassword,
   signOut,
   User,
 } from 'firebase/auth';
@@ -37,11 +34,8 @@ export type AuthState = {
   isFirebaseReady: boolean;
   isPremium: boolean;
   settings: UserSettings;
-  signInEmail: (email: string, password: string) => Promise<void>;
-  signUpEmail: (email: string, password: string) => Promise<void>;
   signOutUser: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signInAsGuest: () => Promise<void>;
   setReminderDays: (days: number) => Promise<void>;
   setPremiumMock: (value: boolean) => Promise<void>;
   markOnboardingComplete: () => Promise<void>;
@@ -108,10 +102,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
         const snap = await getDoc(userRef);
 
         if (!snap.exists()) {
-          // Determine auth provider from user's provider data
-          const authProvider =
-            u.providerData[0]?.providerId === 'google.com' ? 'google' : 'anonymous';
-
           await setDoc(userRef, {
             createdAt: serverTimestamp(),
             email: u.email ?? null,
@@ -122,7 +112,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
               remindDaysBeforeBilling: DEFAULT_SETTINGS.remindDaysBeforeBilling,
               currency: DEFAULT_SETTINGS.currency,
             },
-            authProvider: authProvider,
+            authProvider: 'google',
           });
           setIsPremium(false);
           setSettings(DEFAULT_SETTINGS);
@@ -170,34 +160,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       offlineAccess: false,
     });
   }, []);
-
-  const signInEmail = useCallback(
-    async (email: string, password: string) => {
-      console.log('[auth] signInEmail', { email });
-      if (!isFirebaseReady) throw new Error('Firebase is not configured');
-      try {
-        const auth = getFirebaseAuth();
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (e) {
-        throw new Error(getFirestoreErrorMessage(e));
-      }
-    },
-    [isFirebaseReady]
-  );
-
-  const signUpEmail = useCallback(
-    async (email: string, password: string) => {
-      console.log('[auth] signUpEmail', { email });
-      if (!isFirebaseReady) throw new Error('Firebase is not configured');
-      try {
-        const auth = getFirebaseAuth();
-        await createUserWithEmailAndPassword(auth, email, password);
-      } catch (e) {
-        throw new Error(getFirestoreErrorMessage(e));
-      }
-    },
-    [isFirebaseReady]
-  );
 
   const signInWithGoogle = useCallback(async () => {
     console.log('[auth] signInWithGoogle');
@@ -258,17 +220,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       }
 
       throw error;
-    }
-  }, [isFirebaseReady]);
-
-  const signInAsGuest = useCallback(async () => {
-    console.log('[auth] signInAsGuest -> signInAnonymously');
-    if (!isFirebaseReady) throw new Error('Firebase is not configured');
-    try {
-      const auth = getFirebaseAuth();
-      await signInAnonymously(auth);
-    } catch (e) {
-      throw new Error(getFirestoreErrorMessage(e));
     }
   }, [isFirebaseReady]);
 
@@ -357,11 +308,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       isFirebaseReady,
       isPremium,
       settings,
-      signInEmail,
-      signUpEmail,
       signOutUser,
       signInWithGoogle,
-      signInAsGuest,
       setReminderDays,
       setPremiumMock,
       markOnboardingComplete,
@@ -373,11 +321,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       isFirebaseReady,
       isPremium,
       settings,
-      signInEmail,
-      signUpEmail,
       signOutUser,
       signInWithGoogle,
-      signInAsGuest,
       setReminderDays,
       setPremiumMock,
       markOnboardingComplete,
