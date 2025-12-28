@@ -59,24 +59,30 @@ export default function RootLayout() {
     Inter_700Bold,
   });
 
+  const [ratesLoaded, setRatesLoaded] = React.useState(false);
+
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && ratesLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, ratesLoaded]);
 
   // Initialize currency rates early in app lifecycle
   useEffect(() => {
-    initCurrencyRates().catch(() => {
-      // Errors are handled internally; this prevents unhandled promise rejections
-    });
+    initCurrencyRates()
+      .catch(() => {
+        // Errors are handled internally; this prevents unhandled promise rejections
+      })
+      .finally(() => {
+        setRatesLoaded(true);
+      });
   }, []);
 
-  if (!loaded) {
+  if (!loaded || !ratesLoaded) {
     return null;
   }
 
