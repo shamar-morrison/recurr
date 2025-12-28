@@ -14,7 +14,10 @@ const LOGO_DEV_TOKEN = process.env.EXPO_PUBLIC_LOGO_DEV_PUBLISHABLE_KEY;
 /**
  * Generates the logo.dev URL for a given domain.
  */
-export function getLogoUrl(domain: string): string {
+export function getLogoUrl(domain: string): string | null {
+  if (!LOGO_DEV_TOKEN) {
+    return null;
+  }
   return `https://img.logo.dev/${domain}?token=${LOGO_DEV_TOKEN}`;
 }
 
