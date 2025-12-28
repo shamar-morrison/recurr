@@ -15,6 +15,7 @@ export type Subscription = {
   billingDay: number;
   startDate?: number;
   endDate?: number;
+  paymentMethod?: string;
   notes?: string;
   isArchived?: boolean;
   createdAt: number;

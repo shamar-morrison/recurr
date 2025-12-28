@@ -4,6 +4,11 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { AppColors } from '@/constants/colors';
 import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { FrequencySelectorModal } from '@/src/components/FrequencySelectorModal';
+import {
+  PAYMENT_METHOD_CONFIG,
+  PaymentMethod,
+  PaymentMethodModal,
+} from '@/src/components/PaymentMethodModal';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
@@ -137,6 +142,15 @@ export default function SubscriptionEditorScreen() {
     setShowFrequencyModal(false);
   }, []);
 
+  // State for payment method modal
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | undefined>(undefined);
+  const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
+
+  const handlePaymentMethodSelect = useCallback((method: PaymentMethod) => {
+    setPaymentMethod(method);
+    setShowPaymentMethodModal(false);
+  }, []);
+
   React.useEffect(() => {
     if (!editingId) return;
     if (!existing) return;
@@ -149,6 +163,7 @@ export default function SubscriptionEditorScreen() {
     setCurrency(existing.currency ?? defaultCurrency);
     setStartDate(existing.startDate ? new Date(existing.startDate) : new Date());
     setEndDate(existing.endDate ? new Date(existing.endDate) : null);
+    setPaymentMethod(existing.paymentMethod as PaymentMethod | undefined);
   }, [defaultCurrency, editingId, existing]);
 
   const amount = useMemo(() => {
@@ -190,7 +205,7 @@ export default function SubscriptionEditorScreen() {
     }
 
     try {
-      const payload = toInput(existing, userId, {
+      const payload = buildSubscriptionPayload(existing, userId, {
         serviceName: serviceName.trim(),
         category,
         amount,
@@ -200,6 +215,7 @@ export default function SubscriptionEditorScreen() {
         notes: notes.trim() ? notes.trim() : undefined,
         startDate: startDate.getTime(),
         endDate: endDate ? endDate.getTime() : undefined,
+        paymentMethod: paymentMethod,
       });
 
       await upsertMutation.mutateAsync(payload);
@@ -218,6 +234,7 @@ export default function SubscriptionEditorScreen() {
     endDate,
     existing,
     notes,
+    paymentMethod,
     serviceName,
     startDate,
     upsertMutation,
@@ -502,6 +519,35 @@ export default function SubscriptionEditorScreen() {
                 {dateError && <Text style={styles.errorText}>{dateError}</Text>}
               </View>
 
+              {/* Payment Method */}
+              <View style={styles.section}>
+                <Text style={styles.label}>Payment method</Text>
+                <Pressable
+                  style={styles.dropdownButton}
+                  onPress={() => setShowPaymentMethodModal(true)}
+                  testID="subscriptionEditorPaymentMethod"
+                >
+                  {paymentMethod ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      {(() => {
+                        const config = PAYMENT_METHOD_CONFIG.find((c) => c.label === paymentMethod);
+                        if (config) {
+                          const IconComponent = config.icon;
+                          return <IconComponent color={theme.colors.text} size={20} />;
+                        }
+                        return null;
+                      })()}
+                      <Text style={styles.dropdownText}>{paymentMethod}</Text>
+                    </View>
+                  ) : (
+                    <Text style={[styles.dropdownText, styles.placeholderText]}>
+                      Select payment method
+                    </Text>
+                  )}
+                  <CaretDownIcon color={theme.colors.secondaryText} size={16} />
+                </Pressable>
+              </View>
+
               <View style={styles.section}>
                 <Text style={styles.label}>Notes (optional)</Text>
                 <TextInput
@@ -562,11 +608,17 @@ export default function SubscriptionEditorScreen() {
         onSelect={handleFrequencySelect}
         onClose={() => setShowFrequencyModal(false)}
       />
+      <PaymentMethodModal
+        visible={showPaymentMethodModal}
+        selectedMethod={paymentMethod}
+        onSelect={handlePaymentMethodSelect}
+        onClose={() => setShowPaymentMethodModal(false)}
+      />
     </>
   );
 }
 
-function toInput(
+function buildSubscriptionPayload(
   existing: Subscription | null,
   userId: string,
   base: {
@@ -579,6 +631,7 @@ function toInput(
     notes?: string;
     startDate?: number;
     endDate?: number;
+    paymentMethod?: string;
   }
 ) {
   return {
@@ -593,6 +646,7 @@ function toInput(
     notes: base.notes,
     startDate: base.startDate,
     endDate: base.endDate,
+    paymentMethod: base.paymentMethod,
     isArchived: false,
   };
 }
