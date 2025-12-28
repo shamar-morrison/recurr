@@ -71,7 +71,7 @@ export default function SelectServiceScreen() {
   const hasNoResults = filteredServices.length === 0 && search.trim().length > 0;
 
   const handleSelect = useCallback((service: UnifiedService) => {
-    // Use replace for immediate navigation (faster than navigate)
+    // Replace (not push) so users can't navigate back to the service selector
     router.replace({
       pathname: '/(tabs)/(home)/subscription-editor',
       params: {
@@ -102,7 +102,7 @@ export default function SelectServiceScreen() {
 
   const handleSaveCustomService = useCallback(async () => {
     const trimmedName = editableName.trim();
-    if (!trimmedName || !addCustomService) return;
+    if (!trimmedName) return;
 
     // Check for duplicate names (case-insensitive)
     const lowerName = trimmedName.toLowerCase();
@@ -126,22 +126,17 @@ export default function SelectServiceScreen() {
         color: selectedColor,
       });
 
-      if (newService) {
-        // Use replace for immediate navigation (faster than navigate)
-        router.replace({
-          pathname: '/(tabs)/(home)/subscription-editor',
-          params: {
-            _selectedServiceName: newService.name,
-            _selectedCategory: newService.category,
-          },
-        });
-      } else {
-        Alert.alert(
-          'Failed to Create Service',
-          'Something went wrong while creating your custom service. Please try again.',
-          [{ text: 'OK' }]
-        );
-      }
+      // Guard against null (should never happen in practice as addService throws on errors)
+      if (!newService) return;
+
+      // Replace (not push) so users can't navigate back to the service selector
+      router.replace({
+        pathname: '/(tabs)/(home)/subscription-editor',
+        params: {
+          _selectedServiceName: newService.name,
+          _selectedCategory: newService.category,
+        },
+      });
     } catch (error) {
       console.error(error);
       Alert.alert('Failed to Create Service', getFirestoreErrorMessage(error), [{ text: 'OK' }]);
