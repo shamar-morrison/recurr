@@ -21,13 +21,14 @@ import {
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 
-const FREE_TIER_LIMIT = 5;
+import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
 
 type FilterChip = SubscriptionCategory | 'All';
 
 export default function SubscriptionsHomeScreen() {
   const insets = useSafeAreaInsets();
   const { isPremium, settings } = useAuth();
+  const { freeTierLimit } = useRemoteConfig();
 
   const subscriptionsQuery = useSubscriptionsQuery();
   const items = useSubscriptionListItems(subscriptionsQuery.data);
@@ -41,8 +42,8 @@ export default function SubscriptionsHomeScreen() {
 
   const atFreeLimit = useMemo(() => {
     if (isPremium) return false;
-    return items.length >= FREE_TIER_LIMIT;
-  }, [isPremium, items.length]);
+    return items.length >= freeTierLimit;
+  }, [isPremium, items.length, freeTierLimit]);
 
   // Calculate subscriptions due this month and total spend
   const { subscriptionsDueThisMonth, totalMonthlySpend } = useMemo(() => {
@@ -161,7 +162,7 @@ export default function SubscriptionsHomeScreen() {
           {!isPremium ? (
             <View style={styles.limitRow}>
               <Text style={styles.limitText} testID="freeTierLimitText">
-                Free tier: {Math.min(items.length, FREE_TIER_LIMIT)}/{FREE_TIER_LIMIT} subscriptions
+                Free tier: {Math.min(items.length, freeTierLimit)}/{freeTierLimit} subscriptions
               </Text>
               {atFreeLimit ? (
                 <Pressable

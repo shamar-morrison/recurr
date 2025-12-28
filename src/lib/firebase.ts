@@ -1,19 +1,20 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { initializeApp, getApp, getApps } from 'firebase/app';
+import { getApp, getApps, initializeApp } from 'firebase/app';
 import {
   Auth,
   getAuth,
+  getReactNativePersistence,
   initializeAuth,
   onAuthStateChanged,
-  getReactNativePersistence,
 } from 'firebase/auth';
 import {
-  Firestore,
   connectFirestoreEmulator,
+  Firestore,
   getFirestore,
-  Timestamp,
   setLogLevel,
+  Timestamp,
 } from 'firebase/firestore';
+import { fetchAndActivate, getRemoteConfig, RemoteConfig } from 'firebase/remote-config';
 import { Platform } from 'react-native';
 
 type FirebaseWebConfig = {
@@ -88,6 +89,17 @@ export function getFirebaseAuth(): Auth {
 }
 
 export const firestore: Firestore = getFirestore(firebaseApp);
+
+export const remoteConfig: RemoteConfig = getRemoteConfig(firebaseApp);
+remoteConfig.settings.minimumFetchIntervalMillis = 1000 * 60 * 60; // 1 hr default
+remoteConfig.defaultConfig = {
+  FREE_TIER_LIMIT: 3,
+};
+
+// Initial fetch (fire & forget)
+fetchAndActivate(remoteConfig).catch((e) =>
+  console.log('[firebase] remote config fetch failed', e)
+);
 
 export function timestampToMillis(value: unknown): number {
   if (typeof value === 'number') return value;
