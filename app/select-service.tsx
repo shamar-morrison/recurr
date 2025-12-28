@@ -1,6 +1,16 @@
 import { CheckIcon, MagnifyingGlassIcon, PlusIcon } from 'phosphor-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -9,6 +19,7 @@ import { SERVICE_COLORS } from '@/src/constants/customServices';
 import { Service, SERVICES } from '@/src/constants/services';
 import { useCustomServices } from '@/src/features/services/useCustomServices';
 import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { useBackHandler } from '@/src/hooks/useBackHandler';
 import { getFirestoreErrorMessage } from '@/src/lib/firestore';
 import { useAppTheme } from '@/src/theme/useAppTheme';
 
@@ -85,6 +96,9 @@ export default function SelectServiceScreen() {
     setSelectedColor(SERVICE_COLORS[1]);
   }, []);
 
+  // Handle Android back button - if in add mode, go back to list mode
+  useBackHandler(showAddMode, handleCancelAddMode);
+
   const handleSaveCustomService = useCallback(async () => {
     const trimmedName = editableName.trim();
     if (!trimmedName || !addCustomService) return;
@@ -157,93 +171,103 @@ export default function SelectServiceScreen() {
     <>
       <Stack.Screen
         options={{
-          presentation: 'formSheet',
+          presentation: 'modal',
           headerShown: false,
           sheetAllowedDetents: [0.7, 1],
-          sheetGrabberVisible: true,
           sheetCornerRadius: 24,
         }}
       />
 
-      <SafeAreaView style={styles.container} edges={['bottom']}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         {showAddMode ? (
           // ========== ADD SERVICE VIEW ==========
-          <>
-            <View style={styles.header}>
-              <Text style={styles.title}>Add Custom Service</Text>
-            </View>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+          >
+            <TouchableOpacity activeOpacity={1}>
+              <View style={styles.header}>
+                <Text style={styles.title}>Add Custom Service</Text>
+              </View>
 
-            <View style={styles.section}>
-              <Text style={styles.label}>Service Name</Text>
-              <TextInput
-                value={editableName}
-                onChangeText={setEditableName}
-                placeholder="Enter service name"
-                placeholderTextColor={theme.colors.secondaryText}
-                style={styles.nameInput}
-                autoCapitalize="words"
-                autoCorrect={false}
-                autoFocus
-              />
-            </View>
+              <View style={styles.section}>
+                <Text style={styles.label}>Service Name</Text>
+                <TextInput
+                  value={editableName}
+                  onChangeText={setEditableName}
+                  placeholder="Enter service name"
+                  placeholderTextColor={theme.colors.secondaryText}
+                  style={styles.nameInput}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  autoFocus
+                />
+              </View>
 
-            <View style={styles.section}>
-              <Text style={styles.label}>Category</Text>
-              <View style={styles.categoryGrid}>
-                {SUBSCRIPTION_CATEGORIES.map((category) => {
-                  const isSelected = category === selectedCategory;
-                  return (
-                    <Pressable
-                      key={category}
-                      style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
-                      onPress={() => setSelectedCategory(category)}
-                    >
-                      <Text
-                        style={[styles.categoryText, isSelected && styles.categoryTextSelected]}
+              <View style={styles.section}>
+                <Text style={styles.label}>Category</Text>
+                <View style={styles.categoryGrid}>
+                  {SUBSCRIPTION_CATEGORIES.map((category) => {
+                    const isSelected = category === selectedCategory;
+                    return (
+                      <Pressable
+                        key={category}
+                        style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
+                        onPress={() => setSelectedCategory(category)}
                       >
-                        {category}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
+                        <Text
+                          style={[styles.categoryText, isSelected && styles.categoryTextSelected]}
+                        >
+                          {category}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
-            </View>
 
-            <View style={styles.section}>
-              <Text style={styles.label}>Color</Text>
-              <View style={styles.colorGrid}>
-                {SERVICE_COLORS.map((color) => {
-                  const isColorSelected = color === selectedColor;
-                  return (
-                    <Pressable
-                      key={color}
-                      style={[styles.colorSwatch, { backgroundColor: color }]}
-                      onPress={() => setSelectedColor(color)}
-                    >
-                      {isColorSelected && <CheckIcon color="#FFFFFF" size={20} weight="bold" />}
-                    </Pressable>
-                  );
-                })}
+              <View style={styles.section}>
+                <Text style={styles.label}>Color</Text>
+                <View style={styles.colorGrid}>
+                  {SERVICE_COLORS.map((color) => {
+                    const isColorSelected = color === selectedColor;
+                    return (
+                      <Pressable
+                        key={color}
+                        style={[styles.colorSwatch, { backgroundColor: color }]}
+                        onPress={() => setSelectedColor(color)}
+                      >
+                        {isColorSelected && <CheckIcon color="#FFFFFF" size={20} weight="bold" />}
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
-            </View>
 
-            <View style={styles.buttonRow}>
-              <Pressable
-                style={styles.cancelButton}
-                onPress={handleCancelAddMode}
-                disabled={isSaving}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.saveButton, (!isValidName || isSaving) && styles.saveButtonDisabled]}
-                onPress={handleSaveCustomService}
-                disabled={!isValidName || isSaving}
-              >
-                <Text style={styles.saveButtonText}>{isSaving ? 'Saving...' : 'Create'}</Text>
-              </Pressable>
-            </View>
-          </>
+              <View style={styles.buttonRow}>
+                <Pressable
+                  style={styles.cancelButton}
+                  onPress={handleCancelAddMode}
+                  disabled={isSaving}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.saveButton,
+                    (!isValidName || isSaving) && styles.saveButtonDisabled,
+                  ]}
+                  onPress={handleSaveCustomService}
+                  disabled={!isValidName || isSaving}
+                >
+                  <Text style={styles.saveButtonText}>{isSaving ? 'Saving...' : 'Create'}</Text>
+                </Pressable>
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
         ) : (
           // ========== SERVICE LIST VIEW ==========
           <>
@@ -298,6 +322,14 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       flex: 1,
       backgroundColor: theme.colors.card,
       paddingHorizontal: 16,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollViewContent: {
+      flexGrow: 1,
+      // Extra padding prevents reaching exact bottom where swipe-to-dismiss activates
+      paddingBottom: 100,
     },
     header: {
       paddingTop: 20,

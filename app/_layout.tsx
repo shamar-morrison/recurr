@@ -25,7 +25,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
-      staleTime: 60_000, // 1 minute
+      staleTime: 3_600_000, // 1 hour - we invalidate cache manually when data changes
     },
   },
 });
@@ -42,17 +42,14 @@ function RootLayoutNav() {
           <Stack.Screen name="auth" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="paywall" options={{ presentation: 'modal', headerShown: false }} />
-          <Stack.Screen
-            name="select-service"
-            options={{ presentation: 'formSheet', headerShown: false }}
-          />
+          {/* <Stack.Screen name="select-service" options={{}} /> */}
           <Stack.Screen
             name="select-currency"
-            options={{ presentation: 'formSheet', headerShown: false }}
+            options={{ presentation: 'modal', headerShown: false }}
           />
           <Stack.Screen
             name="select-frequency"
-            options={{ presentation: 'formSheet', headerShown: false }}
+            options={{ presentation: 'modal', headerShown: false }}
           />
         </Stack>
       </>
