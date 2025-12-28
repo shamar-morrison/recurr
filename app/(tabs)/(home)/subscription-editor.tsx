@@ -96,25 +96,21 @@ export default function SubscriptionEditorScreen() {
     return CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$';
   }, [currency]);
 
-  // Memoize service domain lookup to avoid recalculation on every render
   const serviceDomain = useMemo(() => {
     return serviceName ? getServiceDomain(serviceName) : undefined;
   }, [serviceName]);
 
-  // Helper to normalize date to midnight for consistent timestamps
   const normalizeToMidnight = useCallback((date: Date): Date => {
     const normalized = new Date(date);
     normalized.setHours(0, 0, 0, 0);
     return normalized;
   }, []);
 
-  // State for start/end dates (normalized to midnight)
   const [startDate, setStartDate] = useState<Date>(() => normalizeToMidnight(new Date()));
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
-  // Format date for display using user's locale
   const formatDate = useCallback((date: Date) => {
     return date.toLocaleDateString(undefined, {
       month: 'short',
@@ -123,7 +119,6 @@ export default function SubscriptionEditorScreen() {
     });
   }, []);
 
-  // State for service selector modal
   const [showServiceModal, setShowServiceModal] = useState(false);
 
   const handleServiceSelect = useCallback(
@@ -149,7 +144,6 @@ export default function SubscriptionEditorScreen() {
     [editingId, hasManuallyEditedAmount, currency]
   );
 
-  // State for currency selector modal
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
 
   const handleCurrencySelect = useCallback(
@@ -174,7 +168,6 @@ export default function SubscriptionEditorScreen() {
     [editingId, hasManuallyEditedAmount, serviceName]
   );
 
-  // State for frequency selector modal
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
 
   const handleFrequencySelect = useCallback((frequency: BillingCycle) => {
@@ -182,7 +175,6 @@ export default function SubscriptionEditorScreen() {
     setShowFrequencyModal(false);
   }, []);
 
-  // State for payment method modal
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | undefined>(undefined);
   const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
 
@@ -191,7 +183,6 @@ export default function SubscriptionEditorScreen() {
     setShowPaymentMethodModal(false);
   }, []);
 
-  // Memoize payment method icon lookup for cleaner JSX
   const PaymentMethodIcon = useMemo(() => {
     if (!paymentMethod) return null;
     const config = PAYMENT_METHOD_CONFIG.find((c) => c.label === paymentMethod);
@@ -235,7 +226,6 @@ export default function SubscriptionEditorScreen() {
 
   const title = existing ? 'Edit Subscription' : 'New Subscription';
 
-  // Validation for dates
   const dateError = useMemo(() => {
     if (startDate && endDate && endDate < startDate) {
       return 'End date cannot be before start date.';
