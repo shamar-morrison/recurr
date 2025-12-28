@@ -174,8 +174,6 @@ export default function SelectServiceScreen() {
         options={{
           presentation: 'modal',
           headerShown: false,
-          sheetAllowedDetents: [0.7, 1],
-          sheetCornerRadius: 24,
         }}
       />
 

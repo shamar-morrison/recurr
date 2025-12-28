@@ -42,7 +42,6 @@ function RootLayoutNav() {
           <Stack.Screen name="auth" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="paywall" options={{ presentation: 'modal', headerShown: false }} />
-          {/* <Stack.Screen name="select-service" options={{}} /> */}
           <Stack.Screen
             name="select-currency"
             options={{ presentation: 'modal', headerShown: false }}
