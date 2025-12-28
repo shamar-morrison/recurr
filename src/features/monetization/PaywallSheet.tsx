@@ -135,10 +135,10 @@ function createStyles(variant: Props['variant']) {
       paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: 999,
-      backgroundColor: 'rgba(15,23,42,0.08)',
+      backgroundColor: theme.colors.badge,
     },
     badgeText: {
-      color: '#0B1220',
+      color: theme.colors.badgeText,
       fontSize: 12,
       fontWeight: '900',
       letterSpacing: 0.8,

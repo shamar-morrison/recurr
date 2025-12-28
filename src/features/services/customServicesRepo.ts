@@ -13,6 +13,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  QueryDocumentSnapshot,
   serverTimestamp,
 } from 'firebase/firestore';
 
@@ -87,6 +88,19 @@ function normalizeCustomService(raw: unknown): CustomService | null {
   };
 }
 
+function mapDocToCustomService(d: QueryDocumentSnapshot): CustomService {
+  const data = d.data() as Record<string, unknown>;
+  const rawCategory = String(data.category ?? 'Other');
+
+  return {
+    id: d.id,
+    name: String(data.name ?? ''),
+    category: isValidCategory(rawCategory) ? rawCategory : 'Other',
+    color: String(data.color ?? '#4ECDC4'),
+    createdAt: timestampToMillis(data.createdAt),
+  };
+}
+
 async function readLocal(userId: string): Promise<CustomService[]> {
   try {
     const raw = await AsyncStorage.getItem(storageKey(userId));
@@ -131,18 +145,7 @@ export async function listCustomServices(userId: string): Promise<CustomService[
     const q = query(servicesCol, orderBy('name', 'asc'));
 
     const snap = await getDocs(q);
-    const out: CustomService[] = snap.docs.map((d) => {
-      const data = d.data() as Record<string, unknown>;
-      const rawCategory = String(data.category ?? 'Other');
-
-      return {
-        id: d.id,
-        name: String(data.name ?? ''),
-        category: isValidCategory(rawCategory) ? rawCategory : 'Other',
-        color: String(data.color ?? '#4ECDC4'),
-        createdAt: timestampToMillis(data.createdAt),
-      };
-    });
+    const out: CustomService[] = snap.docs.map(mapDocToCustomService);
 
     await writeLocal(userId, out);
 
@@ -199,18 +202,7 @@ export function subscribeToCustomServices(
   const unsubscribe = onSnapshot(
     q,
     (snap) => {
-      const services: CustomService[] = snap.docs.map((d) => {
-        const data = d.data() as Record<string, unknown>;
-        const rawCategory = String(data.category ?? 'Other');
-
-        return {
-          id: d.id,
-          name: String(data.name ?? ''),
-          category: isValidCategory(rawCategory) ? rawCategory : 'Other',
-          color: String(data.color ?? '#4ECDC4'),
-          createdAt: timestampToMillis(data.createdAt),
-        };
-      });
+      const services: CustomService[] = snap.docs.map(mapDocToCustomService);
 
       // Update local storage for offline support
       writeLocal(userId, services);
