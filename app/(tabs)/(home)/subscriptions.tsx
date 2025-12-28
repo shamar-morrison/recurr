@@ -28,7 +28,7 @@ type FilterChip = SubscriptionCategory | 'All';
 export default function SubscriptionsHomeScreen() {
   const insets = useSafeAreaInsets();
   const { isPremium, settings } = useAuth();
-  const { freeTierLimit } = useRemoteConfig();
+  const { freeTierLimit, loading: configLoading } = useRemoteConfig();
 
   const subscriptionsQuery = useSubscriptionsQuery();
   const items = useSubscriptionListItems(subscriptionsQuery.data);
@@ -41,9 +41,9 @@ export default function SubscriptionsHomeScreen() {
   }, [filter, items]);
 
   const atFreeLimit = useMemo(() => {
-    if (isPremium) return false;
+    if (isPremium || configLoading) return false;
     return items.length >= freeTierLimit;
-  }, [isPremium, items.length, freeTierLimit]);
+  }, [isPremium, items.length, freeTierLimit, configLoading]);
 
   // Calculate subscriptions due this month and total spend
   const { subscriptionsDueThisMonth, totalMonthlySpend } = useMemo(() => {
@@ -162,7 +162,9 @@ export default function SubscriptionsHomeScreen() {
           {!isPremium ? (
             <View style={styles.limitRow}>
               <Text style={styles.limitText} testID="freeTierLimitText">
-                Free tier: {Math.min(items.length, freeTierLimit)}/{freeTierLimit} subscriptions
+                {configLoading
+                  ? 'Checking limit…'
+                  : `Free tier: ${Math.min(items.length, freeTierLimit)}/${freeTierLimit} subscriptions`}
               </Text>
               {atFreeLimit ? (
                 <Pressable

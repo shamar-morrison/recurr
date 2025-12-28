@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 
 export function useRemoteConfig() {
   const [freeTierLimit, setFreeTierLimit] = useState(getNumber(remoteConfig, 'FREE_TIER_LIMIT'));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     // Fetch and activate to ensure we have the latest values from the server
@@ -13,9 +15,13 @@ export function useRemoteConfig() {
       })
       .catch((e) => {
         console.log('[useRemoteConfig] fetch failed', e);
+        setError(e instanceof Error ? e : new Error(String(e)));
         // Fallback or stick with existing default
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, []);
 
-  return { freeTierLimit };
+  return { freeTierLimit, loading, error };
 }
