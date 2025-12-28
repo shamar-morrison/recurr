@@ -1,81 +1,97 @@
 /**
- * ActionSheet for creating a custom service.
+ * Screen for creating a custom service.
  * Shows service name (pre-filled), category picker, and color picker.
  */
 
 import { CheckIcon } from 'phosphor-react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  Actionsheet,
-  ActionsheetBackdrop,
-  ActionsheetContent,
-  ActionsheetDragIndicator,
-  ActionsheetDragIndicatorWrapper,
-} from '@/components/ui/actionsheet';
-import { CustomServiceInput, SERVICE_COLORS } from '@/src/constants/customServices';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+
+import { SERVICE_COLORS } from '@/src/constants/customServices';
+import { useCustomServices } from '@/src/features/services/useCustomServices';
 import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { getFirestoreErrorMessage } from '@/src/lib/firestore';
 import { useAppTheme } from '@/src/theme/useAppTheme';
 
-interface AddServiceSheetProps {
-  isOpen: boolean;
-  onClose: () => void;
-  serviceName: string;
-  onSave: (input: CustomServiceInput) => void;
-}
+type RouteParams = {
+  serviceName?: string;
+};
 
-export function AddServiceSheet({ isOpen, onClose, serviceName, onSave }: AddServiceSheetProps) {
+export default function AddServiceScreen() {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const [editableName, setEditableName] = useState(serviceName);
+  const params = useLocalSearchParams<RouteParams>();
+  const initialName = params.serviceName ?? '';
+
+  const { addService: addCustomService } = useCustomServices();
+
+  const [editableName, setEditableName] = useState(initialName);
   const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Other');
   const [selectedColor, setSelectedColor] = useState<string>(SERVICE_COLORS[1]);
+  const [isSaving, setIsSaving] = useState(false);
 
   const isValidName = editableName.trim().length > 0;
 
-  // Reset form state when the sheet opens
-  useEffect(() => {
-    if (isOpen) {
-      setEditableName(serviceName);
-      setSelectedCategory('Other');
-      setSelectedColor(SERVICE_COLORS[1]);
-    }
-  }, [isOpen, serviceName]);
-
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     const trimmedName = editableName.trim();
-    if (!trimmedName) return; // Don't save empty names
+    if (!trimmedName || !addCustomService) return;
 
-    onSave({
-      name: trimmedName,
-      category: selectedCategory,
-      color: selectedColor,
-    });
-    // Reset state
-    setEditableName('');
-    setSelectedCategory('Other');
-    setSelectedColor(SERVICE_COLORS[1]);
-    onClose();
-  }, [editableName, selectedCategory, selectedColor, onSave, onClose]);
+    setIsSaving(true);
+    try {
+      const newService = await addCustomService({
+        name: trimmedName,
+        category: selectedCategory,
+        color: selectedColor,
+      });
 
-  const handleClose = useCallback(() => {
-    setEditableName('');
-    setSelectedCategory('Other');
-    setSelectedColor(SERVICE_COLORS[1]);
-    onClose();
-  }, [onClose]);
+      if (newService) {
+        // Navigate back to select-service with the new service selected
+        router.navigate({
+          pathname: '/select-service',
+          params: {
+            _newServiceName: newService.name,
+            _newServiceCategory: newService.category,
+          },
+        });
+      } else {
+        Alert.alert(
+          'Failed to Create Service',
+          'Something went wrong while creating your custom service. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Failed to Create Service', getFirestoreErrorMessage(error), [{ text: 'OK' }]);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [editableName, selectedCategory, selectedColor, addCustomService]);
+
+  const handleCancel = useCallback(() => {
+    router.back();
+  }, []);
 
   return (
-    <Actionsheet isOpen={isOpen} onClose={handleClose}>
-      <ActionsheetBackdrop />
-      <ActionsheetContent style={styles.content}>
-        <ActionsheetDragIndicatorWrapper>
-          <ActionsheetDragIndicator />
-        </ActionsheetDragIndicatorWrapper>
+    <>
+      <Stack.Screen
+        options={{
+          presentation: 'formSheet',
+          headerShown: false,
+          sheetAllowedDetents: 'fitToContents',
+          sheetGrabberVisible: true,
+          sheetCornerRadius: 24,
+        }}
+      />
 
-        <Text style={styles.title}>Add Custom Service</Text>
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Add Custom Service</Text>
+        </View>
 
         {/* Service Name Input */}
         <View style={styles.section}>
@@ -88,6 +104,7 @@ export function AddServiceSheet({ isOpen, onClose, serviceName, onSave }: AddSer
             style={styles.nameInput}
             autoCapitalize="words"
             autoCorrect={false}
+            autoFocus
           />
         </View>
 
@@ -133,38 +150,40 @@ export function AddServiceSheet({ isOpen, onClose, serviceName, onSave }: AddSer
 
         {/* Action Buttons */}
         <View style={styles.buttonRow}>
-          <Pressable style={styles.cancelButton} onPress={handleClose}>
+          <Pressable style={styles.cancelButton} onPress={handleCancel} disabled={isSaving}>
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </Pressable>
           <Pressable
-            style={[styles.saveButton, !isValidName && styles.saveButtonDisabled]}
+            style={[styles.saveButton, (!isValidName || isSaving) && styles.saveButtonDisabled]}
             onPress={handleSave}
-            disabled={!isValidName}
+            disabled={!isValidName || isSaving}
           >
-            <Text style={styles.saveButtonText}>Save</Text>
+            <Text style={styles.saveButtonText}>{isSaving ? 'Saving...' : 'Save'}</Text>
           </Pressable>
         </View>
-      </ActionsheetContent>
-    </Actionsheet>
+      </SafeAreaView>
+    </>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useAppTheme>) {
   return StyleSheet.create({
-    content: {
+    container: {
+      flex: 1,
       backgroundColor: theme.colors.card,
-      paddingBottom: 24,
+      paddingHorizontal: 16,
+    },
+    header: {
+      paddingTop: 20,
+      paddingBottom: 16,
     },
     title: {
       fontSize: 18,
       fontWeight: '700',
       color: theme.colors.text,
-      marginTop: 8,
-      marginBottom: 20,
       textAlign: 'center',
     },
     section: {
-      width: '100%',
       marginBottom: 20,
     },
     label: {
@@ -221,7 +240,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       flexDirection: 'row',
       gap: 12,
       marginTop: 8,
-      width: '100%',
+      paddingBottom: 16,
     },
     cancelButton: {
       flex: 1,

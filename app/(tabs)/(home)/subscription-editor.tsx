@@ -1,12 +1,8 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
-import { CurrencyPickerSheet } from '@/src/components/CurrencyPickerSheet';
-import { FrequencyPickerSheet } from '@/src/components/FrequencyPickerSheet';
-import { ServicePickerSheet } from '@/src/components/ServicePickerSheet';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
 import { useAuth } from '@/src/features/auth/AuthProvider';
-import { useCustomServices } from '@/src/features/services/useCustomServices';
 import {
   useDeleteSubscriptionMutation,
   useSubscriptionsQuery,
@@ -47,6 +43,13 @@ import {
 
 type RouteParams = {
   id?: string;
+  // Returned from select-service screen
+  _selectedServiceName?: string;
+  _selectedCategory?: string;
+  // Returned from select-currency screen
+  _selectedCurrencyCode?: string;
+  // Returned from select-frequency screen
+  _selectedFrequency?: string;
 };
 
 export default function SubscriptionEditorScreen() {
@@ -58,7 +61,6 @@ export default function SubscriptionEditorScreen() {
 
   const { settings, user } = useAuth();
   const userId = user?.uid ?? '';
-  const { customServices, addService: addCustomService } = useCustomServices();
   const subscriptionsQuery = useSubscriptionsQuery();
   const upsertMutation = useUpsertSubscriptionMutation();
   const deleteMutation = useDeleteSubscriptionMutation();
@@ -92,9 +94,30 @@ export default function SubscriptionEditorScreen() {
   const currencySymbol = useMemo(() => {
     return CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$';
   }, [currency]);
-  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
-  const [showFrequencyPicker, setShowFrequencyPicker] = useState(false);
-  const [showServicePicker, setShowServicePicker] = useState(false);
+
+  // Handle service selection returned from select-service screen
+  React.useEffect(() => {
+    if (params._selectedServiceName) {
+      setServiceName(params._selectedServiceName);
+      if (params._selectedCategory) {
+        setCategory(params._selectedCategory as SubscriptionCategory);
+      }
+    }
+  }, [params._selectedServiceName, params._selectedCategory]);
+
+  // Handle currency selection returned from select-currency screen
+  React.useEffect(() => {
+    if (params._selectedCurrencyCode) {
+      setCurrency(params._selectedCurrencyCode);
+    }
+  }, [params._selectedCurrencyCode]);
+
+  // Handle frequency selection returned from select-frequency screen
+  React.useEffect(() => {
+    if (params._selectedFrequency) {
+      setBillingCycle(params._selectedFrequency as BillingCycle);
+    }
+  }, [params._selectedFrequency]);
 
   React.useEffect(() => {
     if (!editingId) return;
@@ -251,7 +274,12 @@ export default function SubscriptionEditorScreen() {
               <View style={styles.section}>
                 <Text style={styles.label}>Service</Text>
                 <Pressable
-                  onPress={() => setShowServicePicker(true)}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/select-service',
+                      params: { selectedService: serviceName },
+                    })
+                  }
                   style={styles.input}
                   testID="subscriptionEditorServiceName"
                 >
@@ -335,7 +363,12 @@ export default function SubscriptionEditorScreen() {
                   <Text style={styles.label}>Currency</Text>
                   <Pressable
                     style={styles.dropdownButton}
-                    onPress={() => setShowCurrencyPicker(true)}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/select-currency',
+                        params: { selectedCurrency: currency },
+                      })
+                    }
                     testID="subscriptionEditorCurrency"
                   >
                     <Text style={styles.dropdownText}>
@@ -350,7 +383,12 @@ export default function SubscriptionEditorScreen() {
                   <Text style={styles.label}>Frequency</Text>
                   <Pressable
                     style={styles.dropdownButton}
-                    onPress={() => setShowFrequencyPicker(true)}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/select-frequency',
+                        params: { selectedFrequency: billingCycle },
+                      })
+                    }
                     testID="subscriptionEditorFrequency"
                   >
                     <Text style={styles.dropdownText}>{billingCycle}</Text>
@@ -415,36 +453,6 @@ export default function SubscriptionEditorScreen() {
                 testID="subscriptionEditorSaveBottom"
                 style={{ width: '100%' }}
                 icon={<CheckIcon color="#fff" size={20} />}
-              />
-
-              {/* Picker sheets auto-close after selection via their internal handleSelect */}
-              <CurrencyPickerSheet
-                isOpen={showCurrencyPicker}
-                onClose={() => setShowCurrencyPicker(false)}
-                selectedCurrency={currency}
-                onSelect={(code) => setCurrency(code)}
-              />
-
-              <ServicePickerSheet
-                isOpen={showServicePicker}
-                onClose={() => setShowServicePicker(false)}
-                selectedService={serviceName}
-                onSelect={(name, cat) => {
-                  setServiceName(name);
-                  setCategory(cat);
-                }}
-                customServices={customServices}
-                onAddCustomService={addCustomService}
-              />
-
-              <FrequencyPickerSheet
-                isOpen={showFrequencyPicker}
-                onClose={() => setShowFrequencyPicker(false)}
-                selectedFrequency={billingCycle}
-                onSelect={(freq) => {
-                  setBillingCycle(freq);
-                  setShowFrequencyPicker(false);
-                }}
               />
             </>
           )}
