@@ -56,9 +56,6 @@ type RouteParams = {
 };
 
 export default function SubscriptionEditorScreen() {
-  const theme = { colors: AppColors };
-  const styles = useMemo(() => createStyles(), []);
-
   const params = useLocalSearchParams<RouteParams>();
   const editingId = typeof params.id === 'string' ? params.id : undefined;
 
@@ -275,10 +272,10 @@ export default function SubscriptionEditorScreen() {
         style={styles.headerLeft}
         testID="subscriptionEditorBack"
       >
-        <CaretLeftIcon color={theme.colors.text} size={22} />
+        <CaretLeftIcon color={AppColors.text} size={22} />
       </Pressable>
     );
-  }, [styles.headerLeft, theme.colors.text]);
+  }, []);
 
   const showLoading = Boolean(editingId) && subscriptionsQuery.isLoading;
   const showNotFound = Boolean(editingId) && !subscriptionsQuery.isLoading && !existing;
@@ -302,7 +299,7 @@ export default function SubscriptionEditorScreen() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {showLoading ? (
             <View style={styles.loading} testID="subscriptionEditorLoading">
-              <ActivityIndicator color={theme.colors.tint} />
+              <ActivityIndicator color={AppColors.tint} />
               <Text style={styles.loadingText}>Loading…</Text>
             </View>
           ) : null}
@@ -313,7 +310,7 @@ export default function SubscriptionEditorScreen() {
               <Text style={styles.notFoundText}>It may have been deleted on another device.</Text>
               <Pressable
                 onPress={() => router.back()}
-                style={[styles.primary, { backgroundColor: theme.colors.tint }]}
+                style={[styles.primary, { backgroundColor: AppColors.tint }]}
                 testID="subscriptionEditorNotFoundBack"
               >
                 <Text style={styles.primaryText}>Go back</Text>
@@ -339,7 +336,7 @@ export default function SubscriptionEditorScreen() {
                 <View style={styles.chipsRow} testID="subscriptionEditorCategories">
                   {SUBSCRIPTION_CATEGORIES.map((cat) => {
                     const active = cat === category;
-                    const iconColor = active ? '#fff' : theme.colors.text;
+                    const iconColor = active ? '#fff' : AppColors.text;
                     const iconSize = 26;
                     return (
                       <Pressable
@@ -348,7 +345,7 @@ export default function SubscriptionEditorScreen() {
                         style={[
                           styles.chip,
                           active
-                            ? { backgroundColor: theme.colors.tint, borderColor: theme.colors.tint }
+                            ? { backgroundColor: AppColors.tint, borderColor: AppColors.tint }
                             : null,
                         ]}
                         testID={`subscriptionEditorCategory_${cat}`}
@@ -375,7 +372,7 @@ export default function SubscriptionEditorScreen() {
                         <Text
                           style={[
                             styles.chipText,
-                            active ? { color: '#fff' } : { color: theme.colors.text },
+                            active ? { color: '#fff' } : { color: AppColors.text },
                           ]}
                         >
                           {cat}
@@ -412,7 +409,7 @@ export default function SubscriptionEditorScreen() {
                     <Text style={styles.dropdownText}>
                       {currency} ({currencySymbol})
                     </Text>
-                    <CaretDownIcon color={theme.colors.secondaryText} size={16} />
+                    <CaretDownIcon color={AppColors.secondaryText} size={16} />
                   </Pressable>
                 </View>
 
@@ -425,7 +422,7 @@ export default function SubscriptionEditorScreen() {
                     testID="subscriptionEditorFrequency"
                   >
                     <Text style={styles.dropdownText}>{billingCycle}</Text>
-                    <CaretDownIcon color={theme.colors.secondaryText} size={16} />
+                    <CaretDownIcon color={AppColors.secondaryText} size={16} />
                   </Pressable>
                 </View>
               </View>
@@ -488,7 +485,7 @@ export default function SubscriptionEditorScreen() {
                       onPress={() => setEndDate(null)}
                       testID="subscriptionEditorClearEndDate"
                     >
-                      <XIcon color={theme.colors.secondaryText} size={18} />
+                      <XIcon color={AppColors.secondaryText} size={18} />
                     </Pressable>
                   </View>
                 ) : (
@@ -533,7 +530,7 @@ export default function SubscriptionEditorScreen() {
                         const config = PAYMENT_METHOD_CONFIG.find((c) => c.label === paymentMethod);
                         if (config) {
                           const IconComponent = config.icon;
-                          return <IconComponent color={theme.colors.text} size={20} />;
+                          return <IconComponent color={AppColors.text} size={20} />;
                         }
                         return null;
                       })()}
@@ -544,7 +541,7 @@ export default function SubscriptionEditorScreen() {
                       Select payment method
                     </Text>
                   )}
-                  <CaretDownIcon color={theme.colors.secondaryText} size={16} />
+                  <CaretDownIcon color={AppColors.secondaryText} size={16} />
                 </Pressable>
               </View>
 
@@ -569,8 +566,8 @@ export default function SubscriptionEditorScreen() {
                     disabled={deleteMutation.isPending || upsertMutation.isPending}
                     testID="subscriptionEditorDelete"
                   >
-                    <TrashIcon color={theme.colors.negative} size={18} />
-                    <Text style={[styles.deleteText, { color: theme.colors.negative }]}>
+                    <TrashIcon color={AppColors.negative} size={18} />
+                    <Text style={[styles.deleteText, { color: AppColors.negative }]}>
                       Delete Subscription
                     </Text>
                   </Pressable>
@@ -651,279 +648,272 @@ function buildSubscriptionPayload(
   };
 }
 
-function createStyles() {
-  const theme = { colors: AppColors };
-
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    content: {
-      padding: 20,
-      paddingBottom: 40,
-      gap: 20,
-    },
-    headerLeft: {
-      width: 40,
-      height: 40,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'rgba(15,23,42,0.06)',
-    },
-    headerRight: {
-      // Unused now
-      width: 38,
-      height: 38,
-    },
-    section: {
-      gap: 10,
-    },
-    label: {
-      color: theme.colors.secondaryText,
-      fontSize: 13,
-      fontWeight: '700',
-      letterSpacing: 0.4,
-      marginLeft: 4,
-    },
-    helper: {
-      color: theme.colors.secondaryText,
-      fontSize: 13,
-      lineHeight: 18,
-      marginLeft: 4,
-      marginBottom: 4,
-    },
-    input: {
-      minHeight: 56,
-      borderRadius: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      color: theme.colors.text,
-      backgroundColor: '#fff',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      fontSize: 16,
-      fontWeight: '600',
-      // Subtle shadow
-      shadowColor: '#000',
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      shadowOffset: { width: 0, height: 2 },
-      justifyContent: 'center',
-    },
-    inputText: {
-      color: theme.colors.text,
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    placeholderText: {
-      color: 'rgba(15,23,42,0.35)',
-    },
-    errorText: {
-      color: theme.colors.negative,
-      fontSize: 13,
-      fontWeight: '600',
-      marginTop: 6,
-      marginLeft: 4,
-    },
-    dateInput: {
-      minHeight: 56,
-      borderRadius: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      backgroundColor: '#fff',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      justifyContent: 'center',
-      shadowColor: '#000',
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      shadowOffset: { width: 0, height: 2 },
-    },
-    dateText: {
-      color: theme.colors.text,
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    dateRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-    },
-    clearButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: 'rgba(15,23,42,0.06)',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    notesInput: {
-      minHeight: 100,
-      textAlignVertical: 'top',
-      paddingTop: 16,
-    },
-    chipsRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 6,
-      justifyContent: 'flex-start',
-    },
-    chip: {
-      borderRadius: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 20,
-      backgroundColor: theme.colors.card,
-      borderWidth: 1.5,
-      borderColor: theme.colors.border,
-      flexBasis: '30%',
-      flexGrow: 1,
-      maxWidth: '32%',
-      minHeight: 70,
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: 7,
-      // Subtle shadow
-      shadowColor: '#000',
-      shadowOpacity: 0.05,
-      shadowRadius: 6,
-      shadowOffset: { width: 0, height: 2 },
-    },
-    chipText: {
-      fontSize: 13,
-      fontWeight: '700',
-    },
-    grid: {
-      flexDirection: 'row',
-      gap: 16,
-    },
-    gridItem: {
-      flex: 1,
-    },
-    amountRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-    },
-    currencyPill: {
-      paddingHorizontal: 12,
-      paddingVertical: 14,
-      borderRadius: 16,
-      backgroundColor: theme.colors.cardAlt,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      minHeight: 56,
-      justifyContent: 'center',
-    },
-    currencyText: {
-      color: theme.colors.text,
-      fontWeight: '700',
-      fontSize: 14,
-    },
-    dropdownButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      minHeight: 56,
-      borderRadius: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      backgroundColor: '#fff',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      shadowColor: '#000',
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      shadowOffset: { width: 0, height: 2 },
-    },
-    dropdownText: {
-      color: theme.colors.text,
-      fontWeight: '600',
-      fontSize: 14,
-    },
-    amountInput: {
-      flex: 1,
-    },
-    cycleRow: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    cycle: {
-      flex: 1,
-      borderRadius: 16,
-      paddingVertical: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.colors.card,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    cycleText: {
-      fontSize: 13,
-      fontWeight: '600',
-    },
-    dangerZone: {
-      marginTop: 10,
-      borderRadius: 9999,
-      padding: 16,
-      backgroundColor: 'rgba(255,68,56,0.05)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,68,56,0.15)',
-    },
-    deleteButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 10,
-    },
-    deleteText: {
-      fontSize: 17,
-      fontWeight: '600',
-    },
-    primary: {
-      borderRadius: 20,
-      paddingVertical: 16,
-      alignItems: 'center',
-      marginTop: 16,
-    },
-    primaryText: {
-      color: '#fff',
-      fontWeight: '700',
-      fontSize: 16,
-    },
-    loading: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      paddingVertical: 20,
-      justifyContent: 'center',
-    },
-    loadingText: {
-      color: theme.colors.secondaryText,
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    notFound: {
-      borderRadius: 26,
-      padding: 24,
-      backgroundColor: theme.colors.card,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      gap: 12,
-      alignItems: 'center',
-    },
-    notFoundTitle: {
-      color: theme.colors.text,
-      fontSize: 20,
-      fontWeight: '700',
-    },
-    notFoundText: {
-      color: theme.colors.secondaryText,
-      fontSize: 14,
-      lineHeight: 20,
-      textAlign: 'center',
-    },
-  });
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: AppColors.background,
+  },
+  content: {
+    padding: 20,
+    paddingBottom: 40,
+    gap: 20,
+  },
+  headerLeft: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(15,23,42,0.06)',
+  },
+  headerRight: {
+    width: 38,
+    height: 38,
+  },
+  section: {
+    gap: 10,
+  },
+  label: {
+    color: AppColors.secondaryText,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    marginLeft: 4,
+  },
+  helper: {
+    color: AppColors.secondaryText,
+    fontSize: 13,
+    lineHeight: 18,
+    marginLeft: 4,
+    marginBottom: 4,
+  },
+  input: {
+    minHeight: 56,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    color: AppColors.text,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    fontSize: 16,
+    fontWeight: '600',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    justifyContent: 'center',
+  },
+  inputText: {
+    color: AppColors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  placeholderText: {
+    color: 'rgba(15,23,42,0.35)',
+  },
+  errorText: {
+    color: AppColors.negative,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 6,
+    marginLeft: 4,
+  },
+  dateInput: {
+    minHeight: 56,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  dateText: {
+    color: AppColors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  clearButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(15,23,42,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notesInput: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+    paddingTop: 16,
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    justifyContent: 'flex-start',
+  },
+  chip: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    backgroundColor: AppColors.card,
+    borderWidth: 1.5,
+    borderColor: AppColors.border,
+    flexBasis: '30%',
+    flexGrow: 1,
+    maxWidth: '32%',
+    minHeight: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 7,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  grid: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  gridItem: {
+    flex: 1,
+  },
+  amountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  currencyPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: AppColors.cardAlt,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    minHeight: 56,
+    justifyContent: 'center',
+  },
+  currencyText: {
+    color: AppColors.text,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 56,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  dropdownText: {
+    color: AppColors.text,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  amountInput: {
+    flex: 1,
+  },
+  cycleRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  cycle: {
+    flex: 1,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: AppColors.card,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  cycleText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  dangerZone: {
+    marginTop: 10,
+    borderRadius: 9999,
+    padding: 16,
+    backgroundColor: 'rgba(255,68,56,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,68,56,0.15)',
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  deleteText: {
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  primary: {
+    borderRadius: 20,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  primaryText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  loading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 20,
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: AppColors.secondaryText,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  notFound: {
+    borderRadius: 26,
+    padding: 24,
+    backgroundColor: AppColors.card,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    gap: 12,
+    alignItems: 'center',
+  },
+  notFoundTitle: {
+    color: AppColors.text,
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  notFoundText: {
+    color: AppColors.secondaryText,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+});

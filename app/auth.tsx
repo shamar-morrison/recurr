@@ -1,5 +1,5 @@
 import { Stack, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -15,8 +15,6 @@ import { AppColors } from '@/constants/colors';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 
 export default function AuthScreen() {
-  const theme = { colors: AppColors };
-  const styles = useMemo(() => createStyles(), []);
   const router = useRouter();
   const { signInEmail, signUpEmail, signInWithGoogleMock, isFirebaseReady, user, isReady } =
     useAuth();
@@ -106,7 +104,7 @@ export default function AuthScreen() {
           <Pressable
             onPress={submit}
             disabled={isWorking}
-            style={[styles.primary, { backgroundColor: theme.colors.tint }]}
+            style={[styles.primary, { backgroundColor: AppColors.tint }]}
             testID="authSubmit"
           >
             {isWorking ? (
@@ -146,91 +144,88 @@ export default function AuthScreen() {
   );
 }
 
-function createStyles() {
-  const theme = { colors: AppColors };
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: 16,
-      backgroundColor: theme.colors.background,
-    },
-    title: {
-      color: theme.colors.text,
-      fontSize: 30,
-      fontWeight: '900',
-      letterSpacing: -0.9,
-      marginBottom: 6,
-    },
-    subtitle: {
-      color: theme.colors.secondaryText,
-      fontSize: 14,
-      lineHeight: 18,
-      marginBottom: 14,
-      maxWidth: 360,
-    },
-    card: {
-      borderRadius: 24,
-      padding: 16,
-      backgroundColor: theme.colors.card,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.colors.border,
-      gap: 10,
-    },
-    label: {
-      color: theme.colors.secondaryText,
-      fontSize: 12,
-      fontWeight: '800',
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
-      marginTop: 6,
-    },
-    input: {
-      height: 48,
-      borderRadius: 16,
-      paddingHorizontal: 14,
-      color: theme.colors.text,
-      backgroundColor: 'rgba(15,23,42,0.05)',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.colors.border,
-    },
-    primary: {
-      marginTop: 6,
-      borderRadius: 18,
-      paddingVertical: 14,
-      alignItems: 'center',
-    },
-    primaryText: {
-      color: '#fff',
-      fontWeight: '900',
-      fontSize: 15,
-    },
-    switch: {
-      paddingVertical: 10,
-      alignItems: 'center',
-    },
-    switchText: {
-      color: theme.colors.tint,
-      fontWeight: '800',
-      fontSize: 13,
-    },
-    divider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: theme.colors.border,
-      marginVertical: 6,
-    },
-    google: {
-      borderRadius: 18,
-      paddingVertical: 14,
-      alignItems: 'center',
-      backgroundColor: 'rgba(15,23,42,0.06)',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.colors.border,
-    },
-    googleText: {
-      color: theme.colors.text,
-      fontWeight: '900',
-      fontSize: 14,
-      letterSpacing: -0.1,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: AppColors.background,
+  },
+  title: {
+    color: AppColors.text,
+    fontSize: 30,
+    fontWeight: '900',
+    letterSpacing: -0.9,
+    marginBottom: 6,
+  },
+  subtitle: {
+    color: AppColors.secondaryText,
+    fontSize: 14,
+    lineHeight: 18,
+    marginBottom: 14,
+    maxWidth: 360,
+  },
+  card: {
+    borderRadius: 24,
+    padding: 16,
+    backgroundColor: AppColors.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: AppColors.border,
+    gap: 10,
+  },
+  label: {
+    color: AppColors.secondaryText,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginTop: 6,
+  },
+  input: {
+    height: 48,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    color: AppColors.text,
+    backgroundColor: 'rgba(15,23,42,0.05)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: AppColors.border,
+  },
+  primary: {
+    marginTop: 6,
+    borderRadius: 18,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  primaryText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  switch: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  switchText: {
+    color: AppColors.tint,
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: AppColors.border,
+    marginVertical: 6,
+  },
+  google: {
+    borderRadius: 18,
+    paddingVertical: 14,
+    alignItems: 'center',
+    backgroundColor: 'rgba(15,23,42,0.06)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: AppColors.border,
+  },
+  googleText: {
+    color: AppColors.text,
+    fontWeight: '900',
+    fontSize: 14,
+    letterSpacing: -0.1,
+  },
+});

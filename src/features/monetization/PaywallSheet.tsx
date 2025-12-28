@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppColors } from '@/constants/colors';
@@ -13,7 +13,7 @@ export function PaywallSheet({ variant = 'screen' }: Props) {
   const { isPremium, setPremiumMock, user } = useAuth();
   const [isWorking, setIsWorking] = useState<boolean>(false);
 
-  const styles = useMemo(() => createStyles(variant), [variant]);
+  const isInline = variant === 'inline';
 
   const canPurchase = Boolean(user);
 
@@ -80,7 +80,7 @@ export function PaywallSheet({ variant = 'screen' }: Props) {
           </Pressable>
         </View>
       ) : (
-        <View style={styles.actions}>
+        <View style={[styles.actions, { paddingTop: isInline ? 4 : 10 }]}>
           <Pressable
             disabled={!canPurchase || isWorking}
             onPress={handlePurchase}
@@ -117,92 +117,86 @@ export function PaywallSheet({ variant = 'screen' }: Props) {
   );
 }
 
-function createStyles(variant: Props['variant']) {
-  const isInline = variant === 'inline';
-  const theme = { colors: AppColors, isDark: false };
-
-  return StyleSheet.create({
-    container: {
-      gap: 10,
-      paddingTop: 6,
-    },
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-    },
-    badge: {
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 999,
-      backgroundColor: theme.colors.badge,
-    },
-    badgeText: {
-      color: theme.colors.badgeText,
-      fontSize: 12,
-      fontWeight: '900',
-      letterSpacing: 0.8,
-    },
-    tierTitle: {
-      color: theme.colors.text,
-      fontSize: 14,
-      fontWeight: '800',
-      letterSpacing: -0.15,
-    },
-    divider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: theme.colors.border,
-      marginTop: 6,
-      marginBottom: 2,
-    },
-    note: {
-      color: theme.colors.secondaryText,
-      fontSize: 12,
-      lineHeight: 16,
-    },
-    actions: {
-      gap: 10,
-      paddingTop: isInline ? 4 : 10,
-    },
-    primaryButton: {
-      borderRadius: 16,
-      paddingVertical: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    primaryButtonText: {
-      color: '#fff',
-      fontWeight: '900',
-      fontSize: 14,
-      letterSpacing: -0.1,
-    },
-    secondaryButton: {
-      borderRadius: 16,
-      paddingVertical: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.colors.card,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.colors.border,
-    },
-    secondaryButtonText: {
-      color: theme.colors.text,
-      fontWeight: '800',
-      fontSize: 14,
-      letterSpacing: -0.1,
-    },
-    helperText: {
-      color: theme.colors.secondaryText,
-      fontSize: 12,
-    },
-    premiumBox: {
-      gap: 10,
-      paddingTop: 8,
-    },
-    premiumTitle: {
-      color: theme.colors.positive,
-      fontSize: 14,
-      fontWeight: '900',
-    },
-  });
-}
+const styles = StyleSheet.create({
+  container: {
+    gap: 10,
+    paddingTop: 6,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: AppColors.badge,
+  },
+  badgeText: {
+    color: AppColors.badgeText,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  tierTitle: {
+    color: AppColors.text,
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: -0.15,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: AppColors.border,
+    marginTop: 6,
+    marginBottom: 2,
+  },
+  note: {
+    color: AppColors.secondaryText,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  actions: {
+    gap: 10,
+  },
+  primaryButton: {
+    borderRadius: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryButtonText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 14,
+    letterSpacing: -0.1,
+  },
+  secondaryButton: {
+    borderRadius: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: AppColors.card,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: AppColors.border,
+  },
+  secondaryButtonText: {
+    color: AppColors.text,
+    fontWeight: '800',
+    fontSize: 14,
+    letterSpacing: -0.1,
+  },
+  helperText: {
+    color: AppColors.secondaryText,
+    fontSize: 12,
+  },
+  premiumBox: {
+    gap: 10,
+    paddingTop: 8,
+  },
+  premiumTitle: {
+    color: AppColors.positive,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+});

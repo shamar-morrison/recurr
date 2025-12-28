@@ -38,9 +38,6 @@ type Props = {
 };
 
 export function ServiceSelectorModal({ visible, selectedService = '', onSelect, onClose }: Props) {
-  const theme = { colors: AppColors };
-  const styles = useMemo(() => createStyles(), []);
-
   const {
     customServices,
     isLoading: isLoadingCustomServices,
@@ -163,11 +160,11 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
             <Text style={styles.serviceCategory}>{item.category}</Text>
             {item.isCustom && <Text style={styles.customBadge}>Custom</Text>}
           </View>
-          {isSelected && <CheckIcon color={theme.colors.tint} size={20} weight="bold" />}
+          {isSelected && <CheckIcon color={AppColors.tint} size={20} weight="bold" />}
         </Pressable>
       );
     },
-    [handleSelect, selectedService, styles, theme.colors.tint]
+    [handleSelect, selectedService]
   );
 
   const keyExtractor = useCallback((item: UnifiedService) => {
@@ -200,7 +197,7 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
                 <View style={styles.headerSpacer} />
                 <Text style={styles.title}>Add Custom Service</Text>
                 <Pressable onPress={handleCancelAddMode} style={styles.closeButton}>
-                  <XIcon color={theme.colors.text} size={22} />
+                  <XIcon color={AppColors.text} size={22} />
                 </Pressable>
               </View>
 
@@ -210,7 +207,7 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
                   value={editableName}
                   onChangeText={setEditableName}
                   placeholder="Enter service name"
-                  placeholderTextColor={theme.colors.secondaryText}
+                  placeholderTextColor={AppColors.secondaryText}
                   style={styles.nameInput}
                   autoCapitalize="words"
                   autoCorrect={false}
@@ -286,17 +283,17 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
               <View style={styles.headerSpacer} />
               <Text style={styles.title}>Select Service</Text>
               <Pressable onPress={onClose} style={styles.closeButton}>
-                <XIcon color={theme.colors.text} size={22} />
+                <XIcon color={AppColors.text} size={22} />
               </Pressable>
             </View>
 
             <View style={styles.searchContainer}>
-              <MagnifyingGlassIcon color={theme.colors.secondaryText} size={18} />
+              <MagnifyingGlassIcon color={AppColors.secondaryText} size={18} />
               <TextInput
                 value={search}
                 onChangeText={setSearch}
                 placeholder="Search services..."
-                placeholderTextColor={theme.colors.secondaryText}
+                placeholderTextColor={AppColors.secondaryText}
                 style={styles.searchInput}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -316,7 +313,7 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
               <>
                 {isLoadingCustomServices && (
                   <View style={styles.loadingRow}>
-                    <ActivityIndicator size="small" color={theme.colors.tint} />
+                    <ActivityIndicator size="small" color={AppColors.tint} />
                     <Text style={styles.loadingText}>Loading custom services…</Text>
                   </View>
                 )}
@@ -338,224 +335,220 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
   );
 }
 
-function createStyles() {
-  const theme = { colors: AppColors };
-
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.card,
-      paddingHorizontal: 16,
-    },
-    scrollView: {
-      flex: 1,
-    },
-    scrollViewContent: {
-      flexGrow: 1,
-      paddingBottom: 40,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingTop: 20,
-      paddingBottom: 16,
-    },
-    headerSpacer: {
-      width: 40,
-    },
-    title: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: theme.colors.text,
-      textAlign: 'center',
-      flex: 1,
-    },
-    closeButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'rgba(15,23,42,0.04)',
-    },
-    searchContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      borderRadius: 14,
-      backgroundColor: 'rgba(15,23,42,0.04)',
-      marginBottom: 12,
-    },
-    searchInput: {
-      flex: 1,
-      fontSize: 16,
-      color: theme.colors.text,
-      padding: 0,
-    },
-    list: {
-      flex: 1,
-    },
-    item: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: 14,
-      paddingHorizontal: 12,
-      borderRadius: 12,
-    },
-    itemSelected: {
-      backgroundColor: 'rgba(79,140,255,0.08)',
-    },
-    serviceInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      flex: 1,
-    },
-    colorDot: {
-      width: 12,
-      height: 12,
-      borderRadius: 6,
-    },
-    serviceName: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: theme.colors.text,
-    },
-    serviceCategory: {
-      fontSize: 13,
-      color: theme.colors.secondaryText,
-    },
-    customBadge: {
-      fontSize: 10,
-      fontWeight: '600',
-      color: theme.colors.tint,
-      backgroundColor: 'rgba(79,140,255,0.1)',
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 4,
-    },
-    emptyState: {
-      alignItems: 'center',
-      paddingVertical: 32,
-      gap: 16,
-    },
-    emptyText: {
-      fontSize: 15,
-      color: theme.colors.secondaryText,
-    },
-    addButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      backgroundColor: theme.colors.tint,
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      borderRadius: 24,
-    },
-    addButtonText: {
-      fontSize: 15,
-      fontWeight: '600',
-      color: '#FFFFFF',
-    },
-    section: {
-      marginBottom: 20,
-    },
-    label: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: theme.colors.secondaryText,
-      marginBottom: 10,
-    },
-    nameInput: {
-      backgroundColor: 'rgba(15,23,42,0.04)',
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      borderRadius: 12,
-      fontSize: 16,
-      fontWeight: '600',
-      color: theme.colors.text,
-    },
-    categoryGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 10,
-    },
-    categoryChip: {
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      borderRadius: 20,
-      backgroundColor: 'rgba(15,23,42,0.04)',
-    },
-    categoryChipSelected: {
-      backgroundColor: theme.colors.tint,
-    },
-    categoryText: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: theme.colors.secondaryText,
-    },
-    categoryTextSelected: {
-      color: '#FFFFFF',
-      fontWeight: '600',
-    },
-    colorGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 12,
-    },
-    colorSwatch: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    buttonRow: {
-      flexDirection: 'row',
-      gap: 12,
-      marginTop: 8,
-    },
-    cancelButton: {
-      flex: 1,
-      paddingVertical: 14,
-      borderRadius: 12,
-      backgroundColor: 'rgba(15,23,42,0.04)',
-      alignItems: 'center',
-    },
-    cancelButtonText: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: theme.colors.secondaryText,
-    },
-    saveButton: {
-      flex: 1,
-      paddingVertical: 14,
-      borderRadius: 12,
-      backgroundColor: theme.colors.tint,
-      alignItems: 'center',
-    },
-    saveButtonDisabled: {
-      opacity: 0.5,
-    },
-    saveButtonText: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: '#FFFFFF',
-    },
-    loadingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-      paddingVertical: 12,
-      paddingHorizontal: 12,
-    },
-    loadingText: {
-      fontSize: 14,
-      color: theme.colors.secondaryText,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: AppColors.card,
+    paddingHorizontal: 16,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 40,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 20,
+    paddingBottom: 16,
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: AppColors.text,
+    textAlign: 'center',
+    flex: 1,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(15,23,42,0.04)',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: 'rgba(15,23,42,0.04)',
+    marginBottom: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: AppColors.text,
+    padding: 0,
+  },
+  list: {
+    flex: 1,
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+  itemSelected: {
+    backgroundColor: 'rgba(79,140,255,0.08)',
+  },
+  serviceInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  colorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  serviceName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: AppColors.text,
+  },
+  serviceCategory: {
+    fontSize: 13,
+    color: AppColors.secondaryText,
+  },
+  customBadge: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: AppColors.tint,
+    backgroundColor: 'rgba(79,140,255,0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    gap: 16,
+  },
+  emptyText: {
+    fontSize: 15,
+    color: AppColors.secondaryText,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: AppColors.tint,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  addButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  section: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: AppColors.secondaryText,
+    marginBottom: 10,
+  },
+  nameInput: {
+    backgroundColor: 'rgba(15,23,42,0.04)',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    fontSize: 16,
+    fontWeight: '600',
+    color: AppColors.text,
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  categoryChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(15,23,42,0.04)',
+  },
+  categoryChipSelected: {
+    backgroundColor: AppColors.tint,
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: AppColors.secondaryText,
+  },
+  categoryTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  colorGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  colorSwatch: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: 'rgba(15,23,42,0.04)',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: AppColors.secondaryText,
+  },
+  saveButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: AppColors.tint,
+    alignItems: 'center',
+  },
+  saveButtonDisabled: {
+    opacity: 0.5,
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: AppColors.secondaryText,
+  },
+});

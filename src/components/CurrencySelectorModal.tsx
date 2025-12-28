@@ -19,9 +19,6 @@ export function CurrencySelectorModal({
   onSelect,
   onClose,
 }: Props) {
-  const theme = { colors: AppColors };
-  const styles = useMemo(() => createStyles(), []);
-
   const [search, setSearch] = useState('');
 
   // Reset search when modal opens
@@ -61,11 +58,11 @@ export function CurrencySelectorModal({
             <Text style={styles.currencyCode}>{item.code}</Text>
             <Text style={styles.currencyName}>{item.name}</Text>
           </View>
-          {isSelected && <CheckIcon color={theme.colors.tint} size={20} weight="bold" />}
+          {isSelected && <CheckIcon color={AppColors.tint} size={20} weight="bold" />}
         </Pressable>
       );
     },
-    [handleSelect, selectedCurrency, styles, theme.colors.tint]
+    [handleSelect, selectedCurrency]
   );
 
   const keyExtractor = useCallback((item: Currency) => item.code, []);
@@ -82,17 +79,17 @@ export function CurrencySelectorModal({
           <View style={styles.headerSpacer} />
           <Text style={styles.title}>Select Currency</Text>
           <Pressable onPress={onClose} style={styles.closeButton}>
-            <XIcon color={theme.colors.text} size={22} />
+            <XIcon color={AppColors.text} size={22} />
           </Pressable>
         </View>
 
         <View style={styles.searchContainer}>
-          <MagnifyingGlassIcon color={theme.colors.secondaryText} size={18} />
+          <MagnifyingGlassIcon color={AppColors.secondaryText} size={18} />
           <TextInput
             value={search}
             onChangeText={setSearch}
             placeholder="Search currencies..."
-            placeholderTextColor={theme.colors.secondaryText}
+            placeholderTextColor={AppColors.secondaryText}
             style={styles.searchInput}
             autoCapitalize="none"
             autoCorrect={false}
@@ -115,84 +112,80 @@ export function CurrencySelectorModal({
   );
 }
 
-function createStyles() {
-  const theme = { colors: AppColors };
-
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.card,
-      paddingHorizontal: 16,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingTop: 20,
-      paddingBottom: 16,
-    },
-    headerSpacer: {
-      width: 40,
-    },
-    title: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: theme.colors.text,
-      textAlign: 'center',
-      flex: 1,
-    },
-    closeButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'rgba(15,23,42,0.04)',
-    },
-    searchContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      borderRadius: 14,
-      backgroundColor: 'rgba(15,23,42,0.04)',
-      marginBottom: 12,
-    },
-    searchInput: {
-      flex: 1,
-      fontSize: 16,
-      color: theme.colors.text,
-      padding: 0,
-    },
-    list: {
-      flex: 1,
-    },
-    item: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: 14,
-      paddingHorizontal: 12,
-      borderRadius: 12,
-    },
-    itemSelected: {
-      backgroundColor: 'rgba(79,140,255,0.08)',
-    },
-    currencyInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      flex: 1,
-    },
-    currencyCode: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: theme.colors.text,
-    },
-    currencyName: {
-      fontSize: 13,
-      color: theme.colors.secondaryText,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: AppColors.card,
+    paddingHorizontal: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 20,
+    paddingBottom: 16,
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: AppColors.text,
+    textAlign: 'center',
+    flex: 1,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(15,23,42,0.04)',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: 'rgba(15,23,42,0.04)',
+    marginBottom: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: AppColors.text,
+    padding: 0,
+  },
+  list: {
+    flex: 1,
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+  },
+  itemSelected: {
+    backgroundColor: 'rgba(79,140,255,0.08)',
+  },
+  currencyInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  currencyCode: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: AppColors.text,
+  },
+  currencyName: {
+    fontSize: 13,
+    color: AppColors.secondaryText,
+  },
+});

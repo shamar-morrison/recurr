@@ -1,14 +1,9 @@
-import { useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppColors } from '@/constants/colors';
 import { PaywallSheet } from '@/src/features/monetization/PaywallSheet';
 
 export default function ModalScreen() {
-  const theme = { colors: AppColors };
-
-  const styles = useMemo(() => createStyles(), []);
-
   return (
     <Modal transparent animationType="fade" visible>
       <Pressable style={styles.overlay}>
@@ -22,34 +17,31 @@ export default function ModalScreen() {
   );
 }
 
-function createStyles() {
-  const theme = { colors: AppColors };
-  return StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.45)',
-      padding: 16,
-      justifyContent: 'flex-end',
-    },
-    sheet: {
-      backgroundColor: theme.colors.card,
-      borderRadius: 24,
-      padding: 16,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.colors.border,
-    },
-    title: {
-      color: theme.colors.text,
-      fontSize: 22,
-      letterSpacing: -0.2,
-      fontWeight: '800',
-      marginBottom: 6,
-    },
-    subtitle: {
-      color: theme.colors.secondaryText,
-      fontSize: 14,
-      lineHeight: 18,
-      marginBottom: 12,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    padding: 16,
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: AppColors.card,
+    borderRadius: 24,
+    padding: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: AppColors.border,
+  },
+  title: {
+    color: AppColors.text,
+    fontSize: 22,
+    letterSpacing: -0.2,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  subtitle: {
+    color: AppColors.secondaryText,
+    fontSize: 14,
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+});
