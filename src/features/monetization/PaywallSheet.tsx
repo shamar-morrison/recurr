@@ -10,7 +10,6 @@ type Props = {
 };
 
 export function PaywallSheet({ variant = 'screen' }: Props) {
-  const theme = { colors: AppColors, isDark: false };
   const { isPremium, setPremiumMock, user } = useAuth();
   const [isWorking, setIsWorking] = useState<boolean>(false);
 
@@ -56,7 +55,7 @@ export function PaywallSheet({ variant = 'screen' }: Props) {
       </View>
 
       <View style={styles.row}>
-        <View style={[styles.badge, { backgroundColor: theme.colors.tint }]} testID="premiumBadge">
+        <View style={[styles.badge, { backgroundColor: AppColors.tint }]} testID="premiumBadge">
           <Text style={styles.badgeText}>PREMIUM</Text>
         </View>
         <Text style={styles.tierTitle}>Unlimited + Advanced insights</Text>
@@ -74,7 +73,7 @@ export function PaywallSheet({ variant = 'screen' }: Props) {
           <Text style={styles.premiumTitle}>Premium Active</Text>
           <Pressable
             onPress={() => router.back()}
-            style={[styles.primaryButton, { backgroundColor: theme.colors.tint }]}
+            style={[styles.primaryButton, { backgroundColor: AppColors.tint }]}
             testID="paywallDone"
           >
             <Text style={styles.primaryButtonText}>Done</Text>
@@ -88,7 +87,7 @@ export function PaywallSheet({ variant = 'screen' }: Props) {
             style={[
               styles.primaryButton,
               {
-                backgroundColor: canPurchase ? theme.colors.tint : 'rgba(79,140,255,0.25)',
+                backgroundColor: canPurchase ? AppColors.tint : 'rgba(79,140,255,0.25)',
               },
             ]}
             testID="paywallPurchase"

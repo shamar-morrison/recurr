@@ -5,7 +5,6 @@ import { StyleSheet, Text, View } from 'react-native';
 import { AppColors } from '@/constants/colors';
 
 export default function NotFoundScreen() {
-  const theme = { colors: AppColors };
   const styles = useMemo(() => createStyles(), []);
 
   return (

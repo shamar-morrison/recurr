@@ -175,9 +175,17 @@ export function subscribeToCustomServices(
   if (!isFirebaseConfigured()) {
     // Firebase not configured, use local data only (one-time read, no real-time)
     console.log('[customServices] subscribe: Firebase not configured, using local fallback');
-    readLocal(userId).then((local) => {
-      onData(local.sort((a, b) => a.name.localeCompare(b.name)));
-    });
+    readLocal(userId)
+      .then((local) => {
+        onData(local.sort((a, b) => a.name.localeCompare(b.name)));
+      })
+      .catch((e) => {
+        console.log('[customServices] subscribe: local read failed', e);
+        onData([]);
+        if (onError) {
+          onError(e);
+        }
+      });
     return () => {};
   }
 
@@ -214,13 +222,14 @@ export function subscribeToCustomServices(
       console.log('[customServices] subscribeToCustomServices error', error);
 
       // Fallback to local data on error
-      readLocal(userId).then((local) => {
-        onData(local.sort((a, b) => a.name.localeCompare(b.name)));
-      });
-
-      if (onError) {
-        onError(error);
-      }
+      readLocal(userId)
+        .then((local) => {
+          onData(local.sort((a, b) => a.name.localeCompare(b.name)));
+        })
+        .catch((e) => {
+          console.log('[customServices] subscribe: local read failed', e);
+          onData([]);
+        });
     }
   );
 

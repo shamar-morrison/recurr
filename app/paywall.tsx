@@ -7,7 +7,6 @@ import { AppColors } from '@/constants/colors';
 import { PaywallSheet } from '@/src/features/monetization/PaywallSheet';
 
 export default function PaywallScreen() {
-  const theme = { colors: AppColors };
   const styles = useMemo(() => createStyles(), []);
 
   return (
