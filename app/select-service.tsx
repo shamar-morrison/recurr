@@ -104,6 +104,20 @@ export default function SelectServiceScreen() {
     const trimmedName = editableName.trim();
     if (!trimmedName || !addCustomService) return;
 
+    // Check for duplicate names (case-insensitive)
+    const lowerName = trimmedName.toLowerCase();
+    const existingService = allServices.find((s) => s.name.toLowerCase() === lowerName);
+
+    if (existingService) {
+      const serviceType = existingService.isCustom ? 'custom' : 'predefined';
+      Alert.alert(
+        'Service Already Exists',
+        `A ${serviceType} service named "${existingService.name}" already exists. Please choose a different name.`,
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     setIsSaving(true);
     try {
       const newService = await addCustomService({
@@ -134,7 +148,7 @@ export default function SelectServiceScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [editableName, selectedCategory, selectedColor, addCustomService]);
+  }, [editableName, selectedCategory, selectedColor, addCustomService, allServices]);
 
   const renderItem = useCallback(
     ({ item }: { item: UnifiedService }) => {
