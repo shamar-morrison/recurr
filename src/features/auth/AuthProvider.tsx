@@ -108,14 +108,21 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
         const snap = await getDoc(userRef);
 
         if (!snap.exists()) {
+          // Determine auth provider from user's provider data
+          const authProvider =
+            u.providerData[0]?.providerId === 'google.com' ? 'google' : 'anonymous';
+
           await setDoc(userRef, {
             createdAt: serverTimestamp(),
             email: u.email ?? null,
+            displayName: u.displayName ?? null,
+            photoURL: u.photoURL ?? null,
             isPremium: false,
             settings: {
               remindDaysBeforeBilling: DEFAULT_SETTINGS.remindDaysBeforeBilling,
               currency: DEFAULT_SETTINGS.currency,
             },
+            authProvider: authProvider,
           });
           setIsPremium(false);
           setSettings(DEFAULT_SETTINGS);
@@ -124,6 +131,22 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
             isPremium?: boolean;
             settings?: Partial<UserSettings>;
           };
+
+          // Update profile data if it has changed (e.g., user updated their Google profile)
+          const updates: Record<string, unknown> = {};
+          if (u.displayName && snap.data().displayName !== u.displayName) {
+            updates.displayName = u.displayName;
+          }
+          if (u.photoURL && snap.data().photoURL !== u.photoURL) {
+            updates.photoURL = u.photoURL;
+          }
+          if (u.email && snap.data().email !== u.email) {
+            updates.email = u.email;
+          }
+          if (Object.keys(updates).length > 0) {
+            await updateDoc(userRef, updates);
+          }
+
           setIsPremium(Boolean(data.isPremium));
           setSettings({
             remindDaysBeforeBilling:
@@ -140,6 +163,13 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
 
     return () => unsub();
   }, [isFirebaseReady]);
+
+  useEffect(() => {
+    GoogleAuth.configure({
+      androidClientId: WEB_CLIENT_ID,
+      offlineAccess: false,
+    });
+  }, []);
 
   const signInEmail = useCallback(
     async (email: string, password: string) => {
@@ -174,12 +204,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
     if (!isFirebaseReady) throw new Error('Firebase is not configured');
 
     try {
-      // Configure Google Auth (will auto-detect from google-services.json on Android)
-      await GoogleAuth.configure({
-        androidClientId: WEB_CLIENT_ID,
-        offlineAccess: false,
-      });
-
       // Sign in with Google - uses response.type pattern per library API
       const response = await GoogleAuth.signIn();
 
@@ -209,43 +233,9 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
 
       // Sign in to Firebase with the credential
       const auth = getFirebaseAuth();
-      const userCredential = await signInWithCredential(auth, credential);
-      const firebaseUser = userCredential.user;
+      await signInWithCredential(auth, credential);
 
-      // Extract user profile data (prefer Firebase user data, fallback to Google user)
-      const displayName = firebaseUser.displayName || googleUser?.name || 'User';
-      const photoURL = firebaseUser.photoURL || googleUser?.photo || null;
-      const email = firebaseUser.email || googleUser?.email || '';
-
-      // Check if user document exists in Firestore
-      const userDocRef = doc(firestore, 'users', firebaseUser.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (!userDocSnap.exists()) {
-        // Create new user document with Google profile data
-        await setDoc(userDocRef, {
-          uid: firebaseUser.uid,
-          email: email,
-          displayName: displayName,
-          photoURL: photoURL,
-          createdAt: serverTimestamp(),
-          isPremium: false,
-          settings: {
-            remindDaysBeforeBilling: DEFAULT_SETTINGS.remindDaysBeforeBilling,
-            currency: DEFAULT_SETTINGS.currency,
-          },
-          authProvider: 'google',
-        });
-      } else {
-        // Update existing user with latest profile data
-        await updateDoc(userDocRef, {
-          displayName: displayName,
-          photoURL: photoURL,
-          email: email,
-        });
-      }
-
-      // The onAuthStateChanged listener will handle setting the user state
+      // The onAuthStateChanged listener will handle setting the user state and creating/updating the user document
     } catch (error: unknown) {
       console.error('[auth] Google Sign-In Error:', error);
 
