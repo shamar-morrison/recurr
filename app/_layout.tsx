@@ -54,10 +54,6 @@ function RootLayoutNav() {
             name="select-frequency"
             options={{ presentation: 'formSheet', headerShown: false }}
           />
-          <Stack.Screen
-            name="add-service"
-            options={{ presentation: 'formSheet', headerShown: false }}
-          />
         </Stack>
       </>
     </GluestackUIProvider>

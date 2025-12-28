@@ -1,12 +1,15 @@
 import { CheckIcon, MagnifyingGlassIcon, PlusIcon } from 'phosphor-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
+import { SERVICE_COLORS } from '@/src/constants/customServices';
 import { Service, SERVICES } from '@/src/constants/services';
 import { useCustomServices } from '@/src/features/services/useCustomServices';
+import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { getFirestoreErrorMessage } from '@/src/lib/firestore';
 import { useAppTheme } from '@/src/theme/useAppTheme';
 
 // Union type for both predefined and custom services
@@ -14,9 +17,6 @@ type UnifiedService = Service & { isCustom?: boolean; color?: string; id?: strin
 
 type RouteParams = {
   selectedService?: string;
-  // Returned from add-service screen
-  _newServiceName?: string;
-  _newServiceCategory?: string;
 };
 
 export default function SelectServiceScreen() {
@@ -26,9 +26,16 @@ export default function SelectServiceScreen() {
   const params = useLocalSearchParams<RouteParams>();
   const selectedService = params.selectedService ?? '';
 
-  const { customServices } = useCustomServices();
+  const { customServices, addService: addCustomService } = useCustomServices();
 
   const [search, setSearch] = useState('');
+
+  // State for switching between list view and add service view
+  const [showAddMode, setShowAddMode] = useState(false);
+  const [editableName, setEditableName] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Other');
+  const [selectedColor, setSelectedColor] = useState<string>(SERVICE_COLORS[1]);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Combine predefined services with custom services (custom first for better discoverability)
   const allServices = useMemo((): UnifiedService[] => {
@@ -53,7 +60,6 @@ export default function SelectServiceScreen() {
   const hasNoResults = filteredServices.length === 0 && search.trim().length > 0;
 
   const handleSelect = useCallback((service: UnifiedService) => {
-    // Navigate back with selected service data using setParams on the previous screen
     router.navigate({
       pathname: '/(tabs)/(home)/subscription-editor',
       params: {
@@ -63,27 +69,57 @@ export default function SelectServiceScreen() {
     });
   }, []);
 
-  const handleOpenAddService = useCallback(() => {
-    router.push({
-      pathname: '/add-service',
-      params: { serviceName: search.trim() },
-    });
+  const handleOpenAddMode = useCallback(() => {
+    // Switch to add mode with the current search term as the service name
+    setEditableName(search.trim());
+    setSelectedCategory('Other');
+    setSelectedColor(SERVICE_COLORS[1]);
+    setShowAddMode(true);
   }, [search]);
 
-  // Handle newly created service returned from add-service screen
-  React.useEffect(() => {
-    if (params._newServiceName && params._newServiceCategory) {
-      // Auto-select the newly created service and navigate to subscription editor
-      setSearch('');
-      router.navigate({
-        pathname: '/(tabs)/(home)/subscription-editor',
-        params: {
-          _selectedServiceName: params._newServiceName,
-          _selectedCategory: params._newServiceCategory,
-        },
+  const handleCancelAddMode = useCallback(() => {
+    // Go back to list view
+    setShowAddMode(false);
+    setEditableName('');
+    setSelectedCategory('Other');
+    setSelectedColor(SERVICE_COLORS[1]);
+  }, []);
+
+  const handleSaveCustomService = useCallback(async () => {
+    const trimmedName = editableName.trim();
+    if (!trimmedName || !addCustomService) return;
+
+    setIsSaving(true);
+    try {
+      const newService = await addCustomService({
+        name: trimmedName,
+        category: selectedCategory,
+        color: selectedColor,
       });
+
+      if (newService) {
+        // Navigate to subscription-editor with the new service
+        router.navigate({
+          pathname: '/(tabs)/(home)/subscription-editor',
+          params: {
+            _selectedServiceName: newService.name,
+            _selectedCategory: newService.category,
+          },
+        });
+      } else {
+        Alert.alert(
+          'Failed to Create Service',
+          'Something went wrong while creating your custom service. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Failed to Create Service', getFirestoreErrorMessage(error), [{ text: 'OK' }]);
+    } finally {
+      setIsSaving(false);
     }
-  }, [params._newServiceName, params._newServiceCategory]);
+  }, [editableName, selectedCategory, selectedColor, addCustomService]);
 
   const renderItem = useCallback(
     ({ item }: { item: UnifiedService }) => {
@@ -109,12 +145,13 @@ export default function SelectServiceScreen() {
   );
 
   const keyExtractor = useCallback((item: UnifiedService) => {
-    // Use id for custom services (guaranteed unique), name for predefined
     if (item.isCustom && item.id) {
       return `${item.name}-${item.id}-custom`;
     }
     return `${item.name}-predefined`;
   }, []);
+
+  const isValidName = editableName.trim().length > 0;
 
   return (
     <>
@@ -129,43 +166,126 @@ export default function SelectServiceScreen() {
       />
 
       <SafeAreaView style={styles.container} edges={['bottom']}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Select Service</Text>
-        </View>
+        {showAddMode ? (
+          // ========== ADD SERVICE VIEW ==========
+          <>
+            <View style={styles.header}>
+              <Text style={styles.title}>Add Custom Service</Text>
+            </View>
 
-        <View style={styles.searchContainer}>
-          <MagnifyingGlassIcon color={theme.colors.secondaryText} size={18} />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search services..."
-            placeholderTextColor={theme.colors.secondaryText}
-            style={styles.searchInput}
-            autoCapitalize="none"
-            autoCorrect={false}
-            returnKeyType="search"
-          />
-        </View>
+            <View style={styles.section}>
+              <Text style={styles.label}>Service Name</Text>
+              <TextInput
+                value={editableName}
+                onChangeText={setEditableName}
+                placeholder="Enter service name"
+                placeholderTextColor={theme.colors.secondaryText}
+                style={styles.nameInput}
+                autoCapitalize="words"
+                autoCorrect={false}
+                autoFocus
+              />
+            </View>
 
-        {hasNoResults ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No services found</Text>
-            <Pressable style={styles.addButton} onPress={handleOpenAddService}>
-              <PlusIcon color="#FFFFFF" size={18} weight="bold" />
-              <Text style={styles.addButtonText}>Add "{search.trim()}"</Text>
-            </Pressable>
-          </View>
+            <View style={styles.section}>
+              <Text style={styles.label}>Category</Text>
+              <View style={styles.categoryGrid}>
+                {SUBSCRIPTION_CATEGORIES.map((category) => {
+                  const isSelected = category === selectedCategory;
+                  return (
+                    <Pressable
+                      key={category}
+                      style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
+                      onPress={() => setSelectedCategory(category)}
+                    >
+                      <Text
+                        style={[styles.categoryText, isSelected && styles.categoryTextSelected]}
+                      >
+                        {category}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.label}>Color</Text>
+              <View style={styles.colorGrid}>
+                {SERVICE_COLORS.map((color) => {
+                  const isColorSelected = color === selectedColor;
+                  return (
+                    <Pressable
+                      key={color}
+                      style={[styles.colorSwatch, { backgroundColor: color }]}
+                      onPress={() => setSelectedColor(color)}
+                    >
+                      {isColorSelected && <CheckIcon color="#FFFFFF" size={20} weight="bold" />}
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.buttonRow}>
+              <Pressable
+                style={styles.cancelButton}
+                onPress={handleCancelAddMode}
+                disabled={isSaving}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.saveButton, (!isValidName || isSaving) && styles.saveButtonDisabled]}
+                onPress={handleSaveCustomService}
+                disabled={!isValidName || isSaving}
+              >
+                <Text style={styles.saveButtonText}>{isSaving ? 'Saving...' : 'Create'}</Text>
+              </Pressable>
+            </View>
+          </>
         ) : (
-          <FlatList
-            data={filteredServices}
-            keyExtractor={keyExtractor}
-            renderItem={renderItem}
-            style={styles.list}
-            showsVerticalScrollIndicator={false}
-            initialNumToRender={10}
-            maxToRenderPerBatch={10}
-            windowSize={10}
-          />
+          // ========== SERVICE LIST VIEW ==========
+          <>
+            <View style={styles.header}>
+              <Text style={styles.title}>Select Service</Text>
+            </View>
+
+            <View style={styles.searchContainer}>
+              <MagnifyingGlassIcon color={theme.colors.secondaryText} size={18} />
+              <TextInput
+                value={search}
+                onChangeText={setSearch}
+                placeholder="Search services..."
+                placeholderTextColor={theme.colors.secondaryText}
+                style={styles.searchInput}
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="search"
+              />
+            </View>
+
+            {hasNoResults ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>No services found</Text>
+                <Pressable style={styles.addButton} onPress={handleOpenAddMode}>
+                  <PlusIcon color="#FFFFFF" size={18} weight="bold" />
+                  <Text style={styles.addButtonText}>Add "{search.trim()}"</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <FlatList
+                data={filteredServices}
+                keyExtractor={keyExtractor}
+                renderItem={renderItem}
+                style={styles.list}
+                showsVerticalScrollIndicator={false}
+                initialNumToRender={10}
+                maxToRenderPerBatch={10}
+                windowSize={10}
+              />
+            )}
+          </>
         )}
       </SafeAreaView>
     </>
@@ -268,6 +388,92 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
     },
     addButtonText: {
       fontSize: 15,
+      fontWeight: '600',
+      color: '#FFFFFF',
+    },
+    // Add service form styles
+    section: {
+      marginBottom: 20,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: theme.colors.secondaryText,
+      marginBottom: 10,
+    },
+    nameInput: {
+      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : 'rgba(15,23,42,0.04)',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderRadius: 12,
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.colors.text,
+    },
+    categoryGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+    },
+    categoryChip: {
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 20,
+      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : 'rgba(15,23,42,0.04)',
+    },
+    categoryChipSelected: {
+      backgroundColor: theme.colors.tint,
+    },
+    categoryText: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: theme.colors.secondaryText,
+    },
+    categoryTextSelected: {
+      color: '#FFFFFF',
+      fontWeight: '600',
+    },
+    colorGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    colorSwatch: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 8,
+    },
+    cancelButton: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 12,
+      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : 'rgba(15,23,42,0.04)',
+      alignItems: 'center',
+    },
+    cancelButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.colors.secondaryText,
+    },
+    saveButton: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 12,
+      backgroundColor: theme.colors.tint,
+      alignItems: 'center',
+    },
+    saveButtonDisabled: {
+      opacity: 0.5,
+    },
+    saveButtonText: {
+      fontSize: 16,
       fontWeight: '600',
       color: '#FFFFFF',
     },
