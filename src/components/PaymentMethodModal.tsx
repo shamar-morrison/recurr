@@ -1,5 +1,5 @@
 import { CheckIcon, XIcon } from 'phosphor-react-native';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -60,9 +60,6 @@ type Props = {
 };
 
 export function PaymentMethodModal({ visible, selectedMethod, onSelect, onClose }: Props) {
-  const theme = { colors: AppColors };
-  const styles = useMemo(() => createStyles(), []);
-
   const handleSelect = useCallback(
     (method: PaymentMethod) => {
       onSelect(method);
@@ -83,7 +80,7 @@ export function PaymentMethodModal({ visible, selectedMethod, onSelect, onClose 
           <View style={styles.headerSpacer} />
           <Text style={styles.title}>Payment Method</Text>
           <Pressable onPress={onClose} style={styles.closeButton}>
-            <XIcon color={theme.colors.text} size={22} />
+            <XIcon color={AppColors.text} size={22} />
           </Pressable>
         </View>
 
@@ -99,7 +96,7 @@ export function PaymentMethodModal({ visible, selectedMethod, onSelect, onClose 
               >
                 <View style={styles.methodInfo}>
                   <IconComponent
-                    color={isSelected ? theme.colors.tint : theme.colors.text}
+                    color={isSelected ? AppColors.tint : AppColors.text}
                     size={24}
                     weight={isSelected ? 'fill' : 'regular'}
                   />
@@ -107,7 +104,7 @@ export function PaymentMethodModal({ visible, selectedMethod, onSelect, onClose 
                     {config.label}
                   </Text>
                 </View>
-                {isSelected && <CheckIcon color={theme.colors.tint} size={20} weight="bold" />}
+                {isSelected && <CheckIcon color={AppColors.tint} size={20} weight="bold" />}
               </Pressable>
             );
           })}
@@ -117,75 +114,71 @@ export function PaymentMethodModal({ visible, selectedMethod, onSelect, onClose 
   );
 }
 
-function createStyles() {
-  const theme = { colors: AppColors };
-
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.card,
-      paddingHorizontal: 16,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingTop: 20,
-      paddingBottom: 16,
-    },
-    headerSpacer: {
-      width: 40,
-    },
-    title: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: theme.colors.text,
-      textAlign: 'center',
-      flex: 1,
-    },
-    closeButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'rgba(15,23,42,0.04)',
-    },
-    list: {
-      flex: 1,
-    },
-    item: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: 16,
-      paddingHorizontal: 16,
-      borderRadius: 16,
-      marginBottom: 8,
-      backgroundColor: '#fff',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      shadowColor: '#000',
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      shadowOffset: { width: 0, height: 2 },
-    },
-    itemSelected: {
-      backgroundColor: 'rgba(79,140,255,0.08)',
-      borderColor: theme.colors.tint,
-    },
-    methodInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 14,
-    },
-    methodName: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: theme.colors.text,
-    },
-    methodNameSelected: {
-      color: theme.colors.tint,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: AppColors.card,
+    paddingHorizontal: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 20,
+    paddingBottom: 16,
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: AppColors.text,
+    textAlign: 'center',
+    flex: 1,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(15,23,42,0.04)',
+  },
+  list: {
+    flex: 1,
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    marginBottom: 8,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  itemSelected: {
+    backgroundColor: 'rgba(79,140,255,0.08)',
+    borderColor: AppColors.tint,
+  },
+  methodInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  methodName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: AppColors.text,
+  },
+  methodNameSelected: {
+    color: AppColors.tint,
+  },
+});
