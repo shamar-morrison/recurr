@@ -14,6 +14,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AppErrorBoundary } from '@/src/components/AppErrorBoundary';
 import { AuthProvider } from '@/src/features/auth/AuthProvider';
+import { RemoteConfigProvider } from '@/src/features/config/RemoteConfigContext';
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
@@ -79,9 +80,11 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <AppErrorBoundary>
-          <AuthProvider>
-            <RootLayoutNav />
-          </AuthProvider>
+          <RemoteConfigProvider>
+            <AuthProvider>
+              <RootLayoutNav />
+            </AuthProvider>
+          </RemoteConfigProvider>
         </AppErrorBoundary>
       </GestureHandlerRootView>
     </QueryClientProvider>
