@@ -1,8 +1,11 @@
 import { LegendList } from '@legendapp/list';
-import { CheckIcon, MagnifyingGlassIcon, PlusIcon } from 'phosphor-react-native';
-import React, { useCallback, useMemo, useState } from 'react';
+import { CheckIcon, MagnifyingGlassIcon, PlusIcon, XIcon } from 'phosphor-react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
+  BackHandler,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,31 +16,37 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-
 import { SERVICE_COLORS } from '@/src/constants/customServices';
 import { Service, SERVICES } from '@/src/constants/services';
 import { useCustomServices } from '@/src/features/services/useCustomServices';
 import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
-import { useBackHandler } from '@/src/hooks/useBackHandler';
 import { getFirestoreErrorMessage } from '@/src/lib/firestore';
-import { useAppTheme } from '@/src/theme/useAppTheme';
+import { lightTheme } from '@/src/theme/useAppTheme';
 
 // Union type for both predefined and custom services
 type UnifiedService = Service & { isCustom?: boolean; color?: string; id?: string };
 
-type RouteParams = {
-  selectedService?: string;
+export type ServiceSelection = {
+  name: string;
+  category: SubscriptionCategory;
 };
 
-export default function SelectServiceScreen() {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+type Props = {
+  visible: boolean;
+  selectedService?: string;
+  onSelect: (service: ServiceSelection) => void;
+  onClose: () => void;
+};
 
-  const params = useLocalSearchParams<RouteParams>();
-  const selectedService = params.selectedService ?? '';
+export function ServiceSelectorModal({ visible, selectedService = '', onSelect, onClose }: Props) {
+  const theme = lightTheme;
+  const styles = useMemo(() => createStyles(), []);
 
-  const { customServices, addService: addCustomService } = useCustomServices();
+  const {
+    customServices,
+    isLoading: isLoadingCustomServices,
+    addService: addCustomService,
+  } = useCustomServices();
 
   const [search, setSearch] = useState('');
 
@@ -47,6 +56,17 @@ export default function SelectServiceScreen() {
   const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Other');
   const [selectedColor, setSelectedColor] = useState<string>(SERVICE_COLORS[1]);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (visible) {
+      setSearch('');
+      setShowAddMode(false);
+      setEditableName('');
+      setSelectedCategory('Other');
+      setSelectedColor(SERVICE_COLORS[1]);
+    }
+  }, [visible]);
 
   // Combine predefined services with custom services (custom first for better discoverability)
   const allServices = useMemo((): UnifiedService[] => {
@@ -70,19 +90,14 @@ export default function SelectServiceScreen() {
 
   const hasNoResults = filteredServices.length === 0 && search.trim().length > 0;
 
-  const handleSelect = useCallback((service: UnifiedService) => {
-    // Replace (not push) so users can't navigate back to the service selector
-    router.replace({
-      pathname: '/(tabs)/(home)/subscription-editor',
-      params: {
-        _selectedServiceName: service.name,
-        _selectedCategory: service.category,
-      },
-    });
-  }, []);
+  const handleSelect = useCallback(
+    (service: UnifiedService) => {
+      onSelect({ name: service.name, category: service.category });
+    },
+    [onSelect]
+  );
 
   const handleOpenAddMode = useCallback(() => {
-    // Switch to add mode with the current search term as the service name
     setEditableName(search.trim());
     setSelectedCategory('Other');
     setSelectedColor(SERVICE_COLORS[1]);
@@ -90,15 +105,11 @@ export default function SelectServiceScreen() {
   }, [search]);
 
   const handleCancelAddMode = useCallback(() => {
-    // Go back to list view
     setShowAddMode(false);
     setEditableName('');
     setSelectedCategory('Other');
     setSelectedColor(SERVICE_COLORS[1]);
   }, []);
-
-  // Handle Android back button - if in add mode, go back to list mode
-  useBackHandler(showAddMode, handleCancelAddMode);
 
   const handleSaveCustomService = useCallback(async () => {
     const trimmedName = editableName.trim();
@@ -126,24 +137,16 @@ export default function SelectServiceScreen() {
         color: selectedColor,
       });
 
-      // Guard against null (should never happen in practice as addService throws on errors)
       if (!newService) return;
 
-      // Replace (not push) so users can't navigate back to the service selector
-      router.replace({
-        pathname: '/(tabs)/(home)/subscription-editor',
-        params: {
-          _selectedServiceName: newService.name,
-          _selectedCategory: newService.category,
-        },
-      });
+      onSelect({ name: newService.name, category: newService.category });
     } catch (error) {
       console.error(error);
       Alert.alert('Failed to Create Service', getFirestoreErrorMessage(error), [{ text: 'OK' }]);
     } finally {
       setIsSaving(false);
     }
-  }, [editableName, selectedCategory, selectedColor, addCustomService, allServices]);
+  }, [editableName, selectedCategory, selectedColor, addCustomService, allServices, onSelect]);
 
   const renderItem = useCallback(
     ({ item }: { item: UnifiedService }) => {
@@ -178,14 +181,12 @@ export default function SelectServiceScreen() {
   const isValidName = editableName.trim().length > 0;
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          presentation: 'modal',
-          headerShown: false,
-        }}
-      />
-
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={onClose}
+    >
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         {showAddMode ? (
           // ========== ADD SERVICE VIEW ==========
@@ -194,11 +195,14 @@ export default function SelectServiceScreen() {
             contentContainerStyle={styles.scrollViewContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled
           >
             <TouchableOpacity activeOpacity={1}>
               <View style={styles.header}>
+                <View style={styles.headerSpacer} />
                 <Text style={styles.title}>Add Custom Service</Text>
+                <Pressable onPress={handleCancelAddMode} style={styles.closeButton}>
+                  <XIcon color={theme.colors.text} size={22} />
+                </Pressable>
               </View>
 
               <View style={styles.section}>
@@ -280,7 +284,11 @@ export default function SelectServiceScreen() {
           // ========== SERVICE LIST VIEW ==========
           <>
             <View style={styles.header}>
+              <View style={styles.headerSpacer} />
               <Text style={styles.title}>Select Service</Text>
+              <Pressable onPress={onClose} style={styles.closeButton}>
+                <XIcon color={theme.colors.text} size={22} />
+              </Pressable>
             </View>
 
             <View style={styles.searchContainer}>
@@ -306,23 +314,34 @@ export default function SelectServiceScreen() {
                 </Pressable>
               </View>
             ) : (
-              <LegendList
-                data={filteredServices}
-                keyExtractor={keyExtractor}
-                renderItem={renderItem}
-                style={styles.list}
-                showsVerticalScrollIndicator={false}
-                recycleItems
-              />
+              <>
+                {isLoadingCustomServices && (
+                  <View style={styles.loadingRow}>
+                    <ActivityIndicator size="small" color={theme.colors.tint} />
+                    <Text style={styles.loadingText}>Loading custom services…</Text>
+                  </View>
+                )}
+                <LegendList
+                  data={filteredServices}
+                  keyExtractor={keyExtractor}
+                  renderItem={renderItem}
+                  style={styles.list}
+                  showsVerticalScrollIndicator={false}
+                  recycleItems
+                  extraData={customServices}
+                />
+              </>
             )}
           </>
         )}
       </SafeAreaView>
-    </>
+    </Modal>
   );
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>) {
+function createStyles() {
+  const theme = lightTheme;
+
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -334,18 +353,32 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
     },
     scrollViewContent: {
       flexGrow: 1,
-      // Extra padding prevents reaching exact bottom where swipe-to-dismiss activates
-      paddingBottom: 100,
+      paddingBottom: 40,
     },
     header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       paddingTop: 20,
       paddingBottom: 16,
+    },
+    headerSpacer: {
+      width: 40,
     },
     title: {
       fontSize: 18,
       fontWeight: '700',
       color: theme.colors.text,
       textAlign: 'center',
+      flex: 1,
+    },
+    closeButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(15,23,42,0.04)',
     },
     searchContainer: {
       flexDirection: 'row',
@@ -354,7 +387,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       paddingHorizontal: 14,
       paddingVertical: 12,
       borderRadius: 14,
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : 'rgba(15,23,42,0.04)',
+      backgroundColor: 'rgba(15,23,42,0.04)',
       marginBottom: 12,
     },
     searchInput: {
@@ -375,7 +408,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderRadius: 12,
     },
     itemSelected: {
-      backgroundColor: theme.isDark ? 'rgba(121,167,255,0.12)' : 'rgba(79,140,255,0.08)',
+      backgroundColor: 'rgba(79,140,255,0.08)',
     },
     serviceInfo: {
       flexDirection: 'row',
@@ -401,7 +434,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       fontSize: 10,
       fontWeight: '600',
       color: theme.colors.tint,
-      backgroundColor: theme.isDark ? 'rgba(121,167,255,0.15)' : 'rgba(79,140,255,0.1)',
+      backgroundColor: 'rgba(79,140,255,0.1)',
       paddingHorizontal: 6,
       paddingVertical: 2,
       borderRadius: 4,
@@ -429,7 +462,6 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       fontWeight: '600',
       color: '#FFFFFF',
     },
-    // Add service form styles
     section: {
       marginBottom: 20,
     },
@@ -440,7 +472,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       marginBottom: 10,
     },
     nameInput: {
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : 'rgba(15,23,42,0.04)',
+      backgroundColor: 'rgba(15,23,42,0.04)',
       paddingHorizontal: 16,
       paddingVertical: 14,
       borderRadius: 12,
@@ -457,7 +489,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderRadius: 20,
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : 'rgba(15,23,42,0.04)',
+      backgroundColor: 'rgba(15,23,42,0.04)',
     },
     categoryChipSelected: {
       backgroundColor: theme.colors.tint,
@@ -492,7 +524,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       flex: 1,
       paddingVertical: 14,
       borderRadius: 12,
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : 'rgba(15,23,42,0.04)',
+      backgroundColor: 'rgba(15,23,42,0.04)',
       alignItems: 'center',
     },
     cancelButtonText: {
@@ -514,6 +546,17 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       fontSize: 16,
       fontWeight: '600',
       color: '#FFFFFF',
+    },
+    loadingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 12,
+    },
+    loadingText: {
+      fontSize: 14,
+      color: theme.colors.secondaryText,
     },
   });
 }

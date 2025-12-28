@@ -1,12 +1,17 @@
 /**
- * React hooks for managing custom services using React Query.
+ * React hooks for managing custom services using React Query + real-time Firestore listeners.
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 import { CustomService, CustomServiceInput } from '@/src/constants/customServices';
 import { useAuth } from '@/src/features/auth/AuthProvider';
-import { addCustomService, listCustomServices } from '@/src/features/services/customServicesRepo';
+import {
+  addCustomService,
+  listCustomServices,
+  subscribeToCustomServices,
+} from '@/src/features/services/customServicesRepo';
 
 // Query key factory for custom services
 export const customServicesKey = (userId: string | null | undefined) =>
@@ -51,21 +56,45 @@ export function useAddCustomServiceMutation() {
 
 /**
  * Convenience hook that provides both the query and mutation.
- * Maintains backward compatibility with existing useCustomServices usage.
+ * Uses a real-time Firestore listener to keep data fresh.
+ * Data is pushed into React Query's cache so it's instantly available on navigation.
  */
 export function useCustomServices() {
   const { user } = useAuth();
   const userId = user?.uid ?? '';
+  const qc = useQueryClient();
 
+  // Set up real-time listener that pushes data into React Query cache
+  useEffect(() => {
+    if (!userId) return;
+
+    const unsubscribe = subscribeToCustomServices(
+      userId,
+      (services) => {
+        // Push real-time data into React Query cache
+        qc.setQueryData<CustomService[]>(customServicesKey(userId), services);
+      },
+      (error) => {
+        console.log('[useCustomServices] subscription error', error);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [userId, qc]);
+
+  // React Query still manages the cache, but data comes from the listener
   const query = useQuery({
     queryKey: customServicesKey(userId),
     enabled: Boolean(userId),
+    // Use staleTime: Infinity since listener keeps data fresh
+    staleTime: Infinity,
+    // Initial fetch only runs if cache is empty (listener will update after)
     queryFn: async () => {
       return listCustomServices(userId);
     },
   });
-
-  const qc = useQueryClient();
 
   const addMutation = useMutation({
     mutationFn: async (input: CustomServiceInput) => {
@@ -74,6 +103,7 @@ export function useCustomServices() {
     },
     onSuccess: async (newService) => {
       // Optimistically update the cache with the new service
+      // (The real-time listener will also push the update, but this makes it instant)
       qc.setQueryData<CustomService[]>(customServicesKey(userId), (old) => {
         if (!old) return [newService];
         return [newService, ...old].sort((a, b) => a.name.localeCompare(b.name));

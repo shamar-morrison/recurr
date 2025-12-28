@@ -1,5 +1,3 @@
-import { useColorScheme } from 'react-native';
-
 import { AppColors } from '@/constants/colors';
 
 export type AppThemeColors = {
@@ -23,13 +21,19 @@ export type AppTheme = {
   colors: AppThemeColors;
 };
 
+/**
+ * Static light theme - dark mode is not supported.
+ * This is a constant, so components can use it without hooks if needed.
+ */
+export const lightTheme: AppTheme = {
+  isDark: false,
+  colors: AppColors.light as unknown as AppThemeColors,
+};
+
+/**
+ * Returns the app theme (always light mode).
+ * For components, prefer using this hook for consistency.
+ */
 export function useAppTheme(): AppTheme {
-  const isDark = false; // TODO: Implement theme switcher, forcing light for now as requested
-
-  const colors = (isDark ? AppColors.dark : AppColors.light) as unknown as AppThemeColors;
-
-  return {
-    isDark,
-    colors,
-  };
+  return lightTheme;
 }

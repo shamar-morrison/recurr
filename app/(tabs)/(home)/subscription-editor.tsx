@@ -1,5 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
+import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
 import { useAuth } from '@/src/features/auth/AuthProvider';
@@ -43,9 +44,6 @@ import {
 
 type RouteParams = {
   id?: string;
-  // Returned from select-service screen
-  _selectedServiceName?: string;
-  _selectedCategory?: string;
   // Returned from select-currency screen
   _selectedCurrencyCode?: string;
   // Returned from select-frequency screen
@@ -95,15 +93,14 @@ export default function SubscriptionEditorScreen() {
     return CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$';
   }, [currency]);
 
-  // Handle service selection returned from select-service screen
-  React.useEffect(() => {
-    if (params._selectedServiceName) {
-      setServiceName(params._selectedServiceName);
-      if (params._selectedCategory) {
-        setCategory(params._selectedCategory as SubscriptionCategory);
-      }
-    }
-  }, [params._selectedServiceName, params._selectedCategory]);
+  // State for service selector modal
+  const [showServiceModal, setShowServiceModal] = useState(false);
+
+  const handleServiceSelect = useCallback((service: ServiceSelection) => {
+    setServiceName(service.name);
+    setCategory(service.category);
+    setShowServiceModal(false);
+  }, []);
 
   // Handle currency selection returned from select-currency screen
   React.useEffect(() => {
@@ -274,12 +271,7 @@ export default function SubscriptionEditorScreen() {
               <View style={styles.section}>
                 <Text style={styles.label}>Service</Text>
                 <Pressable
-                  onPress={() =>
-                    router.push({
-                      pathname: '/select-service',
-                      params: { selectedService: serviceName },
-                    })
-                  }
+                  onPress={() => setShowServiceModal(true)}
                   style={styles.input}
                   testID="subscriptionEditorServiceName"
                 >
@@ -458,6 +450,13 @@ export default function SubscriptionEditorScreen() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <ServiceSelectorModal
+        visible={showServiceModal}
+        selectedService={serviceName}
+        onSelect={handleServiceSelect}
+        onClose={() => setShowServiceModal(false)}
+      />
     </>
   );
 }
