@@ -1,12 +1,12 @@
 import { router, Stack } from 'expo-router';
 import { ArrowRight, Check, ShieldCheck, Sparkles, Wallet } from 'lucide-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Dimensions, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useAuth } from '@/src/features/auth/AuthProvider';
-import { useAppTheme } from '@/src/theme/useAppTheme';
+import { AppColors } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
+import { useAuth } from '@/src/features/auth/AuthProvider';
 
 type OnboardingPage = {
   key: string;
@@ -54,8 +54,8 @@ const FLOATERS = [
 ] as const;
 
 export default function OnboardingScreen() {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const theme = { colors: AppColors };
+  const styles = useMemo(() => createStyles(), []);
   const { markOnboardingComplete } = useAuth();
 
   const screen = Dimensions.get('window');
@@ -154,8 +154,7 @@ export default function OnboardingScreen() {
 }
 
 function FloatingIconsBackground() {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createBgStyles(theme), [theme]);
+  const styles = useMemo(() => createBgStyles(), []);
 
   const { width, height } = Dimensions.get('window');
   const useNativeDriver = Platform.OS !== 'web';
@@ -253,8 +252,8 @@ function OnboardingPageCard({
   width: number;
   scrollX: Animated.Value;
 }) {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const theme = { colors: AppColors };
+  const styles = useMemo(() => createStyles(), []);
 
   const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
 
@@ -280,7 +279,7 @@ function OnboardingPageCard({
             style={[
               styles.bigIcon,
               {
-                backgroundColor: theme.isDark ? 'rgba(121,167,255,0.12)' : 'rgba(79,140,255,0.12)',
+                backgroundColor: 'rgba(79,140,255,0.12)',
               },
             ]}
           >
@@ -312,8 +311,7 @@ function PaginationDots({
   width: number;
   scrollX: Animated.Value;
 }) {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createStyles(), []);
 
   return (
     <View style={styles.dots} testID="onboardingDots">
@@ -337,7 +335,7 @@ function PaginationDots({
               {
                 width: dotW,
                 opacity: dotOpacity,
-                backgroundColor: theme.isDark ? 'rgba(236,242,255,0.55)' : 'rgba(15,23,42,0.45)',
+                backgroundColor: 'rgba(15,23,42,0.45)',
               },
             ]}
           />
@@ -347,7 +345,8 @@ function PaginationDots({
   );
 }
 
-function createBgStyles(theme: ReturnType<typeof useAppTheme>) {
+function createBgStyles() {
+  const theme = { colors: AppColors };
   return StyleSheet.create({
     bg: {
       ...StyleSheet.absoluteFillObject,
@@ -360,7 +359,7 @@ function createBgStyles(theme: ReturnType<typeof useAppTheme>) {
       width: 320,
       height: 320,
       borderRadius: 999,
-      backgroundColor: theme.isDark ? 'rgba(121,167,255,0.12)' : 'rgba(79,140,255,0.14)',
+      backgroundColor: 'rgba(79,140,255,0.14)',
     },
     glowB: {
       position: 'absolute',
@@ -369,14 +368,14 @@ function createBgStyles(theme: ReturnType<typeof useAppTheme>) {
       width: 380,
       height: 380,
       borderRadius: 999,
-      backgroundColor: theme.isDark ? 'rgba(45,226,180,0.10)' : 'rgba(31,214,164,0.12)',
+      backgroundColor: 'rgba(31,214,164,0.12)',
     },
     floater: {
       position: 'absolute',
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.isDark ? 'rgba(236,242,255,0.20)' : 'rgba(15,23,42,0.12)',
+      borderColor: 'rgba(15,23,42,0.12)',
     },
     floaterText: {
       color: '#fff',
@@ -387,8 +386,9 @@ function createBgStyles(theme: ReturnType<typeof useAppTheme>) {
   });
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>) {
-  const shadowColor = theme.isDark ? 'rgba(0,0,0,0.70)' : 'rgba(15,23,42,0.18)';
+function createStyles() {
+  const theme = { colors: AppColors };
+  const shadowColor = 'rgba(15,23,42,0.18)';
 
   return StyleSheet.create({
     root: {
@@ -408,7 +408,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderRadius: 999,
       paddingHorizontal: 12,
       paddingVertical: 8,
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.08)' : 'rgba(15,23,42,0.06)',
+      backgroundColor: 'rgba(15,23,42,0.06)',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.colors.border,
     },
@@ -423,7 +423,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderRadius: 999,
       paddingHorizontal: 12,
       paddingVertical: 8,
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.08)' : 'rgba(15,23,42,0.06)',
+      backgroundColor: 'rgba(15,23,42,0.06)',
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.colors.border,
     },

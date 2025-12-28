@@ -1,22 +1,20 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 
-import { useAppTheme } from '@/src/theme/useAppTheme';
+import { AppColors } from '@/constants/colors';
 import { ChartBarIcon, CreditCardIcon, GearSixIcon } from 'phosphor-react-native';
 
 export default function TabLayout() {
-  const theme = useAppTheme();
-
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: theme.colors.tint,
-        tabBarInactiveTintColor: theme.isDark ? 'rgba(236,242,255,0.50)' : 'rgba(15,23,42,0.45)',
+        tabBarActiveTintColor: AppColors.tint,
+        tabBarInactiveTintColor: 'rgba(15,23,42,0.45)',
         tabBarStyle: {
-          backgroundColor: theme.colors.card,
-          borderTopColor: theme.colors.border,
+          backgroundColor: AppColors.card,
+          borderTopColor: AppColors.border,
         },
       }}
     >

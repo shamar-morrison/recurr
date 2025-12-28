@@ -3,18 +3,17 @@ import React, { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CATEGORY_COLORS } from '@/constants/colors';
+import { AppColors, CATEGORY_COLORS } from '@/constants/colors';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   useSubscriptionListItems,
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
-import { useAppTheme } from '@/src/theme/useAppTheme';
 
 export default function InsightsScreen() {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const theme = { colors: AppColors };
+  const styles = useMemo(() => createStyles(), []);
   const { isPremium } = useAuth();
 
   const subscriptionsQuery = useSubscriptionsQuery();
@@ -262,8 +261,9 @@ function formatShortDate(iso: string): string {
   }
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>) {
-  const shadowColor = theme.isDark ? 'rgba(0,0,0,0.65)' : 'rgba(15,23,42,0.12)';
+function createStyles() {
+  const theme = { colors: AppColors };
+  const shadowColor = 'rgba(15,23,42,0.12)';
 
   return StyleSheet.create({
     container: {
@@ -450,7 +450,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
     track: {
       height: 12,
       borderRadius: 999,
-      backgroundColor: theme.isDark ? '#222' : '#F2F4F7',
+      backgroundColor: '#F2F4F7',
       overflow: 'hidden',
     },
     fill: {
@@ -460,9 +460,9 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
     locked: {
       borderRadius: 26,
       padding: 20,
-      backgroundColor: theme.isDark ? 'rgba(121,167,255,0.08)' : 'rgba(79,140,255,0.06)',
+      backgroundColor: 'rgba(79,140,255,0.06)',
       borderWidth: 1,
-      borderColor: theme.isDark ? 'rgba(121,167,255,0.20)' : 'rgba(79,140,255,0.15)',
+      borderColor: 'rgba(79,140,255,0.15)',
       gap: 8,
     },
     lockedTitle: {

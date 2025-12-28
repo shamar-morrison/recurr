@@ -10,8 +10,10 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  onSnapshot,
   orderBy,
   query,
+  QueryDocumentSnapshot,
   serverTimestamp,
 } from 'firebase/firestore';
 
@@ -86,6 +88,19 @@ function normalizeCustomService(raw: unknown): CustomService | null {
   };
 }
 
+function mapDocToCustomService(d: QueryDocumentSnapshot): CustomService {
+  const data = d.data() as Record<string, unknown>;
+  const rawCategory = String(data.category ?? 'Other');
+
+  return {
+    id: d.id,
+    name: String(data.name ?? ''),
+    category: isValidCategory(rawCategory) ? rawCategory : 'Other',
+    color: String(data.color ?? '#4ECDC4'),
+    createdAt: timestampToMillis(data.createdAt),
+  };
+}
+
 async function readLocal(userId: string): Promise<CustomService[]> {
   try {
     const raw = await AsyncStorage.getItem(storageKey(userId));
@@ -130,18 +145,7 @@ export async function listCustomServices(userId: string): Promise<CustomService[
     const q = query(servicesCol, orderBy('name', 'asc'));
 
     const snap = await getDocs(q);
-    const out: CustomService[] = snap.docs.map((d) => {
-      const data = d.data() as Record<string, unknown>;
-      const rawCategory = String(data.category ?? 'Other');
-
-      return {
-        id: d.id,
-        name: String(data.name ?? ''),
-        category: isValidCategory(rawCategory) ? rawCategory : 'Other',
-        color: String(data.color ?? '#4ECDC4'),
-        createdAt: timestampToMillis(data.createdAt),
-      };
-    });
+    const out: CustomService[] = snap.docs.map(mapDocToCustomService);
 
     await writeLocal(userId, out);
 
@@ -151,6 +155,77 @@ export async function listCustomServices(userId: string): Promise<CustomService[
     const local = await readLocal(userId);
     return local.sort((a, b) => a.name.localeCompare(b.name));
   }
+}
+
+/**
+ * Subscribe to real-time updates for custom services.
+ * Returns an unsubscribe function that should be called on cleanup.
+ *
+ * The callback receives the sorted list of custom services on each change.
+ * Local storage is updated on each snapshot for offline support.
+ */
+export function subscribeToCustomServices(
+  userId: string,
+  onData: (services: CustomService[]) => void,
+  onError?: (error: Error) => void
+): () => void {
+  if (!userId) {
+    // No user, provide empty data and return no-op unsubscribe
+    onData([]);
+    return () => {};
+  }
+
+  if (!isFirebaseConfigured()) {
+    // Firebase not configured, use local data only (one-time read, no real-time)
+    console.log('[customServices] subscribe: Firebase not configured, using local fallback');
+    readLocal(userId)
+      .then((local) => {
+        onData(local.sort((a, b) => a.name.localeCompare(b.name)));
+      })
+      .catch((e) => {
+        console.log('[customServices] subscribe: local read failed', e);
+        onData([]);
+        if (onError) {
+          onError(e);
+        }
+      });
+    return () => {};
+  }
+
+  console.log('[customServices] subscribeToCustomServices', {
+    userIdSuffix: userId.slice(-4),
+  });
+
+  const servicesCol = collection(firestore, 'users', userId, 'customServices');
+  const q = query(servicesCol, orderBy('name', 'asc'));
+
+  const unsubscribe = onSnapshot(
+    q,
+    (snap) => {
+      const services: CustomService[] = snap.docs.map(mapDocToCustomService);
+
+      // Update local storage for offline support
+      writeLocal(userId, services);
+
+      // Notify caller with the fresh data
+      onData(services);
+    },
+    (error) => {
+      console.log('[customServices] subscribeToCustomServices error', error);
+
+      // Fallback to local data on error
+      readLocal(userId)
+        .then((local) => {
+          onData(local.sort((a, b) => a.name.localeCompare(b.name)));
+        })
+        .catch((e) => {
+          console.log('[customServices] subscribe: local read failed', e);
+          if (onError) onError(e);
+        });
+    }
+  );
+
+  return unsubscribe;
 }
 
 export async function addCustomService(

@@ -4,14 +4,14 @@ import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppColors } from '@/constants/colors';
 import { useAuth } from '@/src/features/auth/AuthProvider';
-import { useAppTheme } from '@/src/theme/useAppTheme';
 
 const REMINDER_OPTIONS: number[] = [0, 1, 2, 3, 5, 7, 10, 14];
 
 export default function SettingsScreen() {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const theme = { colors: AppColors };
+  const styles = useMemo(() => createStyles(), []);
 
   const { isPremium, settings, setReminderDays, signOutUser, isFirebaseReady, user } = useAuth();
 
@@ -142,8 +142,9 @@ export default function SettingsScreen() {
   );
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>) {
-  const shadowColor = theme.isDark ? 'rgba(0,0,0,0.65)' : 'rgba(15,23,42,0.12)';
+function createStyles() {
+  const theme = { colors: AppColors };
+  const shadowColor = 'rgba(15,23,42,0.12)';
 
   return StyleSheet.create({
     container: {
@@ -196,7 +197,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderRadius: 999,
       paddingHorizontal: 14,
       paddingVertical: 8,
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.08)' : 'rgba(15,23,42,0.06)',
+      backgroundColor: 'rgba(15,23,42,0.06)',
       borderWidth: 1,
       borderColor: theme.colors.border,
     },

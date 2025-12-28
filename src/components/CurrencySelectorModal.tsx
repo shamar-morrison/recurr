@@ -1,36 +1,35 @@
-import { CheckIcon, MagnifyingGlassIcon } from 'phosphor-react-native';
-import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { CheckIcon, MagnifyingGlassIcon, XIcon } from 'phosphor-react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  Actionsheet,
-  ActionsheetBackdrop,
-  ActionsheetContent,
-  ActionsheetDragIndicator,
-  ActionsheetDragIndicatorWrapper,
-  ActionsheetItem,
-  ActionsheetVirtualizedList,
-} from '@/components/ui/actionsheet';
+import { AppColors } from '@/constants/colors';
 import { CURRENCIES, Currency } from '@/src/constants/currencies';
-import { useAppTheme } from '@/src/theme/useAppTheme';
 
-interface CurrencyPickerSheetProps {
-  isOpen: boolean;
-  onClose: () => void;
-  selectedCurrency: string;
+type Props = {
+  visible: boolean;
+  selectedCurrency?: string;
   onSelect: (currencyCode: string) => void;
-}
+  onClose: () => void;
+};
 
-export function CurrencyPickerSheet({
-  isOpen,
-  onClose,
-  selectedCurrency,
+export function CurrencySelectorModal({
+  visible,
+  selectedCurrency = '',
   onSelect,
-}: CurrencyPickerSheetProps) {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  onClose,
+}: Props) {
+  const theme = { colors: AppColors };
+  const styles = useMemo(() => createStyles(), []);
 
   const [search, setSearch] = useState('');
+
+  // Reset search when modal opens
+  useEffect(() => {
+    if (visible) {
+      setSearch('');
+    }
+  }, [visible]);
 
   const filteredCurrencies = useMemo(() => {
     if (!search.trim()) return CURRENCIES;
@@ -46,53 +45,46 @@ export function CurrencyPickerSheet({
   const handleSelect = useCallback(
     (currency: Currency) => {
       onSelect(currency.code);
-      setSearch('');
-      onClose();
     },
-    [onClose, onSelect]
+    [onSelect]
   );
 
-  const handleClose = useCallback(() => {
-    setSearch('');
-    onClose();
-  }, [onClose]);
-
-  const getItem = useCallback((data: unknown, index: number) => (data as Currency[])[index], []);
-
-  const getItemCount = useCallback((data: unknown) => (data as Currency[]).length, []);
-
-  const keyExtractor = useCallback((item: unknown) => (item as Currency).code, []);
-
   const renderItem = useCallback(
-    ({ item }: { item: unknown }) => {
-      const currency = item as Currency;
-      const isSelected = currency.code === selectedCurrency;
+    ({ item }: { item: Currency }) => {
+      const isSelected = item.code === selectedCurrency;
       return (
-        <ActionsheetItem
-          onPress={() => handleSelect(currency)}
+        <Pressable
+          onPress={() => handleSelect(item)}
           style={[styles.item, isSelected && styles.itemSelected]}
-          className="active:bg-transparent hover:bg-transparent"
         >
           <View style={styles.currencyInfo}>
-            <Text style={styles.currencyCode}>{currency.code}</Text>
-            <Text style={styles.currencyName}>{currency.name}</Text>
+            <Text style={styles.currencyCode}>{item.code}</Text>
+            <Text style={styles.currencyName}>{item.name}</Text>
           </View>
           {isSelected && <CheckIcon color={theme.colors.tint} size={20} weight="bold" />}
-        </ActionsheetItem>
+        </Pressable>
       );
     },
     [handleSelect, selectedCurrency, styles, theme.colors.tint]
   );
 
-  return (
-    <Actionsheet isOpen={isOpen} onClose={handleClose}>
-      <ActionsheetBackdrop />
-      <ActionsheetContent style={styles.content}>
-        <ActionsheetDragIndicatorWrapper>
-          <ActionsheetDragIndicator />
-        </ActionsheetDragIndicatorWrapper>
+  const keyExtractor = useCallback((item: Currency) => item.code, []);
 
-        <Text style={styles.title}>Select Currency</Text>
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={onClose}
+    >
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <View style={styles.header}>
+          <View style={styles.headerSpacer} />
+          <Text style={styles.title}>Select Currency</Text>
+          <Pressable onPress={onClose} style={styles.closeButton}>
+            <XIcon color={theme.colors.text} size={22} />
+          </Pressable>
+        </View>
 
         <View style={styles.searchContainer}>
           <MagnifyingGlassIcon color={theme.colors.secondaryText} size={18} />
@@ -108,36 +100,54 @@ export function CurrencyPickerSheet({
           />
         </View>
 
-        <ActionsheetVirtualizedList
+        <FlatList
           data={filteredCurrencies}
-          getItem={getItem}
-          getItemCount={getItemCount}
           keyExtractor={keyExtractor}
           renderItem={renderItem}
           style={styles.list}
           showsVerticalScrollIndicator={false}
-          initialNumToRender={10}
+          initialNumToRender={15}
           maxToRenderPerBatch={10}
           windowSize={10}
         />
-      </ActionsheetContent>
-    </Actionsheet>
+      </SafeAreaView>
+    </Modal>
   );
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>) {
+function createStyles() {
+  const theme = { colors: AppColors };
+
   return StyleSheet.create({
-    content: {
-      maxHeight: '70%',
+    container: {
+      flex: 1,
       backgroundColor: theme.colors.card,
+      paddingHorizontal: 16,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: 20,
+      paddingBottom: 16,
+    },
+    headerSpacer: {
+      width: 40,
     },
     title: {
       fontSize: 18,
       fontWeight: '700',
       color: theme.colors.text,
-      marginTop: 8,
-      marginBottom: 16,
       textAlign: 'center',
+      flex: 1,
+    },
+    closeButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(15,23,42,0.04)',
     },
     searchContainer: {
       flexDirection: 'row',
@@ -146,9 +156,8 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       paddingHorizontal: 14,
       paddingVertical: 12,
       borderRadius: 14,
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : 'rgba(15,23,42,0.04)',
+      backgroundColor: 'rgba(15,23,42,0.04)',
       marginBottom: 12,
-      width: '100%',
     },
     searchInput: {
       flex: 1,
@@ -157,8 +166,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       padding: 0,
     },
     list: {
-      width: '100%',
-      maxHeight: 400,
+      flex: 1,
     },
     item: {
       flexDirection: 'row',
@@ -169,7 +177,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderRadius: 12,
     },
     itemSelected: {
-      backgroundColor: theme.isDark ? 'rgba(121,167,255,0.12)' : 'rgba(79,140,255,0.08)',
+      backgroundColor: 'rgba(79,140,255,0.08)',
     },
     currencyInfo: {
       flexDirection: 'row',

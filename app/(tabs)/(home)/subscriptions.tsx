@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CATEGORY_COLORS } from '@/constants/colors';
+import { AppColors, CATEGORY_COLORS } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -20,16 +20,15 @@ import {
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
-import { useAppTheme } from '@/src/theme/useAppTheme';
 
 const FREE_TIER_LIMIT = 5;
 
 type FilterChip = SubscriptionCategory | 'All';
 
 export default function SubscriptionsHomeScreen() {
-  const theme = useAppTheme();
+  const theme = { colors: AppColors };
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => createStyles(theme, insets.bottom), [theme, insets.bottom]);
+  const styles = useMemo(() => createStyles(insets.bottom), [insets.bottom]);
   const { isPremium, settings } = useAuth();
 
   const subscriptionsQuery = useSubscriptionsQuery();
@@ -333,8 +332,9 @@ function formatShortDate(iso: string): string {
   }
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>, bottomInset: number) {
-  const shadowColor = theme.isDark ? 'rgba(0,0,0,0.65)' : 'rgba(15,23,42,0.12)';
+function createStyles(bottomInset: number) {
+  const theme = { colors: AppColors };
+  const shadowColor = 'rgba(15,23,42,0.12)';
 
   return StyleSheet.create({
     headerButton: {
@@ -343,7 +343,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>, bottomInset: number
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.isDark ? 'rgba(121,167,255,0.14)' : 'rgba(79,140,255,0.10)',
+      backgroundColor: 'rgba(79,140,255,0.10)',
     },
     container: {
       flex: 1,
@@ -476,7 +476,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>, bottomInset: number
       borderRadius: 999,
       paddingHorizontal: 10,
       paddingVertical: 6,
-      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.1)' : '#fff',
+      backgroundColor: '#fff',
     },
     limitCtaText: {
       fontWeight: '800',
@@ -539,9 +539,9 @@ function createStyles(theme: ReturnType<typeof useAppTheme>, bottomInset: number
     errorBox: {
       borderRadius: 20,
       padding: 14,
-      backgroundColor: theme.isDark ? 'rgba(255,120,120,0.08)' : 'rgba(255,107,107,0.10)',
+      backgroundColor: 'rgba(255,107,107,0.10)',
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.isDark ? 'rgba(255,120,120,0.28)' : 'rgba(255,107,107,0.25)',
+      borderColor: 'rgba(255,107,107,0.25)',
       gap: 6,
     },
     errorTitle: {
@@ -568,7 +568,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>, bottomInset: number
       width: 48,
       height: 48,
       borderRadius: 16,
-      backgroundColor: theme.isDark ? 'rgba(121,167,255,0.14)' : 'rgba(79,140,255,0.12)',
+      backgroundColor: 'rgba(79,140,255,0.12)',
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -618,7 +618,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>, bottomInset: number
       width: 52,
       height: 52,
       borderRadius: 16,
-      backgroundColor: theme.isDark ? '#252525' : '#F2F4F7',
+      backgroundColor: '#F2F4F7',
       alignItems: 'center',
       justifyContent: 'center',
     },
