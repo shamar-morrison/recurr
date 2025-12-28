@@ -196,8 +196,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
         return;
       }
 
-      // At this point, response.type must be 'success'
-      const { idToken, user: googleUser } = response.data;
+      const { idToken } = response.data;
 
       if (!idToken) {
         throw new Error('No ID token received from Google');
