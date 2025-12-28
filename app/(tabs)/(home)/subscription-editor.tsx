@@ -9,7 +9,7 @@ import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
-import { getServiceDomain } from '@/src/constants/services';
+import { getServiceByName, getServiceDomain } from '@/src/constants/services';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   useDeleteSubscriptionMutation,
@@ -24,6 +24,7 @@ import {
   SUBSCRIPTION_CATEGORIES,
   SubscriptionCategory,
 } from '@/src/features/subscriptions/types';
+import { getDefaultPriceInCurrency } from '@/src/lib/currencyConversion';
 import {
   AppWindowIcon,
   CaretDownIcon,
@@ -86,6 +87,7 @@ export default function SubscriptionEditorScreen() {
   const [serviceName, setServiceName] = useState<string>('');
   const [category, setCategory] = useState<SubscriptionCategory>('Streaming');
   const [amountText, setAmountText] = useState<string>('');
+  const [hasManuallyEditedAmount, setHasManuallyEditedAmount] = useState(false);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('Monthly');
   const [billingDayText, setBillingDayText] = useState<string>('1');
   const [notes, setNotes] = useState<string>('');
@@ -116,11 +118,28 @@ export default function SubscriptionEditorScreen() {
   // State for service selector modal
   const [showServiceModal, setShowServiceModal] = useState(false);
 
-  const handleServiceSelect = useCallback((service: ServiceSelection) => {
-    setServiceName(service.name);
-    setCategory(service.category);
-    setShowServiceModal(false);
-  }, []);
+  const handleServiceSelect = useCallback(
+    (service: ServiceSelection) => {
+      setServiceName(service.name);
+      setCategory(service.category);
+      setShowServiceModal(false);
+
+      // Pre-fill cost from default price (only if user hasn't manually edited)
+      if (!editingId && !hasManuallyEditedAmount) {
+        const serviceData = getServiceByName(service.name);
+        if (serviceData?.defaultPriceUSD) {
+          const convertedPrice = getDefaultPriceInCurrency(serviceData.defaultPriceUSD, currency);
+          if (convertedPrice !== undefined) {
+            setAmountText(String(convertedPrice));
+          }
+        } else {
+          // Clear amount if service has no default price
+          setAmountText('');
+        }
+      }
+    },
+    [editingId, hasManuallyEditedAmount, currency]
+  );
 
   // State for currency selector modal
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
@@ -398,7 +417,10 @@ export default function SubscriptionEditorScreen() {
                   <Text style={styles.label}>Cost</Text>
                   <TextInput
                     value={amountText}
-                    onChangeText={setAmountText}
+                    onChangeText={(text) => {
+                      setAmountText(text);
+                      setHasManuallyEditedAmount(true);
+                    }}
                     keyboardType={Platform.OS === 'web' ? 'default' : 'decimal-pad'}
                     placeholder="9.99"
                     placeholderTextColor="rgba(15,23,42,0.35)"
