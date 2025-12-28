@@ -102,17 +102,13 @@ export default function SubscriptionEditorScreen() {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
-  // Format date for display
+  // Format date for display using user's locale
   const formatDate = useCallback((date: Date) => {
-    const month = date.toLocaleDateString('en-US', { month: 'short' });
-    const day = date.getDate();
-    const year = date.getFullYear();
-
-    const suffix = ['th', 'st', 'nd', 'rd'];
-    const v = day % 100;
-    const ord = suffix[(v - 20) % 10] || suffix[v] || suffix[0];
-
-    return `${month}. ${day}${ord}, ${year}`;
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   }, []);
 
   // State for service selector modal
