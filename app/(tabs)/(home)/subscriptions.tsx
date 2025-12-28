@@ -24,6 +24,7 @@ import {
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 
 import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
+import { CloudSnowIcon, XCircleIcon } from 'phosphor-react-native';
 
 type FilterChip = SubscriptionCategory | 'All';
 
@@ -240,7 +241,11 @@ export default function SubscriptionsHomeScreen() {
         {!subscriptionsQuery.isLoading && filteredItems.length === 0 ? (
           <View style={styles.empty} testID="subscriptionsEmpty">
             <View style={styles.emptyIcon}>
-              <CirclePlus color={AppColors.tint} size={22} />
+              {filter === 'All' ? (
+                <CirclePlus color={AppColors.tint} size={22} />
+              ) : (
+                <XCircleIcon color={AppColors.tint} size={22} />
+              )}
             </View>
             <Text style={styles.emptyTitle}>
               {filter === 'All' ? 'Add your first subscription' : 'No matches'}
