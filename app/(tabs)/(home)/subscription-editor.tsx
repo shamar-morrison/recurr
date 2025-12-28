@@ -101,8 +101,15 @@ export default function SubscriptionEditorScreen() {
     return serviceName ? getServiceDomain(serviceName) : undefined;
   }, [serviceName]);
 
-  // State for start/end dates
-  const [startDate, setStartDate] = useState<Date>(new Date());
+  // Helper to normalize date to midnight for consistent timestamps
+  const normalizeToMidnight = useCallback((date: Date): Date => {
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
+  }, []);
+
+  // State for start/end dates (normalized to midnight)
+  const [startDate, setStartDate] = useState<Date>(() => normalizeToMidnight(new Date()));
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
@@ -203,8 +210,12 @@ export default function SubscriptionEditorScreen() {
     setBillingDayText(existing.billingDay != null ? String(existing.billingDay) : '1');
     setNotes(existing.notes ?? '');
     setCurrency(existing.currency ?? defaultCurrency);
-    setStartDate(existing.startDate ? new Date(existing.startDate) : new Date());
-    setEndDate(existing.endDate ? new Date(existing.endDate) : null);
+    setStartDate(
+      existing.startDate
+        ? normalizeToMidnight(new Date(existing.startDate))
+        : normalizeToMidnight(new Date())
+    );
+    setEndDate(existing.endDate ? normalizeToMidnight(new Date(existing.endDate)) : null);
     setPaymentMethod(existing.paymentMethod);
     // Reset manual edit flag for clean state when loading existing data
     setHasManuallyEditedAmount(false);
@@ -533,7 +544,7 @@ export default function SubscriptionEditorScreen() {
                         return;
                       }
                       if (selectedDate) {
-                        setStartDate(selectedDate);
+                        setStartDate(normalizeToMidnight(selectedDate));
                       }
                     }}
                   />
@@ -583,7 +594,7 @@ export default function SubscriptionEditorScreen() {
                         return;
                       }
                       if (selectedDate) {
-                        setEndDate(selectedDate);
+                        setEndDate(normalizeToMidnight(selectedDate));
                       }
                     }}
                   />
@@ -601,7 +612,7 @@ export default function SubscriptionEditorScreen() {
                   testID="subscriptionEditorPaymentMethod"
                 >
                   {paymentMethod ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <View style={styles.paymentMethodRow}>
                       {PaymentMethodIcon}
                       <Text style={styles.dropdownText}>{paymentMethod}</Text>
                     </View>
@@ -814,6 +825,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  paymentMethodRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
