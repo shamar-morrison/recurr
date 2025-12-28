@@ -16,6 +16,7 @@ import '@/global.css';
 import { AppErrorBoundary } from '@/src/components/AppErrorBoundary';
 import { AuthProvider } from '@/src/features/auth/AuthProvider';
 import { RemoteConfigProvider } from '@/src/features/config/RemoteConfigContext';
+import { initCurrencyRates } from '@/src/lib/currencyConversion';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -67,6 +68,11 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  // Initialize currency rates early in app lifecycle
+  useEffect(() => {
+    initCurrencyRates();
+  }, []);
 
   if (!loaded) {
     return null;

@@ -1,15 +1,21 @@
 /**
- * Currency conversion utilities using static exchange rates.
+ * Currency conversion utilities using dynamic exchange rates.
  *
- * Rates are approximate USD-to-X values (as of late 2024).
- * Used for pre-filling default prices when user's currency differs from USD.
+ * Rates are fetched from fawazahmed0/exchange-api and cached locally.
+ * Falls back to static rates if fetch fails or cache is unavailable.
  */
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const CACHE_KEY = '@currency_rates';
+const CACHE_TIMESTAMP_KEY = '@currency_rates_timestamp';
+const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 /**
  * Static exchange rates: 1 USD = X of target currency.
- * These are approximate and should be updated periodically.
+ * These are approximate fallback values (as of late 2024).
  */
-export const EXCHANGE_RATES_FROM_USD: Record<string, number> = {
+const STATIC_RATES_FROM_USD: Record<string, number> = {
   // Base
   USD: 1,
 
@@ -86,6 +92,121 @@ export const EXCHANGE_RATES_FROM_USD: Record<string, number> = {
   BBD: 2.02,
 };
 
+// In-memory rates, updated by initCurrencyRates
+let liveRates: Record<string, number> | null = null;
+
+interface ExchangeApiResponse {
+  date: string;
+  usd: Record<string, number>;
+}
+
+/**
+ * Fetch latest rates from the exchange API.
+ */
+async function fetchRates(): Promise<Record<string, number> | null> {
+  try {
+    console.log('[currencyConversion] Fetching rates from API...');
+    const response = await fetch(
+      'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'
+    );
+    if (!response.ok) {
+      console.warn('[currencyConversion] API response not OK:', response.status);
+      return null;
+    }
+    const data: ExchangeApiResponse = await response.json();
+    // The API returns rates as { usd: { eur: 0.92, gbp: 0.79, ... } }
+    // We need to convert keys to uppercase for consistency
+    const rates: Record<string, number> = { USD: 1 };
+    for (const [currency, rate] of Object.entries(data.usd)) {
+      rates[currency.toUpperCase()] = rate;
+    }
+    console.log('[currencyConversion] Fetched rates for', Object.keys(rates).length, 'currencies');
+    return rates;
+  } catch (error) {
+    console.warn('[currencyConversion] Failed to fetch rates:', error);
+    return null;
+  }
+}
+
+/**
+ * Save rates to AsyncStorage with current timestamp.
+ */
+async function cacheRates(rates: Record<string, number>): Promise<void> {
+  try {
+    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(rates));
+    await AsyncStorage.setItem(CACHE_TIMESTAMP_KEY, String(Date.now()));
+    console.log('[currencyConversion] Rates cached to AsyncStorage');
+  } catch (error) {
+    console.warn('[currencyConversion] Failed to cache rates:', error);
+  }
+}
+
+/**
+ * Load cached rates from AsyncStorage if valid.
+ */
+async function loadCachedRates(): Promise<Record<string, number> | null> {
+  try {
+    const timestampStr = await AsyncStorage.getItem(CACHE_TIMESTAMP_KEY);
+    if (!timestampStr) return null;
+
+    const timestamp = Number(timestampStr);
+    const age = Date.now() - timestamp;
+    if (age > CACHE_DURATION_MS) {
+      console.log('[currencyConversion] Cache expired, age:', Math.round(age / 3600000), 'hours');
+      return null;
+    }
+
+    const ratesStr = await AsyncStorage.getItem(CACHE_KEY);
+    if (!ratesStr) return null;
+
+    const rates = JSON.parse(ratesStr) as Record<string, number>;
+    console.log(
+      '[currencyConversion] Loaded cached rates, age:',
+      Math.round(age / 3600000),
+      'hours'
+    );
+    return rates;
+  } catch (error) {
+    console.warn('[currencyConversion] Failed to load cached rates:', error);
+    return null;
+  }
+}
+
+/**
+ * Initialize currency rates. Call this early in app startup.
+ * Loads from cache if valid, otherwise fetches from API.
+ */
+export async function initCurrencyRates(): Promise<void> {
+  // Try loading from cache first
+  const cached = await loadCachedRates();
+  if (cached) {
+    liveRates = cached;
+    return;
+  }
+
+  // Cache miss or expired, fetch from API
+  const fetched = await fetchRates();
+  if (fetched) {
+    liveRates = fetched;
+    await cacheRates(fetched);
+  } else {
+    console.log('[currencyConversion] Using static fallback rates');
+    // Keep liveRates as null, convertFromUSD will use static rates
+  }
+}
+
+/**
+ * Get the current exchange rate for a currency.
+ * Uses live rates if available, otherwise static rates.
+ */
+function getRate(currencyCode: string): number | undefined {
+  const code = currencyCode.toUpperCase();
+  if (liveRates && liveRates[code] !== undefined) {
+    return liveRates[code];
+  }
+  return STATIC_RATES_FROM_USD[code];
+}
+
 /**
  * Convert a USD amount to the target currency.
  * Returns the converted amount, or the original if rate is unknown.
@@ -95,7 +216,7 @@ export const EXCHANGE_RATES_FROM_USD: Record<string, number> = {
  * @returns Converted amount in target currency
  */
 export function convertFromUSD(amountUSD: number, targetCurrency: string): number {
-  const rate = EXCHANGE_RATES_FROM_USD[targetCurrency];
+  const rate = getRate(targetCurrency);
 
   if (rate === undefined) {
     // Unknown currency - return original USD amount
@@ -131,3 +252,6 @@ export function getDefaultPriceInCurrency(
 
   return convertFromUSD(priceUSD, userCurrency);
 }
+
+// Re-export static rates for backwards compatibility (if needed elsewhere)
+export const EXCHANGE_RATES_FROM_USD = STATIC_RATES_FROM_USD;

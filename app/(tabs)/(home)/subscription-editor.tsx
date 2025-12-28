@@ -144,10 +144,27 @@ export default function SubscriptionEditorScreen() {
   // State for currency selector modal
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
 
-  const handleCurrencySelect = useCallback((currencyCode: string) => {
-    setCurrency(currencyCode);
-    setShowCurrencyModal(false);
-  }, []);
+  const handleCurrencySelect = useCallback(
+    (currencyCode: string) => {
+      setCurrency(currencyCode);
+      setShowCurrencyModal(false);
+
+      // Recalculate price for new currency (only if user hasn't manually edited)
+      if (!editingId && !hasManuallyEditedAmount && serviceName) {
+        const serviceData = getServiceByName(serviceName);
+        if (serviceData?.defaultPriceUSD) {
+          const convertedPrice = getDefaultPriceInCurrency(
+            serviceData.defaultPriceUSD,
+            currencyCode
+          );
+          if (convertedPrice !== undefined) {
+            setAmountText(String(convertedPrice));
+          }
+        }
+      }
+    },
+    [editingId, hasManuallyEditedAmount, serviceName]
+  );
 
   // State for frequency selector modal
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
