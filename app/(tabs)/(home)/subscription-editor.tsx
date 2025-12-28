@@ -297,6 +297,7 @@ export default function SubscriptionEditorScreen() {
 
   const showLoading = Boolean(editingId) && subscriptionsQuery.isLoading;
   const showNotFound = Boolean(editingId) && !subscriptionsQuery.isLoading && !existing;
+  const isSaving = upsertMutation.isPending;
 
   return (
     <>
@@ -340,7 +341,8 @@ export default function SubscriptionEditorScreen() {
                 <Text style={styles.label}>Service</Text>
                 <Pressable
                   onPress={() => setShowServiceModal(true)}
-                  style={styles.input}
+                  style={[styles.input, isSaving && styles.disabledInput]}
+                  disabled={isSaving}
                   testID="subscriptionEditorServiceName"
                 >
                   <View style={styles.serviceRow}>
@@ -370,11 +372,13 @@ export default function SubscriptionEditorScreen() {
                       <Pressable
                         key={cat}
                         onPress={() => setCategory(cat)}
+                        disabled={isSaving}
                         style={[
                           styles.chip,
                           active
                             ? { backgroundColor: AppColors.tint, borderColor: AppColors.tint }
                             : null,
+                          isSaving && styles.disabledInput,
                         ]}
                         testID={`subscriptionEditorCategory_${cat}`}
                       >
@@ -424,7 +428,8 @@ export default function SubscriptionEditorScreen() {
                     keyboardType={Platform.OS === 'web' ? 'default' : 'decimal-pad'}
                     placeholder="9.99"
                     placeholderTextColor="rgba(15,23,42,0.35)"
-                    style={styles.input}
+                    style={[styles.input, isSaving && styles.disabledInput]}
+                    editable={!isSaving}
                     testID="subscriptionEditorAmount"
                   />
                 </View>
@@ -433,8 +438,9 @@ export default function SubscriptionEditorScreen() {
                 <View style={[styles.section, styles.gridItem]}>
                   <Text style={styles.label}>Currency</Text>
                   <Pressable
-                    style={styles.dropdownButton}
+                    style={[styles.dropdownButton, isSaving && styles.disabledInput]}
                     onPress={() => setShowCurrencyModal(true)}
+                    disabled={isSaving}
                     testID="subscriptionEditorCurrency"
                   >
                     <Text style={styles.dropdownText}>
@@ -448,8 +454,9 @@ export default function SubscriptionEditorScreen() {
                 <View style={[styles.section, styles.gridItem]}>
                   <Text style={styles.label}>Frequency</Text>
                   <Pressable
-                    style={styles.dropdownButton}
+                    style={[styles.dropdownButton, isSaving && styles.disabledInput]}
                     onPress={() => setShowFrequencyModal(true)}
+                    disabled={isSaving}
                     testID="subscriptionEditorFrequency"
                   >
                     <Text style={styles.dropdownText}>{billingCycle}</Text>
@@ -469,7 +476,8 @@ export default function SubscriptionEditorScreen() {
                   keyboardType={Platform.OS === 'web' ? 'default' : 'number-pad'}
                   placeholder="1"
                   placeholderTextColor="rgba(15,23,42,0.35)"
-                  style={styles.input}
+                  style={[styles.input, isSaving && styles.disabledInput]}
+                  editable={!isSaving}
                   testID="subscriptionEditorBillingDay"
                 />
               </View>
@@ -478,8 +486,9 @@ export default function SubscriptionEditorScreen() {
               <View style={styles.section}>
                 <Text style={styles.label}>Start date</Text>
                 <Pressable
-                  style={styles.dateInput}
+                  style={[styles.dateInput, isSaving && styles.disabledInput]}
                   onPress={() => setShowStartDatePicker(true)}
+                  disabled={isSaving}
                   testID="subscriptionEditorStartDate"
                 >
                   <Text style={styles.dateText}>{formatDate(startDate)}</Text>
@@ -505,15 +514,17 @@ export default function SubscriptionEditorScreen() {
                 {endDate ? (
                   <View style={styles.dateRow}>
                     <Pressable
-                      style={[styles.dateInput, { flex: 1 }]}
+                      style={[styles.dateInput, { flex: 1 }, isSaving && styles.disabledInput]}
                       onPress={() => setShowEndDatePicker(true)}
+                      disabled={isSaving}
                       testID="subscriptionEditorEndDate"
                     >
                       <Text style={styles.dateText}>{formatDate(endDate)}</Text>
                     </Pressable>
                     <Pressable
-                      style={styles.clearButton}
+                      style={[styles.clearButton, isSaving && styles.disabledInput]}
                       onPress={() => setEndDate(null)}
+                      disabled={isSaving}
                       testID="subscriptionEditorClearEndDate"
                     >
                       <XIcon color={AppColors.secondaryText} size={18} />
@@ -521,11 +532,12 @@ export default function SubscriptionEditorScreen() {
                   </View>
                 ) : (
                   <Pressable
-                    style={styles.dateInput}
+                    style={[styles.dateInput, isSaving && styles.disabledInput]}
                     onPress={() => {
                       setEndDate(new Date());
                       setShowEndDatePicker(true);
                     }}
+                    disabled={isSaving}
                     testID="subscriptionEditorAddEndDate"
                   >
                     <Text style={styles.placeholderText}>Add end date (optional)</Text>
@@ -551,8 +563,9 @@ export default function SubscriptionEditorScreen() {
               <View style={styles.section}>
                 <Text style={styles.label}>Payment method</Text>
                 <Pressable
-                  style={styles.dropdownButton}
+                  style={[styles.dropdownButton, isSaving && styles.disabledInput]}
                   onPress={() => setShowPaymentMethodModal(true)}
+                  disabled={isSaving}
                   testID="subscriptionEditorPaymentMethod"
                 >
                   {paymentMethod ? (
@@ -584,7 +597,8 @@ export default function SubscriptionEditorScreen() {
                   placeholder="e.g. Family plan, billed through Google Play"
                   placeholderTextColor="rgba(15,23,42,0.35)"
                   multiline
-                  style={[styles.input, styles.notesInput]}
+                  style={[styles.input, styles.notesInput, isSaving && styles.disabledInput]}
+                  editable={!isSaving}
                   testID="subscriptionEditorNotes"
                 />
               </View>
@@ -594,7 +608,7 @@ export default function SubscriptionEditorScreen() {
                   <Pressable
                     onPress={handleDelete}
                     style={styles.deleteButton}
-                    disabled={deleteMutation.isPending || upsertMutation.isPending}
+                    disabled={deleteMutation.isPending || isSaving}
                     testID="subscriptionEditorDelete"
                   >
                     <TrashIcon color={AppColors.negative} size={18} />
@@ -951,5 +965,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
+  },
+  disabledInput: {
+    opacity: 0.5,
   },
 });
