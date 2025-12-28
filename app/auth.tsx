@@ -16,8 +16,7 @@ import { useAuth } from '@/src/features/auth/AuthProvider';
 
 export default function AuthScreen() {
   const router = useRouter();
-  const { signInEmail, signUpEmail, signInWithGoogleMock, isFirebaseReady, user, isReady } =
-    useAuth();
+  const { signInEmail, signUpEmail, signInWithGoogle, isFirebaseReady, user, isReady } = useAuth();
 
   // Redirect to home when user successfully logs in
   useEffect(() => {
@@ -54,13 +53,13 @@ export default function AuthScreen() {
     }
   };
 
-  const googleMock = async () => {
+  const handleGoogleSignIn = async () => {
     setIsWorking(true);
     try {
-      await signInWithGoogleMock();
+      await signInWithGoogle();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Unknown error';
-      Alert.alert('Google sign-in (mock) failed', msg);
+      // Error handling is done in signInWithGoogle - just log here
+      console.log('[auth screen] Google sign-in error:', e);
     } finally {
       setIsWorking(false);
     }
@@ -131,12 +130,12 @@ export default function AuthScreen() {
           <View style={styles.divider} />
 
           <Pressable
-            onPress={googleMock}
+            onPress={handleGoogleSignIn}
             disabled={isWorking}
             style={styles.google}
-            testID="authGoogleMock"
+            testID="authGoogle"
           >
-            <Text style={styles.googleText}>Continue with Google (mock)</Text>
+            <Text style={styles.googleText}>Continue with Google</Text>
           </Pressable>
         </View>
       </SafeAreaView>

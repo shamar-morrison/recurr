@@ -2,17 +2,24 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
   signInAnonymously,
+  signInWithCredential,
   signInWithEmailAndPassword,
   signOut,
   User,
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert } from 'react-native';
+import { GoogleAuth } from 'react-native-google-auth';
 
 import { firestore, getFirebaseAuth, isFirebaseConfigured } from '@/src/lib/firebase';
 import { getFirestoreErrorMessage } from '@/src/lib/firestore';
+
+// Web Client ID from google-services.json (client_type: 3)
+const WEB_CLIENT_ID = '845079285876-u5aeaifg6nsqa3jkjtit099tfarmdvps.apps.googleusercontent.com';
 
 export type UserSettings = {
   remindDaysBeforeBilling: number;
@@ -33,7 +40,8 @@ export type AuthState = {
   signInEmail: (email: string, password: string) => Promise<void>;
   signUpEmail: (email: string, password: string) => Promise<void>;
   signOutUser: () => Promise<void>;
-  signInWithGoogleMock: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInAsGuest: () => Promise<void>;
   setReminderDays: (days: number) => Promise<void>;
   setPremiumMock: (value: boolean) => Promise<void>;
   markOnboardingComplete: () => Promise<void>;
@@ -161,6 +169,119 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
     [isFirebaseReady]
   );
 
+  const signInWithGoogle = useCallback(async () => {
+    console.log('[auth] signInWithGoogle');
+    if (!isFirebaseReady) throw new Error('Firebase is not configured');
+
+    try {
+      // Configure Google Auth (will auto-detect from google-services.json on Android)
+      await GoogleAuth.configure({
+        androidClientId: WEB_CLIENT_ID,
+        offlineAccess: false,
+      });
+
+      // Sign in with Google - uses response.type pattern per library API
+      const response = await GoogleAuth.signIn();
+
+      if (response.type === 'cancelled') {
+        // User cancelled the sign-in flow - don't show alert, just return
+        console.log('[auth] Google Sign-In cancelled by user');
+        return;
+      }
+
+      if (response.type === 'noSavedCredentialFound') {
+        // No saved credential found - this shouldn't happen with interactive sign-in
+        // but handle it gracefully
+        console.log('[auth] No saved Google credential found');
+        Alert.alert('Sign-in Error', 'No Google account found. Please try again.');
+        return;
+      }
+
+      // At this point, response.type must be 'success'
+      const { idToken, user: googleUser } = response.data;
+
+      if (!idToken) {
+        throw new Error('No ID token received from Google');
+      }
+
+      // Create Firebase credential
+      const credential = GoogleAuthProvider.credential(idToken);
+
+      // Sign in to Firebase with the credential
+      const auth = getFirebaseAuth();
+      const userCredential = await signInWithCredential(auth, credential);
+      const firebaseUser = userCredential.user;
+
+      // Extract user profile data (prefer Firebase user data, fallback to Google user)
+      const displayName = firebaseUser.displayName || googleUser?.name || 'User';
+      const photoURL = firebaseUser.photoURL || googleUser?.photo || null;
+      const email = firebaseUser.email || googleUser?.email || '';
+
+      // Check if user document exists in Firestore
+      const userDocRef = doc(firestore, 'users', firebaseUser.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        // Create new user document with Google profile data
+        await setDoc(userDocRef, {
+          uid: firebaseUser.uid,
+          email: email,
+          displayName: displayName,
+          photoURL: photoURL,
+          createdAt: serverTimestamp(),
+          isPremium: false,
+          settings: {
+            remindDaysBeforeBilling: DEFAULT_SETTINGS.remindDaysBeforeBilling,
+            currency: DEFAULT_SETTINGS.currency,
+          },
+          authProvider: 'google',
+        });
+      } else {
+        // Update existing user with latest profile data
+        await updateDoc(userDocRef, {
+          displayName: displayName,
+          photoURL: photoURL,
+          email: email,
+        });
+      }
+
+      // The onAuthStateChanged listener will handle setting the user state
+    } catch (error: unknown) {
+      console.error('[auth] Google Sign-In Error:', error);
+
+      // Handle specific error cases
+      const errorCode = (error as { code?: string })?.code;
+      const errorMessage = (error as { message?: string })?.message || '';
+
+      if (errorCode === 'IN_PROGRESS' || errorMessage.includes('in progress')) {
+        Alert.alert('Sign-in in progress', 'Please wait for the current sign-in to complete.');
+      } else if (
+        errorCode === 'PLAY_SERVICES_NOT_AVAILABLE' ||
+        errorMessage.includes('Play Services')
+      ) {
+        Alert.alert(
+          'Google Play Services',
+          'Google Play Services is not available on this device.'
+        );
+      } else {
+        Alert.alert('Sign-in Error', 'Failed to sign in with Google. Please try again.');
+      }
+
+      throw error;
+    }
+  }, [isFirebaseReady]);
+
+  const signInAsGuest = useCallback(async () => {
+    console.log('[auth] signInAsGuest -> signInAnonymously');
+    if (!isFirebaseReady) throw new Error('Firebase is not configured');
+    try {
+      const auth = getFirebaseAuth();
+      await signInAnonymously(auth);
+    } catch (e) {
+      throw new Error(getFirestoreErrorMessage(e));
+    }
+  }, [isFirebaseReady]);
+
   const signOutUser = useCallback(async () => {
     console.log('[auth] signOutUser');
     if (!isFirebaseReady) {
@@ -169,18 +290,24 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
     }
     try {
       const auth = getFirebaseAuth();
-      await signOut(auth);
-    } catch (e) {
-      throw new Error(getFirestoreErrorMessage(e));
-    }
-  }, [isFirebaseReady]);
+      const currentUser = auth.currentUser;
 
-  const signInWithGoogleMock = useCallback(async () => {
-    console.log('[auth] signInWithGoogleMock -> signInAnonymously');
-    if (!isFirebaseReady) throw new Error('Firebase is not configured');
-    try {
-      const auth = getFirebaseAuth();
-      await signInAnonymously(auth);
+      // Check if user signed in with Google
+      const isGoogleUser = currentUser?.providerData.some(
+        (provider) => provider.providerId === 'google.com'
+      );
+
+      if (isGoogleUser) {
+        // Sign out from Google
+        try {
+          await GoogleAuth.signOut();
+        } catch (e) {
+          console.log('[auth] GoogleAuth.signOut failed (may not be signed in):', e);
+        }
+      }
+
+      // Sign out from Firebase
+      await signOut(auth);
     } catch (e) {
       throw new Error(getFirestoreErrorMessage(e));
     }
@@ -243,7 +370,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       signInEmail,
       signUpEmail,
       signOutUser,
-      signInWithGoogleMock,
+      signInWithGoogle,
+      signInAsGuest,
       setReminderDays,
       setPremiumMock,
       markOnboardingComplete,
@@ -258,7 +386,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       signInEmail,
       signUpEmail,
       signOutUser,
-      signInWithGoogleMock,
+      signInWithGoogle,
+      signInAsGuest,
       setReminderDays,
       setPremiumMock,
       markOnboardingComplete,
