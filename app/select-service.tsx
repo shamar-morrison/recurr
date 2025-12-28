@@ -1,8 +1,8 @@
+import { LegendList } from '@legendapp/list';
 import { CheckIcon, MagnifyingGlassIcon, PlusIcon } from 'phosphor-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
-  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -297,15 +297,13 @@ export default function SelectServiceScreen() {
                 </Pressable>
               </View>
             ) : (
-              <FlatList
+              <LegendList
                 data={filteredServices}
                 keyExtractor={keyExtractor}
                 renderItem={renderItem}
                 style={styles.list}
                 showsVerticalScrollIndicator={false}
-                initialNumToRender={10}
-                maxToRenderPerBatch={10}
-                windowSize={10}
+                recycleItems
               />
             )}
           </>

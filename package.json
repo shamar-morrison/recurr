@@ -15,6 +15,7 @@
     "@expo/html-elements": "^0.12.5",
     "@gluestack-ui/core": "^3.0.12",
     "@gluestack-ui/utils": "^3.0.13",
+    "@legendapp/list": "^2.0.19",
     "@legendapp/motion": "^2.5.3",
     "@nkzw/create-context-hook": "^1.1.0",
     "@react-native-async-storage/async-storage": "2.2.0",
