@@ -96,6 +96,11 @@ export default function SubscriptionEditorScreen() {
     return CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$';
   }, [currency]);
 
+  // Memoize service domain lookup to avoid recalculation on every render
+  const serviceDomain = useMemo(() => {
+    return serviceName ? getServiceDomain(serviceName) : undefined;
+  }, [serviceName]);
+
   // State for start/end dates
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -373,7 +378,7 @@ export default function SubscriptionEditorScreen() {
                     {serviceName ? (
                       <ServiceLogo
                         serviceName={serviceName}
-                        domain={getServiceDomain(serviceName)}
+                        domain={serviceDomain}
                         size={32}
                         borderRadius={8}
                       />
