@@ -1,6 +1,8 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
@@ -34,36 +36,44 @@ export default function AuthScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Welcome to Recurr</Text>
-            <Text style={styles.subtitle}>
-              Sign in to keep your subscriptions synced across all your devices.
-            </Text>
+      <View style={{ flex: 1 }}>
+        <LinearGradient
+          colors={['#FFFFFF', '#E0E7FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <SafeAreaView style={styles.container}>
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <Text style={styles.title}>Welcome to Recurr</Text>
+              <Text style={styles.subtitle}>
+                Sign in to keep your subscriptions synced across all your devices.
+              </Text>
+            </View>
+
+            <Button
+              title="Continue with Google"
+              onPress={handleGoogleSignIn}
+              loading={isWorking}
+              variant="secondary"
+              size="lg"
+              icon={
+                <Image
+                  source={require('@/assets/images/google-icon.png')}
+                  style={styles.googleIcon}
+                />
+              }
+              style={styles.googleButton}
+              textStyle={styles.googleButtonText}
+            />
           </View>
 
-          <Button
-            title="Continue with Google"
-            onPress={handleGoogleSignIn}
-            loading={isWorking}
-            variant="secondary"
-            size="lg"
-            icon={
-              <Image
-                source={require('@/assets/images/google-icon.png')}
-                style={styles.googleIcon}
-              />
-            }
-            style={styles.googleButton}
-            textStyle={styles.googleButtonText}
-          />
-        </View>
-
-        <Text style={styles.footer}>
-          By continuing, you agree to our Terms of Service and Privacy Policy.
-        </Text>
-      </SafeAreaView>
+          <Text style={styles.footer}>
+            By continuing, you agree to our Terms of Service and Privacy Policy.
+          </Text>
+        </SafeAreaView>
+      </View>
     </>
   );
 }
@@ -71,7 +81,7 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
+    // backgroundColor removed to show gradient
     justifyContent: 'space-between',
     padding: 24,
   },
