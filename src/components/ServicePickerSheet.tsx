@@ -15,6 +15,7 @@ import { AddServiceSheet } from '@/src/components/AddServiceSheet';
 import { CustomService, CustomServiceInput } from '@/src/constants/customServices';
 import { Service, SERVICES } from '@/src/constants/services';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { getFirestoreErrorMessage } from '@/src/lib/firestore';
 import { useAppTheme } from '@/src/theme/useAppTheme';
 
 // Union type for both predefined and custom services
@@ -110,13 +111,7 @@ export function ServicePickerSheet({
       } catch (error) {
         // Log error and keep sheet open for retry - do not rethrow
         console.error(error);
-        Alert.alert(
-          'Failed to Create Service',
-          error instanceof Error
-            ? error.message
-            : 'Something went wrong while creating your custom service. Please try again.',
-          [{ text: 'OK' }]
-        );
+        Alert.alert('Failed to Create Service', getFirestoreErrorMessage(error), [{ text: 'OK' }]);
       }
     },
     [onAddCustomService, onSelect, onClose]

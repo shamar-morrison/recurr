@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -12,6 +12,7 @@ import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firest
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { firestore, getFirebaseAuth, isFirebaseConfigured } from '@/src/lib/firebase';
+import { getFirestoreErrorMessage } from '@/src/lib/firestore';
 
 export type UserSettings = {
   remindDaysBeforeBilling: number;
@@ -136,8 +137,12 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
     async (email: string, password: string) => {
       console.log('[auth] signInEmail', { email });
       if (!isFirebaseReady) throw new Error('Firebase is not configured');
-      const auth = getFirebaseAuth();
-      await signInWithEmailAndPassword(auth, email, password);
+      try {
+        const auth = getFirebaseAuth();
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        throw new Error(getFirestoreErrorMessage(e));
+      }
     },
     [isFirebaseReady]
   );
@@ -146,8 +151,12 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
     async (email: string, password: string) => {
       console.log('[auth] signUpEmail', { email });
       if (!isFirebaseReady) throw new Error('Firebase is not configured');
-      const auth = getFirebaseAuth();
-      await createUserWithEmailAndPassword(auth, email, password);
+      try {
+        const auth = getFirebaseAuth();
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        throw new Error(getFirestoreErrorMessage(e));
+      }
     },
     [isFirebaseReady]
   );
@@ -158,15 +167,23 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       setUser(null);
       return;
     }
-    const auth = getFirebaseAuth();
-    await signOut(auth);
+    try {
+      const auth = getFirebaseAuth();
+      await signOut(auth);
+    } catch (e) {
+      throw new Error(getFirestoreErrorMessage(e));
+    }
   }, [isFirebaseReady]);
 
   const signInWithGoogleMock = useCallback(async () => {
     console.log('[auth] signInWithGoogleMock -> signInAnonymously');
     if (!isFirebaseReady) throw new Error('Firebase is not configured');
-    const auth = getFirebaseAuth();
-    await signInAnonymously(auth);
+    try {
+      const auth = getFirebaseAuth();
+      await signInAnonymously(auth);
+    } catch (e) {
+      throw new Error(getFirestoreErrorMessage(e));
+    }
   }, [isFirebaseReady]);
 
   const setReminderDays = useCallback(
