@@ -1,25 +1,35 @@
-import { CheckIcon, MagnifyingGlassIcon } from 'phosphor-react-native';
-import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { CheckIcon, MagnifyingGlassIcon, XIcon } from 'phosphor-react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-
 import { CURRENCIES, Currency } from '@/src/constants/currencies';
-import { useAppTheme } from '@/src/theme/useAppTheme';
+import { lightTheme } from '@/src/theme/useAppTheme';
 
-type RouteParams = {
+type Props = {
+  visible: boolean;
   selectedCurrency?: string;
+  onSelect: (currencyCode: string) => void;
+  onClose: () => void;
 };
 
-export default function SelectCurrencyScreen() {
-  const theme = useAppTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
-
-  const params = useLocalSearchParams<RouteParams>();
-  const selectedCurrency = params.selectedCurrency ?? '';
+export function CurrencySelectorModal({
+  visible,
+  selectedCurrency = '',
+  onSelect,
+  onClose,
+}: Props) {
+  const theme = lightTheme;
+  const styles = useMemo(() => createStyles(), []);
 
   const [search, setSearch] = useState('');
+
+  // Reset search when modal opens
+  useEffect(() => {
+    if (visible) {
+      setSearch('');
+    }
+  }, [visible]);
 
   const filteredCurrencies = useMemo(() => {
     if (!search.trim()) return CURRENCIES;
@@ -32,14 +42,12 @@ export default function SelectCurrencyScreen() {
     );
   }, [search]);
 
-  const handleSelect = useCallback((currency: Currency) => {
-    router.navigate({
-      pathname: '/(tabs)/(home)/subscription-editor',
-      params: {
-        _selectedCurrencyCode: currency.code,
-      },
-    });
-  }, []);
+  const handleSelect = useCallback(
+    (currency: Currency) => {
+      onSelect(currency.code);
+    },
+    [onSelect]
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: Currency }) => {
@@ -63,20 +71,19 @@ export default function SelectCurrencyScreen() {
   const keyExtractor = useCallback((item: Currency) => item.code, []);
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          presentation: 'formSheet',
-          headerShown: false,
-          sheetAllowedDetents: [0.7, 1],
-          sheetGrabberVisible: true,
-          sheetCornerRadius: 24,
-        }}
-      />
-
-      <SafeAreaView style={styles.container} edges={['bottom']}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={onClose}
+    >
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.header}>
+          <View style={styles.headerSpacer} />
           <Text style={styles.title}>Select Currency</Text>
+          <Pressable onPress={onClose} style={styles.closeButton}>
+            <XIcon color={theme.colors.text} size={22} />
+          </Pressable>
         </View>
 
         <View style={styles.searchContainer}>
@@ -104,11 +111,13 @@ export default function SelectCurrencyScreen() {
           windowSize={10}
         />
       </SafeAreaView>
-    </>
+    </Modal>
   );
 }
 
-function createStyles(theme: ReturnType<typeof useAppTheme>) {
+function createStyles() {
+  const theme = lightTheme;
+
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -116,14 +125,29 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       paddingHorizontal: 16,
     },
     header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       paddingTop: 20,
       paddingBottom: 16,
+    },
+    headerSpacer: {
+      width: 40,
     },
     title: {
       fontSize: 18,
       fontWeight: '700',
       color: theme.colors.text,
       textAlign: 'center',
+      flex: 1,
+    },
+    closeButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(15,23,42,0.04)',
     },
     searchContainer: {
       flexDirection: 'row',
@@ -132,7 +156,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       paddingHorizontal: 14,
       paddingVertical: 12,
       borderRadius: 14,
-      backgroundColor: theme.isDark ? 'rgba(236,242,255,0.06)' : 'rgba(15,23,42,0.04)',
+      backgroundColor: 'rgba(15,23,42,0.04)',
       marginBottom: 12,
     },
     searchInput: {
@@ -153,7 +177,7 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       borderRadius: 12,
     },
     itemSelected: {
-      backgroundColor: theme.isDark ? 'rgba(121,167,255,0.12)' : 'rgba(79,140,255,0.08)',
+      backgroundColor: 'rgba(79,140,255,0.08)',
     },
     currencyInfo: {
       flexDirection: 'row',

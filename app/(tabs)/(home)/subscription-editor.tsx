@@ -1,5 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
+import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
+import { FrequencySelectorModal } from '@/src/components/FrequencySelectorModal';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
@@ -44,10 +46,6 @@ import {
 
 type RouteParams = {
   id?: string;
-  // Returned from select-currency screen
-  _selectedCurrencyCode?: string;
-  // Returned from select-frequency screen
-  _selectedFrequency?: string;
 };
 
 export default function SubscriptionEditorScreen() {
@@ -102,19 +100,21 @@ export default function SubscriptionEditorScreen() {
     setShowServiceModal(false);
   }, []);
 
-  // Handle currency selection returned from select-currency screen
-  React.useEffect(() => {
-    if (params._selectedCurrencyCode) {
-      setCurrency(params._selectedCurrencyCode);
-    }
-  }, [params._selectedCurrencyCode]);
+  // State for currency selector modal
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
 
-  // Handle frequency selection returned from select-frequency screen
-  React.useEffect(() => {
-    if (params._selectedFrequency) {
-      setBillingCycle(params._selectedFrequency as BillingCycle);
-    }
-  }, [params._selectedFrequency]);
+  const handleCurrencySelect = useCallback((currencyCode: string) => {
+    setCurrency(currencyCode);
+    setShowCurrencyModal(false);
+  }, []);
+
+  // State for frequency selector modal
+  const [showFrequencyModal, setShowFrequencyModal] = useState(false);
+
+  const handleFrequencySelect = useCallback((frequency: BillingCycle) => {
+    setBillingCycle(frequency);
+    setShowFrequencyModal(false);
+  }, []);
 
   React.useEffect(() => {
     if (!editingId) return;
@@ -355,12 +355,7 @@ export default function SubscriptionEditorScreen() {
                   <Text style={styles.label}>Currency</Text>
                   <Pressable
                     style={styles.dropdownButton}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/select-currency',
-                        params: { selectedCurrency: currency },
-                      })
-                    }
+                    onPress={() => setShowCurrencyModal(true)}
                     testID="subscriptionEditorCurrency"
                   >
                     <Text style={styles.dropdownText}>
@@ -375,12 +370,7 @@ export default function SubscriptionEditorScreen() {
                   <Text style={styles.label}>Frequency</Text>
                   <Pressable
                     style={styles.dropdownButton}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/select-frequency',
-                        params: { selectedFrequency: billingCycle },
-                      })
-                    }
+                    onPress={() => setShowFrequencyModal(true)}
                     testID="subscriptionEditorFrequency"
                   >
                     <Text style={styles.dropdownText}>{billingCycle}</Text>
@@ -456,6 +446,18 @@ export default function SubscriptionEditorScreen() {
         selectedService={serviceName}
         onSelect={handleServiceSelect}
         onClose={() => setShowServiceModal(false)}
+      />
+      <CurrencySelectorModal
+        visible={showCurrencyModal}
+        selectedCurrency={currency}
+        onSelect={handleCurrencySelect}
+        onClose={() => setShowCurrencyModal(false)}
+      />
+      <FrequencySelectorModal
+        visible={showFrequencyModal}
+        selectedFrequency={billingCycle}
+        onSelect={handleFrequencySelect}
+        onClose={() => setShowFrequencyModal(false)}
       />
     </>
   );
