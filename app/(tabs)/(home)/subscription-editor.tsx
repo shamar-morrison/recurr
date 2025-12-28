@@ -533,19 +533,16 @@ export default function SubscriptionEditorScreen() {
                 ) : (
                   <Pressable
                     style={[styles.dateInput, isSaving && styles.disabledInput]}
-                    onPress={() => {
-                      setEndDate(new Date());
-                      setShowEndDatePicker(true);
-                    }}
+                    onPress={() => setShowEndDatePicker(true)}
                     disabled={isSaving}
                     testID="subscriptionEditorAddEndDate"
                   >
                     <Text style={styles.placeholderText}>Add end date (optional)</Text>
                   </Pressable>
                 )}
-                {showEndDatePicker && endDate && (
+                {showEndDatePicker && (
                   <DateTimePicker
-                    value={endDate}
+                    value={endDate || new Date()}
                     mode="date"
                     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                     onChange={(event, selectedDate) => {
