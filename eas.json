@@ -15,7 +15,10 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "env": {
+          "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON"
+        }
       }
     },
     "preview": {
