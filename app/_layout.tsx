@@ -71,7 +71,9 @@ export default function RootLayout() {
 
   // Initialize currency rates early in app lifecycle
   useEffect(() => {
-    initCurrencyRates();
+    initCurrencyRates().catch(() => {
+      // Errors are handled internally; this prevents unhandled promise rejections
+    });
   }, []);
 
   if (!loaded) {

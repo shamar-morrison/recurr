@@ -104,11 +104,23 @@ interface ExchangeApiResponse {
  * Fetch latest rates from the exchange API.
  */
 async function fetchRates(): Promise<Record<string, number> | null> {
+  const FETCH_TIMEOUT_MS = 10000; // 10 seconds
+
   try {
     console.log('[currencyConversion] Fetching rates from API...');
+
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
     const response = await fetch(
-      'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'
+      'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json',
+      { signal: controller.signal }
     );
+
+    // Clear timeout on successful response
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
       console.warn('[currencyConversion] API response not OK:', response.status);
       return null;
@@ -133,8 +145,11 @@ async function fetchRates(): Promise<Record<string, number> | null> {
  */
 async function cacheRates(rates: Record<string, number>): Promise<void> {
   try {
-    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(rates));
-    await AsyncStorage.setItem(CACHE_TIMESTAMP_KEY, String(Date.now()));
+    // Use multiSet for atomic writes to prevent inconsistent state
+    await AsyncStorage.multiSet([
+      [CACHE_KEY, JSON.stringify(rates)],
+      [CACHE_TIMESTAMP_KEY, String(Date.now())],
+    ]);
     console.log('[currencyConversion] Rates cached to AsyncStorage');
   } catch (error) {
     console.warn('[currencyConversion] Failed to cache rates:', error);
@@ -146,8 +161,12 @@ async function cacheRates(rates: Record<string, number>): Promise<void> {
  */
 async function loadCachedRates(): Promise<Record<string, number> | null> {
   try {
-    const timestampStr = await AsyncStorage.getItem(CACHE_TIMESTAMP_KEY);
-    if (!timestampStr) return null;
+    // Use multiGet for atomic reads to prevent inconsistent state
+    const results = await AsyncStorage.multiGet([CACHE_TIMESTAMP_KEY, CACHE_KEY]);
+    const timestampStr = results[0][1];
+    const ratesStr = results[1][1];
+
+    if (!timestampStr || !ratesStr) return null;
 
     const timestamp = Number(timestampStr);
     const age = Date.now() - timestamp;
@@ -155,9 +174,6 @@ async function loadCachedRates(): Promise<Record<string, number> | null> {
       console.log('[currencyConversion] Cache expired, age:', Math.round(age / 3600000), 'hours');
       return null;
     }
-
-    const ratesStr = await AsyncStorage.getItem(CACHE_KEY);
-    if (!ratesStr) return null;
 
     const rates = JSON.parse(ratesStr) as Record<string, number>;
     console.log(
