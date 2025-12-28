@@ -34,19 +34,17 @@ function RootLayoutNav() {
   const theme = useAppTheme();
 
   return (
-    
-    <GluestackUIProvider mode="dark">
+    <GluestackUIProvider>
       <>
-      <StatusBar style={theme.isDark ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerBackTitle: 'Back' }}>
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        <Stack.Screen name="auth" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="paywall" options={{ presentation: 'modal', headerShown: false }} />
-      </Stack>
-    </>
+        <StatusBar style={theme.isDark ? 'light' : 'dark'} />
+        <Stack screenOptions={{ headerBackTitle: 'Back' }}>
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          <Stack.Screen name="auth" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="paywall" options={{ presentation: 'modal', headerShown: false }} />
+        </Stack>
+      </>
     </GluestackUIProvider>
-  
   );
 }
 
