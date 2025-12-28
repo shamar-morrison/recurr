@@ -1,23 +1,14 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 import { AppColors } from '@/constants/colors';
+import { Button } from '@/src/components/ui/Button';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 
 export default function AuthScreen() {
   const router = useRouter();
-  const { signInEmail, signUpEmail, signInWithGoogleMock, isFirebaseReady, user, isReady } =
-    useAuth();
+  const { signInWithGoogle, user, isReady } = useAuth();
 
   // Redirect to home when user successfully logs in
   useEffect(() => {
@@ -26,41 +17,15 @@ export default function AuthScreen() {
     }
   }, [isReady, user, router]);
 
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [isWorking, setIsWorking] = useState<boolean>(false);
 
-  const submit = async () => {
+  const handleGoogleSignIn = async () => {
     setIsWorking(true);
     try {
-      if (!isFirebaseReady) {
-        Alert.alert(
-          'Firebase not configured',
-          'Set EXPO_PUBLIC_FIREBASE_* env vars to enable auth.'
-        );
-        return;
-      }
-      if (mode === 'signin') {
-        await signInEmail(email.trim(), password);
-      } else {
-        await signUpEmail(email.trim(), password);
-      }
+      await signInWithGoogle();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Unknown error';
-      Alert.alert('Auth failed', msg);
-    } finally {
-      setIsWorking(false);
-    }
-  };
-
-  const googleMock = async () => {
-    setIsWorking(true);
-    try {
-      await signInWithGoogleMock();
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Unknown error';
-      Alert.alert('Google sign-in (mock) failed', msg);
+      // Error handling is done in signInWithGoogle - just log here
+      console.log('[auth screen] Google sign-in error:', e);
     } finally {
       setIsWorking(false);
     }
@@ -69,76 +34,35 @@ export default function AuthScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView style={styles.container} testID="authScreen">
-        <Text style={styles.title}>{mode === 'signin' ? 'Welcome back' : 'Create account'}</Text>
-        <Text style={styles.subtitle}>
-          {mode === 'signin'
-            ? 'Sign in to keep your subscriptions synced.'
-            : 'Start tracking and avoid forgotten charges.'}
-        </Text>
-
-        <View style={styles.card}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="you@domain.com"
-            placeholderTextColor="rgba(15,23,42,0.35)"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            style={styles.input}
-            testID="authEmail"
-          />
-
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="••••••••"
-            placeholderTextColor="rgba(15,23,42,0.35)"
-            secureTextEntry
-            style={styles.input}
-            testID="authPassword"
-          />
-
-          <Pressable
-            onPress={submit}
-            disabled={isWorking}
-            style={[styles.primary, { backgroundColor: AppColors.tint }]}
-            testID="authSubmit"
-          >
-            {isWorking ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.primaryText}>
-                {mode === 'signin' ? 'Sign In' : 'Create Account'}
-              </Text>
-            )}
-          </Pressable>
-
-          <Pressable
-            onPress={() => setMode((m) => (m === 'signin' ? 'signup' : 'signin'))}
-            style={styles.switch}
-            testID="authSwitchMode"
-          >
-            <Text style={styles.switchText}>
-              {mode === 'signin'
-                ? 'New here? Create an account'
-                : 'Already have an account? Sign in'}
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Welcome to Recurr</Text>
+            <Text style={styles.subtitle}>
+              Sign in to keep your subscriptions synced across all your devices.
             </Text>
-          </Pressable>
+          </View>
 
-          <View style={styles.divider} />
-
-          <Pressable
-            onPress={googleMock}
-            disabled={isWorking}
-            style={styles.google}
-            testID="authGoogleMock"
-          >
-            <Text style={styles.googleText}>Continue with Google (mock)</Text>
-          </Pressable>
+          <Button
+            title="Continue with Google"
+            onPress={handleGoogleSignIn}
+            loading={isWorking}
+            variant="secondary"
+            size="lg"
+            icon={
+              <Image
+                source={require('@/assets/images/google-icon.png')}
+                style={styles.googleIcon}
+              />
+            }
+            style={styles.googleButton}
+            textStyle={styles.googleButtonText}
+          />
         </View>
+
+        <Text style={styles.footer}>
+          By continuing, you agree to our Terms of Service and Privacy Policy.
+        </Text>
       </SafeAreaView>
     </>
   );
@@ -147,85 +71,56 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: AppColors.background,
+    justifyContent: 'space-between',
+    padding: 24,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: 40,
+  },
+  header: {
+    gap: 12,
+    alignItems: 'center',
   },
   title: {
     color: AppColors.text,
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: '900',
-    letterSpacing: -0.9,
-    marginBottom: 6,
+    letterSpacing: -1,
+    textAlign: 'center',
   },
   subtitle: {
     color: AppColors.secondaryText,
-    fontSize: 14,
-    lineHeight: 18,
-    marginBottom: 14,
-    maxWidth: 360,
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: 'center',
+    maxWidth: 300,
   },
-  card: {
-    borderRadius: 24,
-    padding: 16,
-    backgroundColor: AppColors.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: AppColors.border,
-    gap: 10,
+  googleButton: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  label: {
+  googleButtonText: {
+    color: '#1E293B',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  googleIcon: {
+    width: 24,
+    height: 24,
+  },
+  footer: {
     color: AppColors.secondaryText,
     fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    marginTop: 6,
-  },
-  input: {
-    height: 48,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    color: AppColors.text,
-    backgroundColor: 'rgba(15,23,42,0.05)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: AppColors.border,
-  },
-  primary: {
-    marginTop: 6,
-    borderRadius: 18,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  primaryText: {
-    color: '#fff',
-    fontWeight: '900',
-    fontSize: 15,
-  },
-  switch: {
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  switchText: {
-    color: AppColors.tint,
-    fontWeight: '800',
-    fontSize: 13,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: AppColors.border,
-    marginVertical: 6,
-  },
-  google: {
-    borderRadius: 18,
-    paddingVertical: 14,
-    alignItems: 'center',
-    backgroundColor: 'rgba(15,23,42,0.06)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: AppColors.border,
-  },
-  googleText: {
-    color: AppColors.text,
-    fontWeight: '900',
-    fontSize: 14,
-    letterSpacing: -0.1,
+    textAlign: 'center',
+    opacity: 0.6,
   },
 });

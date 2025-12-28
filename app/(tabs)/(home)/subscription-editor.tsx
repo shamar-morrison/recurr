@@ -1,7 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
-import { AppColors } from '@/constants/colors';
+import { AppColors, CATEGORY_COLORS } from '@/constants/colors';
 import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { FrequencySelectorModal } from '@/src/components/FrequencySelectorModal';
 import { PAYMENT_METHOD_CONFIG, PaymentMethodModal } from '@/src/components/PaymentMethodModal';
@@ -396,6 +396,7 @@ export default function SubscriptionEditorScreen() {
                 <View style={styles.chipsRow} testID="subscriptionEditorCategories">
                   {SUBSCRIPTION_CATEGORIES.map((cat) => {
                     const active = cat === category;
+                    const categoryColor = CATEGORY_COLORS[cat];
                     const iconColor = active ? '#fff' : AppColors.text;
                     const iconSize = 26;
                     return (
@@ -406,7 +407,10 @@ export default function SubscriptionEditorScreen() {
                         style={[
                           styles.chip,
                           active
-                            ? { backgroundColor: AppColors.tint, borderColor: AppColors.tint }
+                            ? {
+                                backgroundColor: categoryColor.text,
+                                borderColor: categoryColor.text,
+                              }
                             : null,
                           isSaving && styles.disabledInput,
                         ]}
