@@ -1,5 +1,5 @@
 import { router, Stack } from 'expo-router';
-import { ArrowRight, Bell, Check, Globe, ShieldAlert, Sparkles, Zap } from 'lucide-react-native';
+import { ArrowRight, Bell, Globe, ShieldAlert, Sparkles, Zap } from 'lucide-react-native';
 import React, { useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -92,7 +92,6 @@ export default function OnboardingScreen() {
 
         <SafeAreaView style={styles.overlay}>
           <View style={styles.topBar}>
-            {/* Brand pill removed as per request */}
             <View />
             <Button
               title="Skip"
@@ -251,37 +250,34 @@ function OnboardingPageContent({
 function VisualTrack() {
   return (
     <View style={styles.visualCard}>
-      <View style={styles.row}>
-        <View style={[styles.iconBox, { backgroundColor: '#E50914' }]}>
-          <Text style={styles.iconText}>N</Text>
+      <View style={styles.trackList}>
+        <View style={styles.row}>
+          <View style={[styles.iconBox, { backgroundColor: '#E50914' }]}>
+            <Text style={styles.iconText}>N</Text>
+          </View>
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>Netflix Premium</Text>
+            <Text style={styles.rowSubtitle}>$22.99 • Monthly</Text>
+          </View>
         </View>
-        <View style={styles.rowText}>
-          <Text style={styles.rowTitle}>Netflix Premium</Text>
-          <Text style={styles.rowSubtitle}>$22.99 • Monthly</Text>
+        <View style={styles.row}>
+          <View style={[styles.iconBox, { backgroundColor: '#1DB954' }]}>
+            <Text style={styles.iconText}>S</Text>
+          </View>
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>Spotify Duo</Text>
+            <Text style={styles.rowSubtitle}>$14.99 • Monthly</Text>
+          </View>
         </View>
-      </View>
-      <View style={styles.row}>
-        <View style={[styles.iconBox, { backgroundColor: '#1DB954' }]}>
-          <Text style={styles.iconText}>S</Text>
+        <View style={styles.row}>
+          <View style={[styles.iconBox, { backgroundColor: '#0070D1' }]}>
+            <Text style={styles.iconText}>P</Text>
+          </View>
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>PlayStation Plus</Text>
+            <Text style={styles.rowSubtitle}>$79.99 • Yearly</Text>
+          </View>
         </View>
-        <View style={styles.rowText}>
-          <Text style={styles.rowTitle}>Spotify Duo</Text>
-          <Text style={styles.rowSubtitle}>$14.99 • Monthly</Text>
-        </View>
-      </View>
-      <View style={styles.row}>
-        <View style={[styles.iconBox, { backgroundColor: '#0070D1' }]}>
-          <Text style={styles.iconText}>P</Text>
-        </View>
-        <View style={styles.rowText}>
-          <Text style={styles.rowTitle}>PlayStation Plus</Text>
-          <Text style={styles.rowSubtitle}>$79.99 • Yearly</Text>
-        </View>
-      </View>
-
-      <View style={styles.floatBadge}>
-        <Check size={14} color="#fff" strokeWidth={3} />
-        <Text style={styles.floatBadgeText}>Tracking 12 apps</Text>
       </View>
     </View>
   );
@@ -318,7 +314,7 @@ function VisualInsights() {
         <View style={styles.doughnut}>
           <View style={styles.doughnutInner}>
             <Text style={styles.doughnutText}>$142</Text>
-            <Text style={styles.doughnutLabel}>/mo</Text>
+            <Text style={styles.doughnutLabel}>per month</Text>
           </View>
         </View>
       </View>
@@ -470,6 +466,10 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 
+  trackList: {
+    width: '100%',
+    gap: 12,
+  },
   // Visual Track Styles
   row: {
     flexDirection: 'row',
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
     padding: 12,
     borderRadius: 20,
-    marginBottom: 12,
+    // marginBottom: 12, // Removed
   },
   iconBox: {
     width: 48,
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
   },
   floatBadge: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 12,
     borderRadius: 20,
     backgroundColor: '#111827',
     paddingHorizontal: 16,
@@ -600,6 +600,7 @@ const styles = StyleSheet.create({
   doughnut: {
     width: 140,
     height: 140,
+    marginTop: -20,
     borderRadius: 70,
     borderWidth: 12,
     borderColor: '#10B981',
