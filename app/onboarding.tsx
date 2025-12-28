@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
 import { ArrowRight, Check, ShieldCheck, Sparkles, Wallet } from 'lucide-react-native';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -54,8 +54,6 @@ const FLOATERS = [
 ] as const;
 
 export default function OnboardingScreen() {
-  const theme = { colors: AppColors };
-  const styles = useMemo(() => createStyles(), []);
   const { markOnboardingComplete } = useAuth();
 
   const screen = Dimensions.get('window');
@@ -154,8 +152,6 @@ export default function OnboardingScreen() {
 }
 
 function FloatingIconsBackground() {
-  const styles = useMemo(() => createBgStyles(), []);
-
   const { width, height } = Dimensions.get('window');
   const useNativeDriver = Platform.OS !== 'web';
 
@@ -214,15 +210,15 @@ function FloatingIconsBackground() {
   }, [anims, height, useNativeDriver]);
 
   return (
-    <View style={styles.bg} pointerEvents="none" testID="onboardingBg">
-      <View style={styles.glowA} />
-      <View style={styles.glowB} />
+    <View style={bgStyles.bg} pointerEvents="none" testID="onboardingBg">
+      <View style={bgStyles.glowA} />
+      <View style={bgStyles.glowB} />
 
       {anims.map((a, idx) => (
         <Animated.View
           key={`${a.label}_${idx}`}
           style={[
-            styles.floater,
+            bgStyles.floater,
             {
               width: a.size,
               height: a.size,
@@ -234,7 +230,7 @@ function FloatingIconsBackground() {
             },
           ]}
         >
-          <Text style={styles.floaterText}>{a.label}</Text>
+          <Text style={bgStyles.floaterText}>{a.label}</Text>
         </Animated.View>
       ))}
     </View>
@@ -252,9 +248,6 @@ function OnboardingPageCard({
   width: number;
   scrollX: Animated.Value;
 }) {
-  const theme = { colors: AppColors };
-  const styles = useMemo(() => createStyles(), []);
-
   const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
 
   const titleOpacity = scrollX.interpolate({
@@ -284,13 +277,13 @@ function OnboardingPageCard({
             ]}
           >
             {page.icon === 'sparkles' ? (
-              <Sparkles color={theme.colors.tint} size={26} />
+              <Sparkles color={AppColors.tint} size={26} />
             ) : page.icon === 'wallet' ? (
-              <Wallet color={theme.colors.tint} size={26} />
+              <Wallet color={AppColors.tint} size={26} />
             ) : page.icon === 'shield' ? (
-              <ShieldCheck color={theme.colors.tint} size={26} />
+              <ShieldCheck color={AppColors.tint} size={26} />
             ) : (
-              <Check color={theme.colors.tint} size={26} />
+              <Check color={AppColors.tint} size={26} />
             )}
           </View>
 
@@ -311,8 +304,6 @@ function PaginationDots({
   width: number;
   scrollX: Animated.Value;
 }) {
-  const styles = useMemo(() => createStyles(), []);
-
   return (
     <View style={styles.dots} testID="onboardingDots">
       {Array.from({ length: count }).map((_, i) => {
@@ -345,167 +336,161 @@ function PaginationDots({
   );
 }
 
-function createBgStyles() {
-  const theme = { colors: AppColors };
-  return StyleSheet.create({
-    bg: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: theme.colors.background,
-    },
-    glowA: {
-      position: 'absolute',
-      top: -120,
-      left: -120,
-      width: 320,
-      height: 320,
-      borderRadius: 999,
-      backgroundColor: 'rgba(79,140,255,0.14)',
-    },
-    glowB: {
-      position: 'absolute',
-      bottom: -160,
-      right: -140,
-      width: 380,
-      height: 380,
-      borderRadius: 999,
-      backgroundColor: 'rgba(31,214,164,0.12)',
-    },
-    floater: {
-      position: 'absolute',
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(15,23,42,0.12)',
-    },
-    floaterText: {
-      color: '#fff',
-      fontWeight: '900',
-      letterSpacing: -0.2,
-      fontSize: 12,
-    },
-  });
-}
+const bgStyles = StyleSheet.create({
+  bg: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: AppColors.background,
+  },
+  glowA: {
+    position: 'absolute',
+    top: -120,
+    left: -120,
+    width: 320,
+    height: 320,
+    borderRadius: 999,
+    backgroundColor: 'rgba(79,140,255,0.14)',
+  },
+  glowB: {
+    position: 'absolute',
+    bottom: -160,
+    right: -140,
+    width: 380,
+    height: 380,
+    borderRadius: 999,
+    backgroundColor: 'rgba(31,214,164,0.12)',
+  },
+  floater: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(15,23,42,0.12)',
+  },
+  floaterText: {
+    color: '#fff',
+    fontWeight: '900',
+    letterSpacing: -0.2,
+    fontSize: 12,
+  },
+});
 
-function createStyles() {
-  const theme = { colors: AppColors };
-  const shadowColor = 'rgba(15,23,42,0.18)';
+const shadowColor = 'rgba(15,23,42,0.18)';
 
-  return StyleSheet.create({
-    root: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    overlay: {
-      flex: 1,
-    },
-    topBar: {
-      paddingHorizontal: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    brandPill: {
-      borderRadius: 999,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      backgroundColor: 'rgba(15,23,42,0.06)',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.colors.border,
-    },
-    brandText: {
-      color: theme.colors.text,
-      fontWeight: '900',
-      letterSpacing: 0.5,
-      fontSize: 12,
-      textTransform: 'uppercase',
-    },
-    skip: {
-      borderRadius: 999,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      backgroundColor: 'rgba(15,23,42,0.06)',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.colors.border,
-    },
-    skipText: {
-      color: theme.colors.text,
-      fontWeight: '900',
-      fontSize: 12,
-      letterSpacing: -0.1,
-    },
-    page: {
-      paddingHorizontal: 16,
-      paddingTop: 26,
-      paddingBottom: 16,
-    },
-    card: {
-      flex: 1,
-      borderRadius: 30,
-      padding: 18,
-      backgroundColor: theme.colors.cardAlt,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.colors.border,
-      shadowColor,
-      shadowOpacity: 1,
-      shadowRadius: 22,
-      shadowOffset: { width: 0, height: 12 },
-      elevation: 2,
-      justifyContent: 'center',
-      gap: 12,
-    },
-    bigIcon: {
-      width: 56,
-      height: 56,
-      borderRadius: 18,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 6,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.colors.border,
-    },
-    h1: {
-      color: theme.colors.text,
-      fontSize: 30,
-      fontWeight: '900',
-      letterSpacing: -1.0,
-      lineHeight: 34,
-      maxWidth: 320,
-    },
-    p: {
-      color: theme.colors.secondaryText,
-      fontSize: 14,
-      lineHeight: 19,
-      maxWidth: 340,
-    },
-    bottomBar: {
-      paddingHorizontal: 16,
-      paddingBottom: 18,
-      gap: 12,
-    },
-    dots: {
-      flexDirection: 'row',
-      gap: 8,
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: 16,
-    },
-    dot: {
-      height: 8,
-      borderRadius: 999,
-    },
-    primary: {
-      borderRadius: 18,
-      paddingVertical: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexDirection: 'row',
-      gap: 10,
-    },
-    primaryText: {
-      color: '#fff',
-      fontWeight: '900',
-      fontSize: 15,
-      letterSpacing: -0.1,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: AppColors.background,
+  },
+  overlay: {
+    flex: 1,
+  },
+  topBar: {
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  brandPill: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(15,23,42,0.06)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: AppColors.border,
+  },
+  brandText: {
+    color: AppColors.text,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    fontSize: 12,
+    textTransform: 'uppercase',
+  },
+  skip: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(15,23,42,0.06)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: AppColors.border,
+  },
+  skipText: {
+    color: AppColors.text,
+    fontWeight: '900',
+    fontSize: 12,
+    letterSpacing: -0.1,
+  },
+  page: {
+    paddingHorizontal: 16,
+    paddingTop: 26,
+    paddingBottom: 16,
+  },
+  card: {
+    flex: 1,
+    borderRadius: 30,
+    padding: 18,
+    backgroundColor: AppColors.cardAlt,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: AppColors.border,
+    shadowColor,
+    shadowOpacity: 1,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 2,
+    justifyContent: 'center',
+    gap: 12,
+  },
+  bigIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: AppColors.border,
+  },
+  h1: {
+    color: AppColors.text,
+    fontSize: 30,
+    fontWeight: '900',
+    letterSpacing: -1.0,
+    lineHeight: 34,
+    maxWidth: 320,
+  },
+  p: {
+    color: AppColors.secondaryText,
+    fontSize: 14,
+    lineHeight: 19,
+    maxWidth: 340,
+  },
+  bottomBar: {
+    paddingHorizontal: 16,
+    paddingBottom: 18,
+    gap: 12,
+  },
+  dots: {
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 16,
+  },
+  dot: {
+    height: 8,
+    borderRadius: 999,
+  },
+  primary: {
+    borderRadius: 18,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 10,
+  },
+  primaryText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 15,
+    letterSpacing: -0.1,
+  },
+});

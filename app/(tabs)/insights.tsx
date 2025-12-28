@@ -12,8 +12,6 @@ import {
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 
 export default function InsightsScreen() {
-  const theme = { colors: AppColors };
-  const styles = useMemo(() => createStyles(), []);
   const { isPremium } = useAuth();
 
   const subscriptionsQuery = useSubscriptionsQuery();
@@ -76,7 +74,7 @@ export default function InsightsScreen() {
 
           {subscriptionsQuery.isLoading ? (
             <View style={styles.loadingRow} testID="insightsLoading">
-              <ActivityIndicator color={theme.colors.tint} />
+              <ActivityIndicator color={AppColors.tint} />
               <Text style={styles.loadingText}>Calculating…</Text>
             </View>
           ) : (
@@ -100,7 +98,7 @@ export default function InsightsScreen() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderLeft}>
-              <TrendingUp color={theme.colors.text} size={18} />
+              <TrendingUp color={AppColors.text} size={18} />
               <Text style={styles.cardTitle}>Highlights</Text>
             </View>
           </View>
@@ -261,223 +259,220 @@ function formatShortDate(iso: string): string {
   }
 }
 
-function createStyles() {
-  const theme = { colors: AppColors };
-  const shadowColor = 'rgba(15,23,42,0.12)';
+const shadowColor = 'rgba(15,23,42,0.12)';
 
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    content: {
-      padding: 16,
-      paddingBottom: 28,
-      gap: 16,
-    },
-    hero: {
-      borderRadius: 32,
-      padding: 24,
-      backgroundColor: theme.colors.primary,
-      shadowColor: theme.colors.primary,
-      shadowOpacity: 0.3,
-      shadowRadius: 20,
-      shadowOffset: { width: 0, height: 10 },
-      elevation: 4,
-      gap: 16,
-    },
-    heroTop: {
-      gap: 8,
-    },
-    heroTitleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 12,
-    },
-    heroTitle: {
-      color: '#fff',
-      fontSize: 18,
-      fontWeight: '600',
-      letterSpacing: -0.1,
-      opacity: 0.9,
-    },
-    heroSubtitle: {
-      color: '#fff',
-      fontSize: 14,
-      lineHeight: 20,
-      opacity: 0.8,
-      maxWidth: 320,
-    },
-    premiumPill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      backgroundColor: 'rgba(255,255,255,0.2)',
-      borderRadius: 999,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-    },
-    premiumPillText: {
-      color: '#fff',
-      fontWeight: '700',
-      fontSize: 12,
-      letterSpacing: 0.4,
-    },
-    loadingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-      paddingVertical: 8,
-    },
-    loadingText: {
-      color: '#fff',
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    totals: {
-      flexDirection: 'row',
-      gap: 12,
-    },
-    totalCard: {
-      flex: 1,
-      borderRadius: 20,
-      padding: 16,
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      gap: 4,
-    },
-    totalLabel: {
-      color: '#fff',
-      fontSize: 12,
-      fontWeight: '700',
-      letterSpacing: 0.6,
-      textTransform: 'uppercase',
-      opacity: 0.8,
-    },
-    totalValue: {
-      color: '#fff',
-      fontSize: 20,
-      fontWeight: '800',
-      letterSpacing: -0.5,
-    },
-    card: {
-      borderRadius: 26,
-      padding: 20,
-      backgroundColor: theme.colors.card,
-      borderWidth: 1,
-      borderColor: 'transparent', // theme.colors.border, clean look
-      shadowColor,
-      shadowOpacity: 0.06,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
-      gap: 16,
-    },
-    cardHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 10,
-    },
-    cardHeaderLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-    },
-    cardTitle: {
-      color: theme.colors.text,
-      fontSize: 18,
-      fontWeight: '800',
-      letterSpacing: -0.3,
-    },
-    subtitle: {
-      color: theme.colors.secondaryText,
-      fontSize: 14,
-      lineHeight: 20,
-    },
-    highlights: {
-      gap: 12,
-    },
-    highlightRow: {
-      gap: 4,
-    },
-    highlightLabel: {
-      color: theme.colors.secondaryText,
-      fontSize: 12,
-      fontWeight: '700',
-      letterSpacing: 0.6,
-      textTransform: 'uppercase',
-    },
-    highlightValue: {
-      color: theme.colors.text,
-      fontSize: 16,
-      fontWeight: '700',
-      letterSpacing: -0.2,
-    },
-    divider: {
-      height: 1,
-      backgroundColor: theme.colors.border,
-      opacity: 0.5,
-    },
-    bars: {
-      gap: 16,
-    },
-    barRow: {
-      gap: 8,
-    },
-    barTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 10,
-    },
-    categoryBadge: {
-      alignSelf: 'flex-start',
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 6,
-    },
-    categoryBadgeText: {
-      fontSize: 11,
-      fontWeight: '700',
-      letterSpacing: 0.5,
-    },
-    barValue: {
-      color: theme.colors.text,
-      fontSize: 14,
-      fontWeight: '700',
-      letterSpacing: -0.1,
-    },
-    track: {
-      height: 12,
-      borderRadius: 999,
-      backgroundColor: '#F2F4F7',
-      overflow: 'hidden',
-    },
-    fill: {
-      height: 12,
-      borderRadius: 999,
-    },
-    locked: {
-      borderRadius: 26,
-      padding: 20,
-      backgroundColor: 'rgba(79,140,255,0.06)',
-      borderWidth: 1,
-      borderColor: 'rgba(79,140,255,0.15)',
-      gap: 8,
-    },
-    lockedTitle: {
-      color: theme.colors.text,
-      fontSize: 16,
-      fontWeight: '800',
-      letterSpacing: -0.2,
-    },
-    lockedText: {
-      color: theme.colors.secondaryText,
-      fontSize: 14,
-      lineHeight: 20,
-    },
-    footerSpace: {
-      height: 20,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: AppColors.background,
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 28,
+    gap: 16,
+  },
+  hero: {
+    borderRadius: 32,
+    padding: 24,
+    backgroundColor: AppColors.primary,
+    shadowColor: AppColors.primary,
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 4,
+    gap: 16,
+  },
+  heroTop: {
+    gap: 8,
+  },
+  heroTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  heroTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    letterSpacing: -0.1,
+    opacity: 0.9,
+  },
+  heroSubtitle: {
+    color: '#fff',
+    fontSize: 14,
+    lineHeight: 20,
+    opacity: 0.8,
+    maxWidth: 320,
+  },
+  premiumPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  premiumPillText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 12,
+    letterSpacing: 0.4,
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  totals: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  totalCard: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    gap: 4,
+  },
+  totalLabel: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    opacity: 0.8,
+  },
+  totalValue: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  card: {
+    borderRadius: 26,
+    padding: 20,
+    backgroundColor: AppColors.card,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    shadowColor,
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    gap: 16,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  cardHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  cardTitle: {
+    color: AppColors.text,
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  subtitle: {
+    color: AppColors.secondaryText,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  highlights: {
+    gap: 12,
+  },
+  highlightRow: {
+    gap: 4,
+  },
+  highlightLabel: {
+    color: AppColors.secondaryText,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  highlightValue: {
+    color: AppColors.text,
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: AppColors.border,
+    opacity: 0.5,
+  },
+  bars: {
+    gap: 16,
+  },
+  barRow: {
+    gap: 8,
+  },
+  barTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  categoryBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  barValue: {
+    color: AppColors.text,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: -0.1,
+  },
+  track: {
+    height: 12,
+    borderRadius: 999,
+    backgroundColor: '#F2F4F7',
+    overflow: 'hidden',
+  },
+  fill: {
+    height: 12,
+    borderRadius: 999,
+  },
+  locked: {
+    borderRadius: 26,
+    padding: 20,
+    backgroundColor: 'rgba(79,140,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(79,140,255,0.15)',
+    gap: 8,
+  },
+  lockedTitle: {
+    color: AppColors.text,
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  lockedText: {
+    color: AppColors.secondaryText,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  footerSpace: {
+    height: 20,
+  },
+});

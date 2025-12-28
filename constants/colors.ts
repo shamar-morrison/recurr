@@ -16,6 +16,11 @@ export const AppColors = {
   disabledTint: 'rgba(94, 56, 248, 0.35)',
   badge: 'rgba(15, 23, 42, 0.08)',
   badgeText: '#0B1220',
+  inputBackground: 'rgba(15, 23, 42, 0.04)',
+  selectedBackground: 'rgba(79, 140, 255, 0.08)',
+  badgeBackground: 'rgba(79, 140, 255, 0.1)',
+  tertiaryBackground: 'rgba(15, 23, 42, 0.06)',
+  negativeBackground: 'rgba(255, 90, 90, 0.1)',
 } as const;
 
 // Category-specific colors for badges

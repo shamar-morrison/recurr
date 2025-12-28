@@ -4,6 +4,16 @@ export type BillingCycle = 'Monthly' | 'Yearly';
 
 export type CurrencyCode = string;
 
+export type PaymentMethod =
+  | 'Credit Card'
+  | 'Debit Card'
+  | 'PayPal'
+  | 'Apple Pay'
+  | 'Google Pay'
+  | 'Bank Transfer'
+  | 'Cash'
+  | 'Other';
+
 export type Subscription = {
   id: string;
   userId: string;
@@ -13,6 +23,9 @@ export type Subscription = {
   currency: CurrencyCode;
   billingCycle: BillingCycle;
   billingDay: number;
+  startDate?: number;
+  endDate?: number;
+  paymentMethod?: PaymentMethod;
   notes?: string;
   isArchived?: boolean;
   createdAt: number;
@@ -46,3 +59,14 @@ export const SUBSCRIPTION_CATEGORIES: SubscriptionCategory[] = [
 ];
 
 export const BILLING_CYCLES: BillingCycle[] = ['Monthly', 'Yearly'];
+
+export const PAYMENT_METHODS: PaymentMethod[] = [
+  'Credit Card',
+  'Debit Card',
+  'PayPal',
+  'Apple Pay',
+  'Google Pay',
+  'Bank Transfer',
+  'Cash',
+  'Other',
+];

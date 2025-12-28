@@ -1,11 +1,15 @@
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 
 import { AppColors } from '@/constants/colors';
 import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { FrequencySelectorModal } from '@/src/components/FrequencySelectorModal';
+import { PAYMENT_METHOD_CONFIG, PaymentMethodModal } from '@/src/components/PaymentMethodModal';
+import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
+import { getServiceByName, getServiceDomain } from '@/src/constants/services';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   useDeleteSubscriptionMutation,
@@ -15,10 +19,12 @@ import {
 import { clampBillingDay } from '@/src/features/subscriptions/subscriptionsUtils';
 import {
   BillingCycle,
+  PaymentMethod,
   Subscription,
   SUBSCRIPTION_CATEGORIES,
   SubscriptionCategory,
 } from '@/src/features/subscriptions/types';
+import { getDefaultPriceInCurrency } from '@/src/lib/currencyConversion';
 import {
   AppWindowIcon,
   CaretDownIcon,
@@ -29,6 +35,7 @@ import {
   MusicNotesIcon,
   PlayCircleIcon,
   TrashIcon,
+  XIcon,
 } from 'phosphor-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -49,9 +56,6 @@ type RouteParams = {
 };
 
 export default function SubscriptionEditorScreen() {
-  const theme = { colors: AppColors };
-  const styles = useMemo(() => createStyles(), []);
-
   const params = useLocalSearchParams<RouteParams>();
   const editingId = typeof params.id === 'string' ? params.id : undefined;
 
@@ -83,6 +87,7 @@ export default function SubscriptionEditorScreen() {
   const [serviceName, setServiceName] = useState<string>('');
   const [category, setCategory] = useState<SubscriptionCategory>('Streaming');
   const [amountText, setAmountText] = useState<string>('');
+  const [hasManuallyEditedAmount, setHasManuallyEditedAmount] = useState(false);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('Monthly');
   const [billingDayText, setBillingDayText] = useState<string>('1');
   const [notes, setNotes] = useState<string>('');
@@ -91,30 +96,100 @@ export default function SubscriptionEditorScreen() {
     return CURRENCIES.find((c) => c.code === currency)?.symbol ?? '$';
   }, [currency]);
 
-  // State for service selector modal
+  const serviceDomain = useMemo(() => {
+    return serviceName ? getServiceDomain(serviceName) : undefined;
+  }, [serviceName]);
+
+  const normalizeToMidnight = useCallback((date: Date): Date => {
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
+  }, []);
+
+  const [startDate, setStartDate] = useState<Date>(() => normalizeToMidnight(new Date()));
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+
+  const formatDate = useCallback((date: Date) => {
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }, []);
+
   const [showServiceModal, setShowServiceModal] = useState(false);
 
-  const handleServiceSelect = useCallback((service: ServiceSelection) => {
-    setServiceName(service.name);
-    setCategory(service.category);
-    setShowServiceModal(false);
-  }, []);
+  const handleServiceSelect = useCallback(
+    (service: ServiceSelection) => {
+      setServiceName(service.name);
+      setCategory(service.category);
+      setShowServiceModal(false);
 
-  // State for currency selector modal
+      // Pre-fill cost from default price (only if user hasn't manually edited)
+      if (!editingId && !hasManuallyEditedAmount) {
+        const serviceData = getServiceByName(service.name);
+        if (serviceData?.defaultPriceUSD) {
+          const convertedPrice = getDefaultPriceInCurrency(serviceData.defaultPriceUSD, currency);
+          if (convertedPrice !== undefined) {
+            setAmountText(String(convertedPrice));
+          }
+        } else {
+          // Clear amount if service has no default price
+          setAmountText('');
+        }
+      }
+    },
+    [editingId, hasManuallyEditedAmount, currency]
+  );
+
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
 
-  const handleCurrencySelect = useCallback((currencyCode: string) => {
-    setCurrency(currencyCode);
-    setShowCurrencyModal(false);
-  }, []);
+  const handleCurrencySelect = useCallback(
+    (currencyCode: string) => {
+      setCurrency(currencyCode);
+      setShowCurrencyModal(false);
 
-  // State for frequency selector modal
+      // Recalculate price for new currency (only if user hasn't manually edited)
+      if (!editingId && !hasManuallyEditedAmount && serviceName) {
+        const serviceData = getServiceByName(serviceName);
+        if (serviceData?.defaultPriceUSD) {
+          const convertedPrice = getDefaultPriceInCurrency(
+            serviceData.defaultPriceUSD,
+            currencyCode
+          );
+          if (convertedPrice !== undefined) {
+            setAmountText(String(convertedPrice));
+          }
+        }
+      }
+    },
+    [editingId, hasManuallyEditedAmount, serviceName]
+  );
+
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
 
   const handleFrequencySelect = useCallback((frequency: BillingCycle) => {
     setBillingCycle(frequency);
     setShowFrequencyModal(false);
   }, []);
+
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | undefined>(undefined);
+  const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
+
+  const handlePaymentMethodSelect = useCallback((method: PaymentMethod) => {
+    setPaymentMethod(method);
+    setShowPaymentMethodModal(false);
+  }, []);
+
+  const PaymentMethodIcon = useMemo(() => {
+    if (!paymentMethod) return null;
+    const config = PAYMENT_METHOD_CONFIG.find((c) => c.label === paymentMethod);
+    if (!config) return null;
+    const IconComponent = config.icon;
+    return <IconComponent color={AppColors.text} size={20} />;
+  }, [paymentMethod]);
 
   React.useEffect(() => {
     if (!editingId) return;
@@ -126,6 +201,15 @@ export default function SubscriptionEditorScreen() {
     setBillingDayText(existing.billingDay != null ? String(existing.billingDay) : '1');
     setNotes(existing.notes ?? '');
     setCurrency(existing.currency ?? defaultCurrency);
+    setStartDate(
+      existing.startDate
+        ? normalizeToMidnight(new Date(existing.startDate))
+        : normalizeToMidnight(new Date())
+    );
+    setEndDate(existing.endDate ? normalizeToMidnight(new Date(existing.endDate)) : null);
+    setPaymentMethod(existing.paymentMethod);
+    // Reset manual edit flag for clean state when loading existing data
+    setHasManuallyEditedAmount(false);
   }, [defaultCurrency, editingId, existing]);
 
   const amount = useMemo(() => {
@@ -142,13 +226,21 @@ export default function SubscriptionEditorScreen() {
 
   const title = existing ? 'Edit Subscription' : 'New Subscription';
 
+  const dateError = useMemo(() => {
+    if (startDate && endDate && endDate < startDate) {
+      return 'End date cannot be before start date.';
+    }
+    return null;
+  }, [startDate, endDate]);
+
   const validate = useCallback((): string | null => {
     if (!serviceName.trim()) return 'Service name is required.';
     if (!Number.isFinite(amount) || amount <= 0) return 'Enter a billing amount greater than 0.';
     if (!Number.isFinite(billingDay) || billingDay < 1 || billingDay > 31)
       return 'Billing day must be between 1 and 31.';
+    if (dateError) return dateError;
     return null;
-  }, [amount, billingDay, serviceName]);
+  }, [amount, billingDay, dateError, serviceName]);
 
   const handleSave = useCallback(async () => {
     const error = validate();
@@ -158,7 +250,7 @@ export default function SubscriptionEditorScreen() {
     }
 
     try {
-      const payload = toInput(existing, userId, {
+      const payload = buildSubscriptionPayload(existing, userId, {
         serviceName: serviceName.trim(),
         category,
         amount,
@@ -166,6 +258,9 @@ export default function SubscriptionEditorScreen() {
         billingCycle,
         billingDay,
         notes: notes.trim() ? notes.trim() : undefined,
+        startDate: startDate.getTime(),
+        endDate: endDate ? endDate.getTime() : undefined,
+        paymentMethod: paymentMethod,
       });
 
       await upsertMutation.mutateAsync(payload);
@@ -181,9 +276,12 @@ export default function SubscriptionEditorScreen() {
     billingDay,
     category,
     currency,
+    endDate,
     existing,
     notes,
+    paymentMethod,
     serviceName,
+    startDate,
     upsertMutation,
     userId,
     validate,
@@ -222,13 +320,14 @@ export default function SubscriptionEditorScreen() {
         style={styles.headerLeft}
         testID="subscriptionEditorBack"
       >
-        <CaretLeftIcon color={theme.colors.text} size={22} />
+        <CaretLeftIcon color={AppColors.text} size={22} />
       </Pressable>
     );
-  }, [styles.headerLeft, theme.colors.text]);
+  }, []);
 
   const showLoading = Boolean(editingId) && subscriptionsQuery.isLoading;
   const showNotFound = Boolean(editingId) && !subscriptionsQuery.isLoading && !existing;
+  const isSaving = upsertMutation.isPending;
 
   return (
     <>
@@ -249,7 +348,7 @@ export default function SubscriptionEditorScreen() {
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {showLoading ? (
             <View style={styles.loading} testID="subscriptionEditorLoading">
-              <ActivityIndicator color={theme.colors.tint} />
+              <ActivityIndicator color={AppColors.tint} />
               <Text style={styles.loadingText}>Loading…</Text>
             </View>
           ) : null}
@@ -260,7 +359,7 @@ export default function SubscriptionEditorScreen() {
               <Text style={styles.notFoundText}>It may have been deleted on another device.</Text>
               <Pressable
                 onPress={() => router.back()}
-                style={[styles.primary, { backgroundColor: theme.colors.tint }]}
+                style={[styles.primary, { backgroundColor: AppColors.tint }]}
                 testID="subscriptionEditorNotFoundBack"
               >
                 <Text style={styles.primaryText}>Go back</Text>
@@ -272,12 +371,23 @@ export default function SubscriptionEditorScreen() {
                 <Text style={styles.label}>Service</Text>
                 <Pressable
                   onPress={() => setShowServiceModal(true)}
-                  style={styles.input}
+                  style={[styles.input, isSaving && styles.disabledInput]}
+                  disabled={isSaving}
                   testID="subscriptionEditorServiceName"
                 >
-                  <Text style={[styles.inputText, !serviceName && styles.placeholderText]}>
-                    {serviceName || 'Netflix, Spotify, iCloud…'}
-                  </Text>
+                  <View style={styles.serviceRow}>
+                    {serviceName ? (
+                      <ServiceLogo
+                        serviceName={serviceName}
+                        domain={serviceDomain}
+                        size={32}
+                        borderRadius={8}
+                      />
+                    ) : null}
+                    <Text style={[styles.inputText, !serviceName && styles.placeholderText]}>
+                      {serviceName || 'Netflix, Spotify, iCloud…'}
+                    </Text>
+                  </View>
                 </Pressable>
               </View>
 
@@ -286,17 +396,19 @@ export default function SubscriptionEditorScreen() {
                 <View style={styles.chipsRow} testID="subscriptionEditorCategories">
                   {SUBSCRIPTION_CATEGORIES.map((cat) => {
                     const active = cat === category;
-                    const iconColor = active ? '#fff' : theme.colors.text;
+                    const iconColor = active ? '#fff' : AppColors.text;
                     const iconSize = 26;
                     return (
                       <Pressable
                         key={cat}
                         onPress={() => setCategory(cat)}
+                        disabled={isSaving}
                         style={[
                           styles.chip,
                           active
-                            ? { backgroundColor: theme.colors.tint, borderColor: theme.colors.tint }
+                            ? { backgroundColor: AppColors.tint, borderColor: AppColors.tint }
                             : null,
+                          isSaving && styles.disabledInput,
                         ]}
                         testID={`subscriptionEditorCategory_${cat}`}
                       >
@@ -322,7 +434,7 @@ export default function SubscriptionEditorScreen() {
                         <Text
                           style={[
                             styles.chipText,
-                            active ? { color: '#fff' } : { color: theme.colors.text },
+                            active ? { color: '#fff' } : { color: AppColors.text },
                           ]}
                         >
                           {cat}
@@ -339,11 +451,15 @@ export default function SubscriptionEditorScreen() {
                   <Text style={styles.label}>Cost</Text>
                   <TextInput
                     value={amountText}
-                    onChangeText={setAmountText}
+                    onChangeText={(text) => {
+                      setAmountText(text);
+                      setHasManuallyEditedAmount(true);
+                    }}
                     keyboardType={Platform.OS === 'web' ? 'default' : 'decimal-pad'}
                     placeholder="9.99"
                     placeholderTextColor="rgba(15,23,42,0.35)"
-                    style={styles.input}
+                    style={[styles.input, isSaving && styles.disabledInput]}
+                    editable={!isSaving}
                     testID="subscriptionEditorAmount"
                   />
                 </View>
@@ -352,14 +468,15 @@ export default function SubscriptionEditorScreen() {
                 <View style={[styles.section, styles.gridItem]}>
                   <Text style={styles.label}>Currency</Text>
                   <Pressable
-                    style={styles.dropdownButton}
+                    style={[styles.dropdownButton, isSaving && styles.disabledInput]}
                     onPress={() => setShowCurrencyModal(true)}
+                    disabled={isSaving}
                     testID="subscriptionEditorCurrency"
                   >
                     <Text style={styles.dropdownText}>
                       {currency} ({currencySymbol})
                     </Text>
-                    <CaretDownIcon color={theme.colors.secondaryText} size={16} />
+                    <CaretDownIcon color={AppColors.secondaryText} size={16} />
                   </Pressable>
                 </View>
 
@@ -367,12 +484,13 @@ export default function SubscriptionEditorScreen() {
                 <View style={[styles.section, styles.gridItem]}>
                   <Text style={styles.label}>Frequency</Text>
                   <Pressable
-                    style={styles.dropdownButton}
+                    style={[styles.dropdownButton, isSaving && styles.disabledInput]}
                     onPress={() => setShowFrequencyModal(true)}
+                    disabled={isSaving}
                     testID="subscriptionEditorFrequency"
                   >
                     <Text style={styles.dropdownText}>{billingCycle}</Text>
-                    <CaretDownIcon color={theme.colors.secondaryText} size={16} />
+                    <CaretDownIcon color={AppColors.secondaryText} size={16} />
                   </Pressable>
                 </View>
               </View>
@@ -388,9 +506,113 @@ export default function SubscriptionEditorScreen() {
                   keyboardType={Platform.OS === 'web' ? 'default' : 'number-pad'}
                   placeholder="1"
                   placeholderTextColor="rgba(15,23,42,0.35)"
-                  style={styles.input}
+                  style={[styles.input, isSaving && styles.disabledInput]}
+                  editable={!isSaving}
                   testID="subscriptionEditorBillingDay"
                 />
+              </View>
+
+              {/* Start Date */}
+              <View style={styles.section}>
+                <Text style={styles.label}>Start date</Text>
+                <Pressable
+                  style={[styles.dateInput, isSaving && styles.disabledInput]}
+                  onPress={() => setShowStartDatePicker(true)}
+                  disabled={isSaving}
+                  testID="subscriptionEditorStartDate"
+                >
+                  <Text style={styles.dateText}>{formatDate(startDate)}</Text>
+                </Pressable>
+                {showStartDatePicker && (
+                  <DateTimePicker
+                    value={startDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(event, selectedDate) => {
+                      setShowStartDatePicker(Platform.OS === 'ios');
+                      if (event.type === 'dismissed') {
+                        return;
+                      }
+                      if (selectedDate) {
+                        setStartDate(normalizeToMidnight(selectedDate));
+                      }
+                    }}
+                  />
+                )}
+              </View>
+
+              {/* End Date (optional) */}
+              <View style={styles.section}>
+                <Text style={styles.label}>End date</Text>
+                {endDate ? (
+                  <View style={styles.dateRow}>
+                    <Pressable
+                      style={[styles.dateInput, { flex: 1 }, isSaving && styles.disabledInput]}
+                      onPress={() => setShowEndDatePicker(true)}
+                      disabled={isSaving}
+                      testID="subscriptionEditorEndDate"
+                    >
+                      <Text style={styles.dateText}>{formatDate(endDate)}</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.clearButton, isSaving && styles.disabledInput]}
+                      onPress={() => setEndDate(null)}
+                      disabled={isSaving}
+                      testID="subscriptionEditorClearEndDate"
+                    >
+                      <XIcon color={AppColors.secondaryText} size={18} />
+                    </Pressable>
+                  </View>
+                ) : (
+                  <Pressable
+                    style={[styles.dateInput, isSaving && styles.disabledInput]}
+                    onPress={() => setShowEndDatePicker(true)}
+                    disabled={isSaving}
+                    testID="subscriptionEditorAddEndDate"
+                  >
+                    <Text style={styles.placeholderText}>Add end date (optional)</Text>
+                  </Pressable>
+                )}
+                {showEndDatePicker && (
+                  <DateTimePicker
+                    value={endDate || new Date()}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={(event, selectedDate) => {
+                      setShowEndDatePicker(Platform.OS === 'ios');
+                      if (event.type === 'dismissed') {
+                        return;
+                      }
+                      if (selectedDate) {
+                        setEndDate(normalizeToMidnight(selectedDate));
+                      }
+                    }}
+                  />
+                )}
+                {dateError && <Text style={styles.errorText}>{dateError}</Text>}
+              </View>
+
+              {/* Payment Method */}
+              <View style={styles.section}>
+                <Text style={styles.label}>Payment method</Text>
+                <Pressable
+                  style={[styles.dropdownButton, isSaving && styles.disabledInput]}
+                  onPress={() => setShowPaymentMethodModal(true)}
+                  disabled={isSaving}
+                  testID="subscriptionEditorPaymentMethod"
+                >
+                  {paymentMethod ? (
+                    <View style={styles.paymentMethodRow}>
+                      {PaymentMethodIcon}
+                      <Text style={styles.dropdownText}>{paymentMethod}</Text>
+                    </View>
+                  ) : (
+                    <Text style={[styles.dropdownText, styles.placeholderText]}>
+                      Select payment method
+                    </Text>
+                  )}
+                  <CaretDownIcon color={AppColors.secondaryText} size={16} />
+                </Pressable>
               </View>
 
               <View style={styles.section}>
@@ -401,7 +623,8 @@ export default function SubscriptionEditorScreen() {
                   placeholder="e.g. Family plan, billed through Google Play"
                   placeholderTextColor="rgba(15,23,42,0.35)"
                   multiline
-                  style={[styles.input, styles.notesInput]}
+                  style={[styles.input, styles.notesInput, isSaving && styles.disabledInput]}
+                  editable={!isSaving}
                   testID="subscriptionEditorNotes"
                 />
               </View>
@@ -411,11 +634,11 @@ export default function SubscriptionEditorScreen() {
                   <Pressable
                     onPress={handleDelete}
                     style={styles.deleteButton}
-                    disabled={deleteMutation.isPending || upsertMutation.isPending}
+                    disabled={deleteMutation.isPending || isSaving}
                     testID="subscriptionEditorDelete"
                   >
-                    <TrashIcon color={theme.colors.negative} size={18} />
-                    <Text style={[styles.deleteText, { color: theme.colors.negative }]}>
+                    <TrashIcon color={AppColors.negative} size={18} />
+                    <Text style={[styles.deleteText, { color: AppColors.negative }]}>
                       Delete Subscription
                     </Text>
                   </Pressable>
@@ -453,11 +676,17 @@ export default function SubscriptionEditorScreen() {
         onSelect={handleFrequencySelect}
         onClose={() => setShowFrequencyModal(false)}
       />
+      <PaymentMethodModal
+        visible={showPaymentMethodModal}
+        selectedMethod={paymentMethod}
+        onSelect={handlePaymentMethodSelect}
+        onClose={() => setShowPaymentMethodModal(false)}
+      />
     </>
   );
 }
 
-function toInput(
+function buildSubscriptionPayload(
   existing: Subscription | null,
   userId: string,
   base: {
@@ -468,6 +697,9 @@ function toInput(
     billingCycle: Subscription['billingCycle'];
     billingDay: number;
     notes?: string;
+    startDate?: number;
+    endDate?: number;
+    paymentMethod?: PaymentMethod;
   }
 ) {
   return {
@@ -480,244 +712,292 @@ function toInput(
     billingCycle: base.billingCycle,
     billingDay: base.billingDay,
     notes: base.notes,
+    startDate: base.startDate,
+    endDate: base.endDate,
+    paymentMethod: base.paymentMethod,
     isArchived: false,
   };
 }
 
-function createStyles() {
-  const theme = { colors: AppColors };
-
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    content: {
-      padding: 20,
-      paddingBottom: 40,
-      gap: 20,
-    },
-    headerLeft: {
-      width: 40,
-      height: 40,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'rgba(15,23,42,0.06)',
-    },
-    headerRight: {
-      // Unused now
-      width: 38,
-      height: 38,
-    },
-    section: {
-      gap: 10,
-    },
-    label: {
-      color: theme.colors.secondaryText,
-      fontSize: 13,
-      fontWeight: '700',
-      letterSpacing: 0.4,
-      marginLeft: 4,
-    },
-    helper: {
-      color: theme.colors.secondaryText,
-      fontSize: 13,
-      lineHeight: 18,
-      marginLeft: 4,
-      marginBottom: 4,
-    },
-    input: {
-      minHeight: 56,
-      borderRadius: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      color: theme.colors.text,
-      backgroundColor: '#fff',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      fontSize: 16,
-      fontWeight: '600',
-      // Subtle shadow
-      shadowColor: '#000',
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      shadowOffset: { width: 0, height: 2 },
-      justifyContent: 'center',
-    },
-    inputText: {
-      color: theme.colors.text,
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    placeholderText: {
-      color: 'rgba(15,23,42,0.35)',
-    },
-    notesInput: {
-      minHeight: 100,
-      textAlignVertical: 'top',
-      paddingTop: 16,
-    },
-    chipsRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 6,
-      justifyContent: 'flex-start',
-    },
-    chip: {
-      borderRadius: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 20,
-      backgroundColor: theme.colors.card,
-      borderWidth: 1.5,
-      borderColor: theme.colors.border,
-      flexBasis: '30%',
-      flexGrow: 1,
-      maxWidth: '32%',
-      minHeight: 70,
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: 7,
-      // Subtle shadow
-      shadowColor: '#000',
-      shadowOpacity: 0.05,
-      shadowRadius: 6,
-      shadowOffset: { width: 0, height: 2 },
-    },
-    chipText: {
-      fontSize: 13,
-      fontWeight: '700',
-    },
-    grid: {
-      flexDirection: 'row',
-      gap: 16,
-    },
-    gridItem: {
-      flex: 1,
-    },
-    amountRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-    },
-    currencyPill: {
-      paddingHorizontal: 12,
-      paddingVertical: 14,
-      borderRadius: 16,
-      backgroundColor: theme.colors.cardAlt,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      minHeight: 56,
-      justifyContent: 'center',
-    },
-    currencyText: {
-      color: theme.colors.text,
-      fontWeight: '700',
-      fontSize: 14,
-    },
-    dropdownButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      minHeight: 56,
-      borderRadius: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      backgroundColor: '#fff',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      shadowColor: '#000',
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      shadowOffset: { width: 0, height: 2 },
-    },
-    dropdownText: {
-      color: theme.colors.text,
-      fontWeight: '600',
-      fontSize: 14,
-    },
-    amountInput: {
-      flex: 1,
-    },
-    cycleRow: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    cycle: {
-      flex: 1,
-      borderRadius: 16,
-      paddingVertical: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: theme.colors.card,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    cycleText: {
-      fontSize: 13,
-      fontWeight: '600',
-    },
-    dangerZone: {
-      marginTop: 10,
-      borderRadius: 9999,
-      padding: 16,
-      backgroundColor: 'rgba(255,68,56,0.05)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,68,56,0.15)',
-    },
-    deleteButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 10,
-    },
-    deleteText: {
-      fontSize: 17,
-      fontWeight: '600',
-    },
-    primary: {
-      borderRadius: 20,
-      paddingVertical: 16,
-      alignItems: 'center',
-      marginTop: 16,
-    },
-    primaryText: {
-      color: '#fff',
-      fontWeight: '700',
-      fontSize: 16,
-    },
-    loading: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      paddingVertical: 20,
-      justifyContent: 'center',
-    },
-    loadingText: {
-      color: theme.colors.secondaryText,
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    notFound: {
-      borderRadius: 26,
-      padding: 24,
-      backgroundColor: theme.colors.card,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      gap: 12,
-      alignItems: 'center',
-    },
-    notFoundTitle: {
-      color: theme.colors.text,
-      fontSize: 20,
-      fontWeight: '700',
-    },
-    notFoundText: {
-      color: theme.colors.secondaryText,
-      fontSize: 14,
-      lineHeight: 20,
-      textAlign: 'center',
-    },
-  });
-}
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: AppColors.background,
+  },
+  content: {
+    padding: 20,
+    paddingBottom: 40,
+    gap: 20,
+  },
+  headerLeft: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(15,23,42,0.06)',
+  },
+  headerRight: {
+    width: 38,
+    height: 38,
+  },
+  section: {
+    gap: 10,
+  },
+  label: {
+    color: AppColors.secondaryText,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    marginLeft: 4,
+  },
+  helper: {
+    color: AppColors.secondaryText,
+    fontSize: 13,
+    lineHeight: 18,
+    marginLeft: 4,
+    marginBottom: 4,
+  },
+  input: {
+    minHeight: 56,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    color: AppColors.text,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    fontSize: 16,
+    fontWeight: '600',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    justifyContent: 'center',
+  },
+  inputText: {
+    color: AppColors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  serviceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  placeholderText: {
+    color: 'rgba(15,23,42,0.35)',
+  },
+  errorText: {
+    color: AppColors.negative,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 6,
+    marginLeft: 4,
+  },
+  dateInput: {
+    minHeight: 56,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  dateText: {
+    color: AppColors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  paymentMethodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  clearButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(15,23,42,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notesInput: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+    paddingTop: 16,
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    justifyContent: 'flex-start',
+  },
+  chip: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    backgroundColor: AppColors.card,
+    borderWidth: 1.5,
+    borderColor: AppColors.border,
+    flexBasis: '30%',
+    flexGrow: 1,
+    maxWidth: '32%',
+    minHeight: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 7,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  grid: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  gridItem: {
+    flex: 1,
+  },
+  amountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  currencyPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: AppColors.cardAlt,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    minHeight: 56,
+    justifyContent: 'center',
+  },
+  currencyText: {
+    color: AppColors.text,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 56,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  dropdownText: {
+    color: AppColors.text,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  amountInput: {
+    flex: 1,
+  },
+  cycleRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  cycle: {
+    flex: 1,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: AppColors.card,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  cycleText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  dangerZone: {
+    marginTop: 10,
+    borderRadius: 9999,
+    padding: 16,
+    backgroundColor: 'rgba(255,68,56,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,68,56,0.15)',
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  deleteText: {
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  primary: {
+    borderRadius: 20,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  primaryText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  loading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 20,
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: AppColors.secondaryText,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  notFound: {
+    borderRadius: 26,
+    padding: 24,
+    backgroundColor: AppColors.card,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    gap: 12,
+    alignItems: 'center',
+  },
+  notFoundTitle: {
+    color: AppColors.text,
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  notFoundText: {
+    color: AppColors.secondaryText,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  disabledInput: {
+    opacity: 0.5,
+  },
+});
