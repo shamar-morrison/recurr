@@ -71,7 +71,8 @@ export default function SelectServiceScreen() {
   const hasNoResults = filteredServices.length === 0 && search.trim().length > 0;
 
   const handleSelect = useCallback((service: UnifiedService) => {
-    router.navigate({
+    // Use replace for immediate navigation (faster than navigate)
+    router.replace({
       pathname: '/(tabs)/(home)/subscription-editor',
       params: {
         _selectedServiceName: service.name,
@@ -112,8 +113,8 @@ export default function SelectServiceScreen() {
       });
 
       if (newService) {
-        // Navigate to subscription-editor with the new service
-        router.navigate({
+        // Use replace for immediate navigation (faster than navigate)
+        router.replace({
           pathname: '/(tabs)/(home)/subscription-editor',
           params: {
             _selectedServiceName: newService.name,
