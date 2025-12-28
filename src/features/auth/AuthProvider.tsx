@@ -102,6 +102,16 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
         const snap = await getDoc(userRef);
 
         if (!snap.exists()) {
+          // Determine auth provider from user's providerData
+          const authProvider =
+            u.providerData[0]?.providerId === 'google.com'
+              ? 'google'
+              : u.providerData[0]?.providerId === 'apple.com'
+                ? 'apple'
+                : u.isAnonymous
+                  ? 'anonymous'
+                  : 'unknown';
+
           await setDoc(userRef, {
             createdAt: serverTimestamp(),
             email: u.email ?? null,
@@ -112,7 +122,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
               remindDaysBeforeBilling: DEFAULT_SETTINGS.remindDaysBeforeBilling,
               currency: DEFAULT_SETTINGS.currency,
             },
-            authProvider: 'google',
+            authProvider,
           });
           setIsPremium(false);
           setSettings(DEFAULT_SETTINGS);
