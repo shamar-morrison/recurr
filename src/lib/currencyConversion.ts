@@ -100,44 +100,64 @@ interface ExchangeApiResponse {
   usd: Record<string, number>;
 }
 
+// API URLs for exchange rates - pinned to specific snapshot for production stability
+const EXCHANGE_API_PRIMARY_URL =
+  'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json';
+const EXCHANGE_API_FALLBACK_URL = 'https://currency-api.pages.dev/v1/currencies/usd.json';
+
 /**
  * Fetch latest rates from the exchange API.
+ * Tries the primary jsDelivr URL first, then falls back to Cloudflare Pages.
  */
 async function fetchRates(): Promise<Record<string, number> | null> {
   const FETCH_TIMEOUT_MS = 10000; // 10 seconds
 
-  try {
-    console.log('[currencyConversion] Fetching rates from API...');
-
-    // Create abort controller for timeout
+  /**
+   * Attempt to fetch rates from a given URL with timeout.
+   */
+  async function tryFetch(url: string): Promise<Record<string, number> | null> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
-    const response = await fetch(
-      'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json',
-      { signal: controller.signal }
-    );
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
 
-    // Clear timeout on successful response
-    clearTimeout(timeoutId);
+      if (!response.ok) {
+        console.warn('[currencyConversion] API response not OK:', response.status, 'from', url);
+        return null;
+      }
 
-    if (!response.ok) {
-      console.warn('[currencyConversion] API response not OK:', response.status);
+      const data: ExchangeApiResponse = await response.json();
+      // The API returns rates as { usd: { eur: 0.92, gbp: 0.79, ... } }
+      // We need to convert keys to uppercase for consistency
+      const rates: Record<string, number> = { USD: 1 };
+      for (const [currency, rate] of Object.entries(data.usd)) {
+        rates[currency.toUpperCase()] = rate;
+      }
+      return rates;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.warn('[currencyConversion] Fetch failed from', url, ':', error);
       return null;
     }
-    const data: ExchangeApiResponse = await response.json();
-    // The API returns rates as { usd: { eur: 0.92, gbp: 0.79, ... } }
-    // We need to convert keys to uppercase for consistency
-    const rates: Record<string, number> = { USD: 1 };
-    for (const [currency, rate] of Object.entries(data.usd)) {
-      rates[currency.toUpperCase()] = rate;
-    }
-    console.log('[currencyConversion] Fetched rates for', Object.keys(rates).length, 'currencies');
-    return rates;
-  } catch (error) {
-    console.warn('[currencyConversion] Failed to fetch rates:', error);
-    return null;
   }
+
+  console.log('[currencyConversion] Fetching rates from primary API...');
+  let rates = await tryFetch(EXCHANGE_API_PRIMARY_URL);
+
+  if (!rates) {
+    console.log('[currencyConversion] Primary API failed, trying fallback...');
+    rates = await tryFetch(EXCHANGE_API_FALLBACK_URL);
+  }
+
+  if (rates) {
+    console.log('[currencyConversion] Fetched rates for', Object.keys(rates).length, 'currencies');
+  } else {
+    console.warn('[currencyConversion] All API sources failed');
+  }
+
+  return rates;
 }
 
 /**
