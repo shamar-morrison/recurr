@@ -23,6 +23,11 @@ export const AppColors = {
   negativeBackground: 'rgba(255, 90, 90, 0.1)',
 } as const;
 
+// Gradient color palettes
+export const GRADIENTS = {
+  premium: ['#5E38F8', '#7C5CFC', '#9B7DFF'] as const,
+} as const;
+
 // Category-specific colors for badges
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 

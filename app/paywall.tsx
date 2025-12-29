@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppColors } from '@/constants/colors';
+import { AppColors, GRADIENTS } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { FeatureItem } from '@/src/features/monetization/FeatureItem';
@@ -93,7 +93,7 @@ export default function PaywallScreen() {
       <>
         <Stack.Screen options={{ title: 'Premium', headerShown: false }} />
         <LinearGradient
-          colors={['#5E38F8', '#7C5CFC', '#9B7DFF']}
+          colors={[...GRADIENTS.premium]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
@@ -132,7 +132,7 @@ export default function PaywallScreen() {
     <>
       <Stack.Screen options={{ title: 'Premium', headerShown: false }} />
       <LinearGradient
-        colors={['#5E38F8', '#7C5CFC', '#9B7DFF']}
+        colors={[...GRADIENTS.premium]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
