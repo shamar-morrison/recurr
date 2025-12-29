@@ -4,11 +4,17 @@ import * as Sharing from 'expo-sharing';
 import { Subscription } from '@/src/features/subscriptions/types';
 
 /**
- * Formats a timestamp to ISO date string
+ * Formats a timestamp to a human-readable date string
  */
 function formatDate(timestamp: number | undefined): string {
   if (!timestamp) return '';
-  return new Date(timestamp).toISOString();
+  return new Date(timestamp).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 /**
@@ -40,7 +46,7 @@ const CSV_HEADERS = [
   'Notes',
   'Archived',
   'Reminder Days',
-  'Reminder Hour',
+  'Reminder Hour (24h)',
   'Created At',
   'Updated At',
 ];
