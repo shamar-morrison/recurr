@@ -317,10 +317,7 @@ export default function SettingsScreen() {
                   iconColor="#D97706"
                   iconBg="#FEF3C7"
                   label="Upgrade to Premium"
-                  onPress={() => {
-                    // TODO: Navigate to premium upgrade screen
-                    console.log('Upgrade to Premium pressed');
-                  }}
+                  onPress={() => router.push('/paywall')}
                 />
               </>
             )}
