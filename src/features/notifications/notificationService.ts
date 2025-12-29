@@ -75,7 +75,6 @@ function calculateReminderDate(
   const reminderDate = new Date(billingDate);
   reminderDate.setDate(reminderDate.getDate() - reminderDays);
 
-  // Set reminder time to the specified hour
   reminderDate.setHours(reminderHour, 0, 0, 0);
 
   // Don't schedule if the reminder date is in the past

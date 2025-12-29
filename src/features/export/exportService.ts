@@ -1,0 +1,191 @@
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+
+import { DateFormatId, formatDate as formatDateBase } from '@/src/constants/dateFormats';
+import { Subscription } from '@/src/features/subscriptions/types';
+
+/**
+ * Formats a timestamp to a date string using the user's preferred format.
+ * Includes time for timestamps that need it (createdAt, updatedAt).
+ */
+function formatTimestamp(
+  timestamp: number | undefined,
+  dateFormat: DateFormatId,
+  includeTime: boolean = false
+): string {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  const formattedDate = formatDateBase(date, dateFormat);
+
+  if (!includeTime) {
+    return formattedDate;
+  }
+
+  // Append time in user's locale format
+  const time = date.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+  return `${formattedDate} ${time}`;
+}
+
+/**
+ * Escapes a value for CSV (handles commas, quotes, and newlines)
+ */
+function escapeCSV(value: string | number | boolean | null | undefined): string {
+  if (value === null || value === undefined) return '';
+  const str = String(value);
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+/**
+ * CSV column headers
+ */
+const CSV_HEADERS = [
+  'ID',
+  'Service Name',
+  'Category',
+  'Amount',
+  'Currency',
+  'Billing Cycle',
+  'Billing Day',
+  'Start Date',
+  'End Date',
+  'Payment Method',
+  'Notes',
+  'Archived',
+  'Reminder Days',
+  'Reminder Hour (24h)',
+  'Created At',
+  'Updated At',
+];
+
+/**
+ * Generates CSV content from subscriptions
+ */
+export function generateCSV(subscriptions: Subscription[], dateFormat: DateFormatId): string {
+  const rows: string[] = [];
+
+  // Header row
+  rows.push(CSV_HEADERS.join(','));
+
+  // Data rows
+  for (const sub of subscriptions) {
+    const row = [
+      escapeCSV(sub.id),
+      escapeCSV(sub.serviceName),
+      escapeCSV(sub.category),
+      escapeCSV(sub.amount),
+      escapeCSV(sub.currency),
+      escapeCSV(sub.billingCycle),
+      escapeCSV(sub.billingDay),
+      escapeCSV(formatTimestamp(sub.startDate, dateFormat)),
+      escapeCSV(formatTimestamp(sub.endDate, dateFormat)),
+      escapeCSV(sub.paymentMethod ?? ''),
+      escapeCSV(sub.notes ?? ''),
+      escapeCSV(sub.isArchived ? 'Yes' : 'No'),
+      escapeCSV(sub.reminderDays ?? ''),
+      escapeCSV(sub.reminderHour ?? ''),
+      escapeCSV(formatTimestamp(sub.createdAt, dateFormat, true)),
+      escapeCSV(formatTimestamp(sub.updatedAt, dateFormat, true)),
+    ];
+    rows.push(row.join(','));
+  }
+
+  return rows.join('\n');
+}
+
+/**
+ * Generates Markdown table content from subscriptions
+ */
+export function generateMarkdown(subscriptions: Subscription[]): string {
+  const lines: string[] = [];
+
+  // Title
+  lines.push('# Subscription Export');
+  lines.push('');
+  lines.push(`Exported on: ${new Date().toLocaleDateString()}`);
+  lines.push('');
+
+  if (subscriptions.length === 0) {
+    lines.push('No subscriptions to export.');
+    return lines.join('\n');
+  }
+
+  // Table header
+  lines.push('| Service | Category | Amount | Billing Cycle | Billing Day | Payment Method |');
+  lines.push('|---------|----------|--------|---------------|-------------|----------------|');
+
+  // Table rows
+  for (const sub of subscriptions) {
+    const amount = `${sub.currency} ${sub.amount.toFixed(2)}`;
+    // Escape pipe characters to prevent table formatting issues
+    const escapeCell = (val: string | number) => String(val).replace(/\|/g, '\\|');
+    const row = [
+      escapeCell(sub.serviceName),
+      escapeCell(sub.category),
+      escapeCell(amount),
+      escapeCell(sub.billingCycle),
+      escapeCell(sub.billingDay),
+      escapeCell(sub.paymentMethod ?? '-'),
+    ];
+    lines.push(`| ${row.join(' | ')} |`);
+  }
+
+  lines.push('');
+  lines.push(`Total: ${subscriptions.length} subscription(s)`);
+
+  return lines.join('\n');
+}
+
+export type ExportFormat = 'csv' | 'markdown';
+
+/**
+ * Exports subscription data to a file and opens the share sheet
+ */
+export async function exportData(
+  subscriptions: Subscription[],
+  format: ExportFormat,
+  includeArchived: boolean,
+  dateFormat: DateFormatId
+): Promise<void> {
+  // Filter subscriptions based on archive preference
+  const filteredSubs = includeArchived
+    ? subscriptions
+    : subscriptions.filter((sub) => !sub.isArchived);
+
+  // Generate content based on format
+  const content =
+    format === 'csv' ? generateCSV(filteredSubs, dateFormat) : generateMarkdown(filteredSubs);
+
+  // Determine file extension and name
+  const extension = format === 'csv' ? 'csv' : 'md';
+  const timestamp = new Date().toISOString().split('T')[0];
+  const fileName = `subscriptions_${timestamp}.${extension}`;
+
+  // Write to cache directory using new File API
+  const file = new File(Paths.cache, fileName);
+  await file.write(content);
+
+  // Check if sharing is available
+  const isAvailable = await Sharing.isAvailableAsync();
+  if (!isAvailable) {
+    throw new Error('Sharing is not available on this device');
+  }
+
+  // Open share sheet
+  await Sharing.shareAsync(file.uri, {
+    mimeType: format === 'csv' ? 'text/csv' : 'text/markdown',
+    dialogTitle: 'Export Subscriptions',
+  });
+
+  // Clean up temp file after sharing
+  try {
+    await file.delete();
+  } catch {
+    // Ignore cleanup errors - OS will eventually clear cache
+  }
+}
