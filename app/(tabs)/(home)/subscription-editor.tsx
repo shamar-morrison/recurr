@@ -307,7 +307,10 @@ export default function SubscriptionEditorScreen() {
         reminderDays: reminderDays,
       });
 
-      // Handle notification scheduling
+      // Step 1: Save the subscription first to get a persisted ID
+      const savedSubscription = await upsertMutation.mutateAsync(payload);
+
+      // Step 2: Handle notification scheduling AFTER successful save
       if (reminderDays && reminderDays > 0) {
         // Request permissions if not already granted
         const hasPermission = await requestNotificationPermissions();
@@ -316,16 +319,30 @@ export default function SubscriptionEditorScreen() {
           if (existing?.notificationId) {
             await cancelNotification(existing.notificationId);
           }
-          // Schedule new notification
-          const savedPayload = { ...payload, id: existing?.id ?? 'temp' };
-          await scheduleSubscriptionReminder(savedPayload as Subscription, reminderDays);
+
+          // Schedule new notification with the persisted subscription
+          const notificationId = await scheduleSubscriptionReminder(
+            savedSubscription,
+            reminderDays
+          );
+
+          // Step 3: Persist the notificationId back to the subscription if we got one
+          if (notificationId) {
+            await upsertMutation.mutateAsync({
+              ...savedSubscription,
+              notificationId,
+            });
+          }
         }
       } else if (existing?.notificationId) {
-        // Reminder was removed, cancel existing notification
+        // Reminder was removed, cancel existing notification and clear notificationId
         await cancelNotification(existing.notificationId);
+        await upsertMutation.mutateAsync({
+          ...savedSubscription,
+          notificationId: null,
+        });
       }
 
-      await upsertMutation.mutateAsync(payload);
       router.back();
     } catch (e) {
       console.log('[subscription-editor] save failed', e);

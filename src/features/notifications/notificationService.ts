@@ -145,6 +145,11 @@ export async function scheduleSubscriptionReminder(
           type: 'billing_reminder',
         },
         sound: 'default',
+        ...(Platform.OS === 'android' && {
+          android: {
+            channelId: 'billing-reminders',
+          },
+        }),
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
