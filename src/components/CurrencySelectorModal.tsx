@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 
-import { AppColors } from '@/constants/colors';
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
 import { CURRENCIES, Currency } from '@/src/constants/currencies';
@@ -90,12 +89,5 @@ export function CurrencySelectorModal({
 const styles = StyleSheet.create({
   list: {
     flex: 1,
-  },
-  currencySymbol: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: AppColors.tint,
-    width: 28,
-    textAlign: 'center',
   },
 });

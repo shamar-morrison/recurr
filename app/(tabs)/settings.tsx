@@ -24,16 +24,16 @@ import {
   BellIcon,
   CalendarIcon,
   CaretRightIcon,
-  ChatCircleDots,
+  ChatCircleDotsIcon,
   CoinsIcon,
   CrownIcon,
   EnvelopeIcon,
-  GridFour,
-  Info,
+  GridFourIcon,
+  InfoIcon,
   InvoiceIcon,
-  ShareNetwork,
+  ShareNetworkIcon,
   SignOutIcon,
-  Star,
+  StarIcon,
 } from 'phosphor-react-native';
 
 interface SettingRowProps {
@@ -156,8 +156,8 @@ export default function SettingsScreen() {
   };
 
   const handleOtherApps = async () => {
-    const developerUrl = 'market://dev?id=Horizon+Apps';
-    const webUrl = 'https://play.google.com/store/apps/developer?id=Horizon+Apps';
+    const developerUrl = 'market://dev?id=The+Avg+Coder';
+    const webUrl = 'https://play.google.com/store/apps/developer?id=The+Avg+Coder&hl=en';
     try {
       const supported = await Linking.canOpenURL(developerUrl);
       if (supported) {
@@ -324,7 +324,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>INFORMATION</Text>
           <View style={styles.card}>
             <SettingRow
-              icon={<Star weight="fill" />}
+              icon={<StarIcon weight="fill" />}
               iconColor="#F59E0B"
               iconBg="#FEF3C7"
               label="Rate us"
@@ -334,7 +334,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
-              icon={<ChatCircleDots />}
+              icon={<ChatCircleDotsIcon />}
               iconColor="#06B6D4"
               iconBg="#CFFAFE"
               label="Contact Support"
@@ -344,7 +344,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
-              icon={<GridFour />}
+              icon={<GridFourIcon />}
               iconColor="#8B5CF6"
               iconBg="#EDE9FE"
               label="Other apps"
@@ -354,7 +354,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
-              icon={<ShareNetwork />}
+              icon={<ShareNetworkIcon />}
               iconColor="#EC4899"
               iconBg="#FCE7F3"
               label="Share App"
@@ -364,7 +364,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
-              icon={<Info />}
+              icon={<InfoIcon />}
               iconColor="#6366F1"
               iconBg="#E0E7FF"
               label="About"
