@@ -1,11 +1,11 @@
 import { router, Stack } from 'expo-router';
-import { CirclePlus, Crown, Filter, Plus } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -21,10 +21,17 @@ import {
   useSubscriptionListItems,
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
-import { SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
 
 import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
-import { CloudSnowIcon, XCircleIcon } from 'phosphor-react-native';
+import {
+  CirclesThreePlusIcon,
+  CrownIcon,
+  PlusCircleIcon,
+  PlusIcon,
+  SlidersIcon,
+  XCircleIcon,
+} from 'phosphor-react-native';
 
 type FilterChip = SubscriptionCategory | 'All';
 
@@ -78,7 +85,7 @@ export default function SubscriptionsHomeScreen() {
   const headerRight = useCallback(() => {
     return (
       <Pressable onPress={handleAdd} style={styles.headerButton} testID="subscriptionsHeaderAdd">
-        <Plus color={AppColors.tint} size={20} />
+        <CirclesThreePlusIcon color={AppColors.tint} size={20} />
       </Pressable>
     );
   }, [handleAdd]);
@@ -153,7 +160,6 @@ export default function SubscriptionsHomeScreen() {
               <Text style={styles.heroAmount}>
                 {formatMoney(totalMonthlySpend, settings.currency)}
               </Text>
-              <Text style={styles.heroAmountSuffix}>/ month</Text>
             </View>
           </View>
 
@@ -179,7 +185,7 @@ export default function SubscriptionsHomeScreen() {
                   testID="unlockPremiumCta"
                 >
                   <Text style={[styles.limitCtaText, { color: AppColors.tint }]}>Unlock</Text>
-                  <Crown color={AppColors.tint} size={16} />
+                  <CrownIcon color={AppColors.tint} size={16} />
                 </Pressable>
               ) : null}
             </View>
@@ -188,38 +194,40 @@ export default function SubscriptionsHomeScreen() {
 
         <View style={styles.filters}>
           <View style={styles.filtersLeft}>
-            <Filter color={AppColors.secondaryText} size={16} />
+            <SlidersIcon color={AppColors.secondaryText} size={16} />
             <Text style={styles.filtersLabel}>Filter</Text>
           </View>
-          <View style={styles.chipsRow}>
-            {(['All', 'Streaming', 'Music', 'Software', 'Utilities', 'Other'] as const).map(
-              (chip) => {
-                const active = chip === filter;
-                return (
-                  <Pressable
-                    key={chip}
-                    onPress={() => setFilter(chip)}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipsScrollContent}
+          >
+            {(['All', ...SUBSCRIPTION_CATEGORIES] as const).map((chip) => {
+              const active = chip === filter;
+              return (
+                <Pressable
+                  key={chip}
+                  onPress={() => setFilter(chip)}
+                  style={[
+                    styles.chip,
+                    active
+                      ? { backgroundColor: AppColors.tint, borderColor: AppColors.tint }
+                      : null,
+                  ]}
+                  testID={`filterChip_${chip}`}
+                >
+                  <Text
                     style={[
-                      styles.chip,
-                      active
-                        ? { backgroundColor: AppColors.tint, borderColor: AppColors.tint }
-                        : null,
+                      styles.chipText,
+                      active ? { color: '#fff' } : { color: AppColors.text },
                     ]}
-                    testID={`filterChip_${chip}`}
                   >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        active ? { color: '#fff' } : { color: AppColors.text },
-                      ]}
-                    >
-                      {chip}
-                    </Text>
-                  </Pressable>
-                );
-              }
-            )}
-          </View>
+                    {chip}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {subscriptionsQuery.isLoading ? (
@@ -242,7 +250,7 @@ export default function SubscriptionsHomeScreen() {
           <View style={styles.empty} testID="subscriptionsEmpty">
             <View style={styles.emptyIcon}>
               {filter === 'All' ? (
-                <CirclePlus color={AppColors.tint} size={22} />
+                <PlusCircleIcon color={AppColors.tint} size={22} />
               ) : (
                 <XCircleIcon color={AppColors.tint} size={22} />
               )}
@@ -312,7 +320,7 @@ export default function SubscriptionsHomeScreen() {
           ]}
           testID="subscriptionsFab"
         >
-          <Plus color="#fff" size={22} />
+          <PlusIcon color="#fff" size={22} />
         </Pressable>
       </View>
     </>
@@ -415,11 +423,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -1.5,
   },
-  heroAmountSuffix: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 18,
-    fontWeight: '600',
-  },
   activeSubsPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -508,16 +511,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  chipsScrollContent: {
     gap: 10,
+    paddingRight: 16,
   },
   chip: {
-    width: '31%',
-    minWidth: 0,
-    borderRadius: 999,
+    paddingHorizontal: 16,
     paddingVertical: 10,
+    borderRadius: 999,
     backgroundColor: AppColors.card,
     borderWidth: 1,
     borderColor: AppColors.border,

@@ -12,6 +12,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import { GoogleAuth } from 'react-native-google-auth';
 
+import { CURRENCIES } from '@/src/constants/currencies';
+import {
+  DATE_FORMAT_OPTIONS,
+  DateFormatId,
+  DEFAULT_DATE_FORMAT,
+  isValidDateFormatId,
+} from '@/src/constants/dateFormats';
 import { firestore, getFirebaseAuth, isFirebaseConfigured } from '@/src/lib/firebase';
 import { getFirestoreErrorMessage } from '@/src/lib/firestore';
 
@@ -21,6 +28,7 @@ const WEB_CLIENT_ID = '845079285876-u5aeaifg6nsqa3jkjtit099tfarmdvps.apps.google
 export type UserSettings = {
   remindDaysBeforeBilling: number;
   currency: string;
+  dateFormat: DateFormatId;
 };
 
 export type PlanStatus = {
@@ -37,6 +45,8 @@ export type AuthState = {
   signOutUser: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   setReminderDays: (days: number) => Promise<void>;
+  setCurrency: (currency: string) => Promise<void>;
+  setDateFormat: (format: DateFormatId) => Promise<void>;
   setPremiumMock: (value: boolean) => Promise<void>;
   markOnboardingComplete: () => Promise<void>;
   hasCompletedOnboarding: boolean;
@@ -45,6 +55,7 @@ export type AuthState = {
 const DEFAULT_SETTINGS: UserSettings = {
   remindDaysBeforeBilling: 3,
   currency: 'USD',
+  dateFormat: DEFAULT_DATE_FORMAT,
 };
 
 const ONBOARDING_KEY = 'onboardingComplete:v1';
@@ -121,6 +132,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
             settings: {
               remindDaysBeforeBilling: DEFAULT_SETTINGS.remindDaysBeforeBilling,
               currency: DEFAULT_SETTINGS.currency,
+              dateFormat: DEFAULT_SETTINGS.dateFormat,
             },
             authProvider,
           });
@@ -151,10 +163,17 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
           }
 
           setIsPremium(Boolean(data.isPremium));
+          // Validate dateFormat from Firestore - fall back to default if invalid or missing
+          const rawDateFormat = data.settings?.dateFormat;
+          const validatedDateFormat = isValidDateFormatId(rawDateFormat)
+            ? rawDateFormat
+            : DEFAULT_SETTINGS.dateFormat;
+
           setSettings({
             remindDaysBeforeBilling:
               data.settings?.remindDaysBeforeBilling ?? DEFAULT_SETTINGS.remindDaysBeforeBilling,
             currency: data.settings?.currency ?? DEFAULT_SETTINGS.currency,
+            dateFormat: validatedDateFormat,
           });
         }
       } catch (e) {
@@ -285,6 +304,60 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
     [isFirebaseReady, user]
   );
 
+  const setCurrency = useCallback(
+    async (currency: string) => {
+      // Validate currency is a valid ISO-4217 code from our allowed list
+      const isValidCurrency = CURRENCIES.some((c) => c.code === currency);
+      if (!isValidCurrency) {
+        console.warn(
+          `[auth] setCurrency: invalid currency code "${currency}". Must be a valid ISO-4217 code.`
+        );
+        return;
+      }
+
+      try {
+        setSettings((prev) => ({ ...prev, currency }));
+
+        if (!isFirebaseReady || !user) return;
+
+        const userRef = doc(firestore, 'users', user.uid);
+        await updateDoc(userRef, {
+          'settings.currency': currency,
+        });
+      } catch (e) {
+        console.log('[auth] setCurrency update failed', e);
+      }
+    },
+    [isFirebaseReady, user]
+  );
+
+  const setDateFormat = useCallback(
+    async (format: DateFormatId) => {
+      // Validate format is a valid option
+      const isValidFormat = DATE_FORMAT_OPTIONS.some((o) => o.id === format);
+      if (!isValidFormat) {
+        console.warn(
+          `[auth] setDateFormat: invalid format "${format}". Must be a valid DateFormatId.`
+        );
+        return;
+      }
+
+      try {
+        setSettings((prev) => ({ ...prev, dateFormat: format }));
+
+        if (!isFirebaseReady || !user) return;
+
+        const userRef = doc(firestore, 'users', user.uid);
+        await updateDoc(userRef, {
+          'settings.dateFormat': format,
+        });
+      } catch (e) {
+        console.log('[auth] setDateFormat update failed', e);
+      }
+    },
+    [isFirebaseReady, user]
+  );
+
   const setPremiumMock = useCallback(
     async (value: boolean) => {
       console.log('[auth] setPremiumMock', { value });
@@ -323,6 +396,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       signOutUser,
       signInWithGoogle,
       setReminderDays,
+      setCurrency,
+      setDateFormat,
       setPremiumMock,
       markOnboardingComplete,
       hasCompletedOnboarding,
@@ -336,6 +411,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       signOutUser,
       signInWithGoogle,
       setReminderDays,
+      setCurrency,
+      setDateFormat,
       setPremiumMock,
       markOnboardingComplete,
       hasCompletedOnboarding,

@@ -1,4 +1,3 @@
-import { Crown, TrendingUp } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +9,7 @@ import {
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { ChartLineUpIcon, CrownIcon } from 'phosphor-react-native';
 
 export default function InsightsScreen() {
   const { isPremium } = useAuth();
@@ -57,6 +57,12 @@ export default function InsightsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']} testID="insightsScreen">
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Insights</Text>
+        <Text style={styles.headerSubtitle}>Track your spending patterns</Text>
+      </View>
+
       <ScrollView contentContainerStyle={styles.content} testID="insightsScroll">
         <View style={styles.hero}>
           <View style={styles.heroTop}>
@@ -64,7 +70,7 @@ export default function InsightsScreen() {
               <Text style={styles.heroTitle}>Spending</Text>
               {isPremium ? (
                 <View style={styles.premiumPill} testID="insightsPremiumPill">
-                  <Crown color="#fff" size={14} />
+                  <CrownIcon color="#fff" size={14} />
                   <Text style={styles.premiumPillText}>Premium</Text>
                 </View>
               ) : null}
@@ -98,7 +104,7 @@ export default function InsightsScreen() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderLeft}>
-              <TrendingUp color={AppColors.text} size={18} />
+              <ChartLineUpIcon color={AppColors.text} size={18} />
               <Text style={styles.cardTitle}>Highlights</Text>
             </View>
           </View>
@@ -217,6 +223,11 @@ function groupByCategory(items: ReturnType<typeof useSubscriptionListItems>) {
     Music: [],
     Software: [],
     Utilities: [],
+    Health: [],
+    Food: [],
+    Education: [],
+    Shopping: [],
+    AI: [],
     Other: [],
   };
 
@@ -265,6 +276,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.background,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: AppColors.text,
+    letterSpacing: -0.4,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: AppColors.secondaryText,
+    marginTop: 2,
   },
   content: {
     padding: 16,

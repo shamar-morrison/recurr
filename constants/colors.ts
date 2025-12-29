@@ -31,5 +31,10 @@ export const CATEGORY_COLORS: Record<SubscriptionCategory, { bg: string; text: s
   Music: { bg: 'rgba(34, 197, 94, 0.12)', text: '#16A34A' }, // Green
   Software: { bg: 'rgba(59, 130, 246, 0.12)', text: '#3B82F6' }, // Blue
   Utilities: { bg: 'rgba(245, 158, 11, 0.12)', text: '#D97706' }, // Amber
+  Health: { bg: 'rgba(20, 184, 166, 0.12)', text: '#0D9488' }, // Teal
+  Food: { bg: 'rgba(249, 115, 22, 0.12)', text: '#EA580C' }, // Orange
+  Education: { bg: 'rgba(6, 182, 212, 0.12)', text: '#0891B2' }, // Cyan
+  Shopping: { bg: 'rgba(236, 72, 153, 0.12)', text: '#DB2777' }, // Pink
+  AI: { bg: 'rgba(139, 92, 246, 0.12)', text: '#7C3AED' }, // Violet
   Other: { bg: 'rgba(168, 85, 247, 0.12)', text: '#9333EA' }, // Purple
 };

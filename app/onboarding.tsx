@@ -1,5 +1,4 @@
 import { router, Stack } from 'expo-router';
-import { ArrowRight, Bell, Globe, ShieldAlert, Sparkles, Zap } from 'lucide-react-native';
 import React, { useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +7,14 @@ import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { AppColors } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import {
+  BellRingingIcon,
+  CaretRightIcon,
+  CoinsIcon,
+  GlobeIcon,
+  ShieldWarningIcon,
+  SparkleIcon,
+} from 'phosphor-react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -136,7 +143,7 @@ export default function OnboardingScreen() {
                 size="lg"
                 style={[styles.mainButton, { backgroundColor: PAGES[pageIndex].color }]}
                 textStyle={{ fontSize: 16 }}
-                icon={<ArrowRight color="#fff" size={20} />}
+                icon={<CaretRightIcon color="#fff" size={20} />}
               />
             </View>
           </View>
@@ -288,7 +295,7 @@ function VisualAlerts() {
     <View style={styles.visualCard}>
       <View style={styles.alertCard}>
         <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
-          <Bell size={24} color="#D97706" fill="#D97706" />
+          <BellRingingIcon size={24} color="#D97706" />
         </View>
         <Text style={styles.alertTitle}>Payment Reminder</Text>
         <Text style={styles.alertDesc}>Netflix is due tomorrow!</Text>
@@ -326,20 +333,20 @@ function VisualStart() {
   return (
     <View style={styles.visualCard}>
       <View style={styles.logoContainer}>
-        <Zap size={64} color={AppColors.tint} fill={AppColors.tint} />
+        <CoinsIcon size={64} color={AppColors.tint} weight="fill" />
       </View>
 
       <View style={styles.bulletList}>
         <View style={styles.bulletRow}>
-          <Sparkles size={20} color={AppColors.tint} />
+          <SparkleIcon size={20} color={AppColors.tint} />
           <Text style={styles.bulletText}>Smart Insights</Text>
         </View>
         <View style={styles.bulletRow}>
-          <ShieldAlert size={20} color={AppColors.tint} />
+          <ShieldWarningIcon size={20} color={AppColors.tint} />
           <Text style={styles.bulletText}>Secure Data</Text>
         </View>
         <View style={styles.bulletRow}>
-          <Globe size={20} color={AppColors.tint} />
+          <GlobeIcon size={20} color={AppColors.tint} />
           <Text style={styles.bulletText}>Global Currencies</Text>
         </View>
       </View>

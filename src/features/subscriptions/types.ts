@@ -1,4 +1,14 @@
-export type SubscriptionCategory = 'Streaming' | 'Music' | 'Software' | 'Utilities' | 'Other';
+export type SubscriptionCategory =
+  | 'Streaming'
+  | 'Music'
+  | 'Software'
+  | 'Utilities'
+  | 'Health'
+  | 'Food'
+  | 'Education'
+  | 'Shopping'
+  | 'AI'
+  | 'Other';
 
 export type BillingCycle = 'Monthly' | 'Yearly' | 'One-Time';
 
@@ -55,6 +65,11 @@ export const SUBSCRIPTION_CATEGORIES: SubscriptionCategory[] = [
   'Music',
   'Software',
   'Utilities',
+  'Health',
+  'Food',
+  'Education',
+  'Shopping',
+  'AI',
   'Other',
 ];
 

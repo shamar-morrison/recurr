@@ -1,304 +1,417 @@
 import { router } from 'expo-router';
-import { Crown, LogOut, Sliders } from 'lucide-react-native';
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
+import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
+import { DateFormatModal } from '@/src/components/DateFormatModal';
+import { getCurrencySymbol } from '@/src/constants/currencies';
+import { DateFormatId, getDateFormatLabel } from '@/src/constants/dateFormats';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import {
+  BellIcon,
+  CalendarIcon,
+  CaretRightIcon,
+  CoinsIcon,
+  CrownIcon,
+  EnvelopeIcon,
+  InvoiceIcon,
+  SignOutIcon,
+} from 'phosphor-react-native';
 
-const REMINDER_OPTIONS: number[] = [0, 1, 2, 3, 5, 7, 10, 14];
+interface SettingRowProps {
+  icon: React.ReactNode;
+  iconColor: string;
+  iconBg: string;
+  label: string;
+  value?: string;
+  isSwitch?: boolean;
+  switchValue?: boolean;
+  onSwitchChange?: (val: boolean) => void;
+  onPress?: () => void;
+  showChevron?: boolean;
+}
 
-export default function SettingsScreen() {
-  const { isPremium, settings, setReminderDays, signOutUser, isFirebaseReady, user } = useAuth();
-
-  const reminderValue = settings.remindDaysBeforeBilling;
-
+function SettingRow({
+  icon,
+  iconColor,
+  iconBg,
+  label,
+  value,
+  isSwitch,
+  switchValue,
+  onSwitchChange,
+  onPress,
+  showChevron = true,
+}: SettingRowProps) {
   return (
-    <SafeAreaView style={styles.container} edges={['top']} testID="settingsScreen">
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.hero}>
-          <View style={styles.heroTop}>
-            <Text style={styles.title}>Preferences</Text>
-            <Text style={styles.subtitle}>
-              Control reminders, premium status, and your session.
+    <Pressable onPress={onPress} disabled={isSwitch} style={styles.row}>
+      <View style={[styles.iconContainer, { backgroundColor: iconBg }]}>
+        {React.cloneElement(icon as React.ReactElement<{ size?: number; color?: string }>, {
+          size: 20,
+          color: iconColor,
+        })}
+      </View>
+
+      <Text style={styles.rowLabel} numberOfLines={1}>
+        {label}
+      </Text>
+
+      {isSwitch ? (
+        <Switch
+          value={switchValue}
+          onValueChange={onSwitchChange}
+          trackColor={{ false: AppColors.border, true: AppColors.primary }}
+          thumbColor={AppColors.card}
+        />
+      ) : (
+        <View style={styles.rowRight}>
+          {value && (
+            <Text style={styles.rowValue} numberOfLines={1}>
+              {value}
             </Text>
-          </View>
-
-          <View style={styles.statusRow}>
-            <View style={styles.statusPill} testID="settingsAuthPill">
-              <Text style={styles.statusPillText}>{user ? 'Signed in' : 'Signed out'}</Text>
-            </View>
-            {isPremium ? (
-              <View
-                style={[styles.statusPill, { backgroundColor: AppColors.tint }]}
-                testID="settingsPremiumPill"
-              >
-                <Crown color="#fff" size={16} />
-                <Text style={[styles.statusPillText, { color: '#fff' }]}>Premium Active</Text>
-              </View>
-            ) : (
-              <Pressable
-                onPress={() => router.push('/paywall')}
-                style={[styles.statusPill, styles.premiumCta]}
-                testID="settingsGoPremium"
-              >
-                <Crown color={'#fff'} size={16} />
-                <Text style={[styles.statusPillText, { color: '#fff' }]}>Go Premium</Text>
-              </Pressable>
-            )}
-          </View>
-
-          {!isFirebaseReady ? (
-            <Text style={styles.firebaseNote} testID="settingsFirebaseNote">
-              Firebase isn’t configured. Auth + cloud sync will run in limited mode.
-            </Text>
-          ) : null}
-        </View>
-
-        <View style={styles.card} testID="settingsRemindersCard">
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderLeft}>
-              <Sliders color={AppColors.text} size={18} />
-              <Text style={styles.cardTitle}>Reminders</Text>
-            </View>
-            <Text style={styles.cardHeaderRight} testID="settingsRemindersValue">
-              {reminderValue}d
-            </Text>
-          </View>
-
-          <Text style={styles.cardSubtitle}>
-            Store your preference now. Push notifications can be added later.
-          </Text>
-
-          <View style={styles.chipsRow} testID="settingsReminderOptions">
-            {REMINDER_OPTIONS.map((days) => {
-              const active = days === reminderValue;
-              return (
-                <Pressable
-                  key={days}
-                  onPress={() => setReminderDays(days)}
-                  style={[
-                    styles.chip,
-                    active
-                      ? { backgroundColor: AppColors.primary, borderColor: AppColors.primary }
-                      : null,
-                  ]}
-                  testID={`settingsReminder_${days}`}
-                >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      active ? { color: '#fff' } : { color: AppColors.text },
-                    ]}
-                  >
-                    {days}d
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.card} testID="settingsAccountCard">
-          <Text style={styles.cardTitle}>Account</Text>
-
-          {user ? (
-            <Pressable
-              onPress={async () => {
-                try {
-                  await signOutUser();
-                } finally {
-                  router.replace('/auth');
-                }
-              }}
-              style={styles.actionRow}
-              testID="settingsLogout"
-            >
-              <View style={styles.actionLeft}>
-                <LogOut color={AppColors.negative} size={18} />
-                <Text style={[styles.actionText, { color: AppColors.negative }]}>Log out</Text>
-              </View>
-              <Text style={styles.actionHint}>Sign out</Text>
-            </Pressable>
-          ) : (
-            <Pressable
-              onPress={() => router.replace('/auth')}
-              style={styles.actionRow}
-              testID="settingsLogin"
-            >
-              <View style={styles.actionLeft}>
-                <Text style={styles.actionText}>Sign in</Text>
-              </View>
-              <Text style={styles.actionHint}>Auth</Text>
-            </Pressable>
           )}
+          {showChevron && <CaretRightIcon size={20} color={AppColors.secondaryText} />}
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      )}
+    </Pressable>
   );
 }
 
-const shadowColor = 'rgba(15,23,42,0.12)';
+export default function SettingsScreen() {
+  const { user, isPremium, signOutUser, settings, setReminderDays, setCurrency, setDateFormat } =
+    useAuth();
+
+  const [pushEnabled, setPushEnabled] = useState(true);
+  const [emailEnabled, setEmailEnabled] = useState(false);
+  const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
+  const [dateFormatModalVisible, setDateFormatModalVisible] = useState(false);
+
+  const billingRemindersEnabled = settings.remindDaysBeforeBilling > 0;
+  const toggleBillingReminders = (val: boolean) => {
+    setReminderDays(val ? 1 : 0);
+  };
+
+  const handleCurrencySelect = (currencyCode: string) => {
+    setCurrency(currencyCode);
+    setCurrencyModalVisible(false);
+  };
+
+  const handleDateFormatSelect = (format: DateFormatId) => {
+    setDateFormat(format);
+    setDateFormatModalVisible(false);
+  };
+
+  const handleSignOut = () => {
+    Alert.alert('Log Out', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Log Out',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await signOutUser();
+            router.replace('/auth');
+          } catch (error) {
+            console.error('Sign out failed:', error);
+            Alert.alert('Sign Out Failed', 'Unable to sign out. Please try again.', [
+              { text: 'OK' },
+            ]);
+          }
+        },
+      },
+    ]);
+  };
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Preferences</Text>
+        <Text style={styles.headerSubtitle}>Manage your account and settings</Text>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Account Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ACCOUNT</Text>
+          <View style={styles.card}>
+            {/* Profile Row */}
+            <View style={styles.profileRow}>
+              <View style={styles.profileLeft}>
+                {user?.photoURL ? (
+                  <Image source={{ uri: user.photoURL }} style={styles.avatar} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Text style={styles.avatarInitial}>{user?.displayName?.[0] || 'U'}</Text>
+                  </View>
+                )}
+                <View>
+                  <Text style={styles.profileName}>{user?.displayName || 'User'}</Text>
+                  <Text style={styles.profilePlan}>
+                    {isPremium ? 'Premium Account' : 'Personal Account'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {!isPremium && (
+              <>
+                <View style={styles.divider} />
+                <SettingRow
+                  icon={<CrownIcon weight="fill" />}
+                  iconColor="#D97706"
+                  iconBg="#FEF3C7"
+                  label="Upgrade to Premium"
+                  onPress={() => {
+                    // TODO: Navigate to premium upgrade screen
+                    console.log('Upgrade to Premium pressed');
+                  }}
+                />
+              </>
+            )}
+          </View>
+        </View>
+
+        {/* Notifications Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
+          <View style={styles.card}>
+            <SettingRow
+              icon={<BellIcon />}
+              iconColor="#F97316"
+              iconBg="#FFEDD5"
+              label="Push Notifications"
+              isSwitch
+              switchValue={pushEnabled}
+              onSwitchChange={setPushEnabled}
+              showChevron={false}
+            />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<EnvelopeIcon />}
+              iconColor="#3B82F6"
+              iconBg="#DBEAFE"
+              label="Email Alerts"
+              isSwitch
+              switchValue={emailEnabled}
+              onSwitchChange={setEmailEnabled}
+              showChevron={false}
+            />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<InvoiceIcon />}
+              iconColor="#A855F7"
+              iconBg="#F3E8FF"
+              label="Billing Reminders"
+              isSwitch
+              switchValue={billingRemindersEnabled}
+              onSwitchChange={toggleBillingReminders}
+              showChevron={false}
+            />
+          </View>
+        </View>
+
+        {/* Preferences Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>PREFERENCES</Text>
+          <View style={styles.card}>
+            <SettingRow
+              icon={<CoinsIcon />}
+              iconColor="#10B981"
+              iconBg="#D1FAE5"
+              label="Default Currency"
+              value={`${settings.currency} (${getCurrencySymbol(settings.currency)})`}
+              onPress={() => setCurrencyModalVisible(true)}
+            />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<CalendarIcon />}
+              iconColor="#6366F1"
+              iconBg="#E0E7FF"
+              label="Date Format"
+              value={getDateFormatLabel(settings.dateFormat)}
+              onPress={() => setDateFormatModalVisible(true)}
+            />
+          </View>
+        </View>
+
+        {/* Sign Out */}
+        <View style={styles.section}>
+          <Pressable onPress={handleSignOut} style={styles.logoutCard}>
+            <View style={styles.logoutIconContainer}>
+              <SignOutIcon size={20} color={AppColors.negative} />
+            </View>
+            <Text style={styles.logoutText}>Log Out</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+
+      <CurrencySelectorModal
+        visible={currencyModalVisible}
+        selectedCurrency={settings.currency}
+        onSelect={handleCurrencySelect}
+        onClose={() => setCurrencyModalVisible(false)}
+      />
+
+      <DateFormatModal
+        visible={dateFormatModalVisible}
+        selectedFormat={settings.dateFormat}
+        onSelect={handleDateFormatSelect}
+        onClose={() => setDateFormatModalVisible(false)}
+      />
+    </SafeAreaView>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.background,
   },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 28,
-    gap: 16,
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 12,
   },
-  hero: {
-    borderRadius: 32,
-    padding: 24,
-    backgroundColor: AppColors.card,
-    borderWidth: 1,
-    borderColor: AppColors.border,
-    shadowColor,
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 3,
-    gap: 20,
-  },
-  heroTop: {
-    gap: 8,
-  },
-  title: {
-    color: AppColors.text,
-    fontSize: 28,
+  headerTitle: {
+    fontSize: 20,
     fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    color: AppColors.secondaryText,
-    fontSize: 16,
-    lineHeight: 22,
-    maxWidth: 300,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: 10,
-  },
-  statusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: AppColors.tertiaryBackground,
-    borderWidth: 1,
-    borderColor: AppColors.border,
-  },
-  premiumCta: {
-    backgroundColor: AppColors.primary,
-    borderColor: AppColors.primary,
-  },
-  statusPillText: {
     color: AppColors.text,
-    fontWeight: '700',
-    fontSize: 13,
-    letterSpacing: -0.1,
+    letterSpacing: -0.4,
   },
-  firebaseNote: {
-    color: AppColors.negative,
+  headerSubtitle: {
     fontSize: 13,
-    lineHeight: 18,
-    backgroundColor: AppColors.negativeBackground,
-    padding: 12,
-    borderRadius: 12,
-    overflow: 'hidden',
+    fontWeight: '500',
+    color: AppColors.secondaryText,
+    marginTop: 2,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: AppColors.secondaryText,
+    marginLeft: 4,
+    marginBottom: 8,
+    letterSpacing: 0.5,
   },
   card: {
-    borderRadius: 28,
-    padding: 24,
     backgroundColor: AppColors.card,
-    borderWidth: 1,
-    borderColor: AppColors.border,
-    gap: 16,
-    shadowColor,
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  cardHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  cardHeaderRight: {
-    color: AppColors.primary,
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  cardTitle: {
-    color: AppColors.text,
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-  },
-  cardSubtitle: {
-    color: AppColors.secondaryText,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  chip: {
     borderRadius: 16,
+    overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: AppColors.background,
-    borderWidth: 1,
-    borderColor: AppColors.border,
-    minWidth: 44,
+    backgroundColor: AppColors.card,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 12,
   },
-  chipText: {
-    fontSize: 14,
-    fontWeight: '600',
+  rowLabel: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '500',
+    color: AppColors.text,
   },
-  actionRow: {
-    borderRadius: 20,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    backgroundColor: AppColors.background,
-    borderWidth: 1,
-    borderColor: AppColors.border,
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  rowValue: {
+    fontSize: 15,
+    color: AppColors.secondaryText,
+    marginRight: 6,
+    maxWidth: 160,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: AppColors.border,
+    marginLeft: 64,
+  },
+  profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
-  actionLeft: {
+  profileLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
   },
-  actionText: {
-    color: AppColors.text,
-    fontSize: 16,
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+  avatarPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: AppColors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  avatarInitial: {
+    fontSize: 20,
     fontWeight: '700',
-    letterSpacing: -0.2,
-  },
-  actionHint: {
     color: AppColors.secondaryText,
-    fontSize: 13,
+  },
+  profileName: {
+    fontSize: 17,
     fontWeight: '600',
+    color: AppColors.text,
+  },
+  profilePlan: {
+    fontSize: 14,
+    color: AppColors.secondaryText,
+  },
+  logoutCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255,68,56,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,68,56,0.15)',
+  },
+  logoutIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    backgroundColor: 'rgba(255,68,56,0.12)',
+  },
+  logoutText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: AppColors.negative,
   },
 });

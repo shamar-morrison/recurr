@@ -9,6 +9,7 @@ import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
+import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
 import { getServiceByName, getServiceDomain } from '@/src/constants/services';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -31,9 +32,14 @@ import {
   CaretLeftIcon,
   CheckIcon,
   DotsThreeCircleIcon,
+  ForkKnifeIcon,
+  GraduationCapIcon,
+  HeartbeatIcon,
   LightbulbIcon,
   MusicNotesIcon,
   PlayCircleIcon,
+  RobotIcon,
+  ShoppingCartIcon,
   TrashIcon,
   XIcon,
 } from 'phosphor-react-native';
@@ -111,13 +117,12 @@ export default function SubscriptionEditorScreen() {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
-  const formatDate = useCallback((date: Date) => {
-    return date.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  }, []);
+  const formatDate = useCallback(
+    (date: Date) => {
+      return formatDateUtil(date, settings.dateFormat);
+    },
+    [settings.dateFormat]
+  );
 
   const [showServiceModal, setShowServiceModal] = useState(false);
 
@@ -440,6 +445,41 @@ export default function SubscriptionEditorScreen() {
                         {cat === 'Software' && <AppWindowIcon color={iconColor} size={iconSize} />}
                         {cat === 'Utilities' && (
                           <LightbulbIcon
+                            color={iconColor}
+                            size={iconSize}
+                            weight={active ? 'fill' : 'regular'}
+                          />
+                        )}
+                        {cat === 'Health' && (
+                          <HeartbeatIcon
+                            color={iconColor}
+                            size={iconSize}
+                            weight={active ? 'fill' : 'regular'}
+                          />
+                        )}
+                        {cat === 'Food' && (
+                          <ForkKnifeIcon
+                            color={iconColor}
+                            size={iconSize}
+                            weight={active ? 'fill' : 'regular'}
+                          />
+                        )}
+                        {cat === 'Education' && (
+                          <GraduationCapIcon
+                            color={iconColor}
+                            size={iconSize}
+                            weight={active ? 'fill' : 'regular'}
+                          />
+                        )}
+                        {cat === 'Shopping' && (
+                          <ShoppingCartIcon
+                            color={iconColor}
+                            size={iconSize}
+                            weight={active ? 'fill' : 'regular'}
+                          />
+                        )}
+                        {cat === 'AI' && (
+                          <RobotIcon
                             color={iconColor}
                             size={iconSize}
                             weight={active ? 'fill' : 'regular'}

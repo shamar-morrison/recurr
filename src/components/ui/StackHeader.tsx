@@ -1,10 +1,10 @@
 import { router } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
+import { CaretLeftIcon } from 'phosphor-react-native';
 
 interface StackHeaderProps {
   title?: string;
@@ -54,7 +54,7 @@ export function StackHeader({
                 ]}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <ChevronLeft color={AppColors.text} size={22} />
+                <CaretLeftIcon color={AppColors.text} size={22} />
               </Pressable>
             ) : null}
           </View>
