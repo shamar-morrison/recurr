@@ -375,12 +375,20 @@ function logError(message: string, context: object) {
 
 // Define the background task
 TaskManager.defineTask(IAP_ACK_RETRY_TASK, async () => {
-  try {
-    console.log('[IAP] Background task running: retrying acknowledgements');
+  console.log('[IAP] Background task running: retrying acknowledgements');
 
-    // Use the per-purchase key helper to get all failed purchases atomically
-    const failedList = await getFailedPurchases();
-    if (failedList.length === 0) return BackgroundTask.BackgroundTaskResult.Success;
+  // Use the per-purchase key helper to get all failed purchases atomically
+  const failedList = await getFailedPurchases();
+  if (failedList.length === 0) return BackgroundTask.BackgroundTaskResult.Success;
+
+  // Initialize IAP connection before attempting to acknowledge purchases
+  let connectionInitialized = false;
+  try {
+    connectionInitialized = await initIAP();
+    if (!connectionInitialized) {
+      console.error('[IAP] Background task: Failed to initialize IAP connection');
+      return BackgroundTask.BackgroundTaskResult.Failed;
+    }
 
     let successCount = 0;
 
@@ -407,6 +415,16 @@ TaskManager.defineTask(IAP_ACK_RETRY_TASK, async () => {
   } catch (error) {
     console.error('[IAP] Background task error:', error);
     return BackgroundTask.BackgroundTaskResult.Failed;
+  } finally {
+    // Always clean up the billing connection
+    if (connectionInitialized) {
+      try {
+        await endConnection();
+        console.log('[IAP] Background task: Connection closed');
+      } catch (endError) {
+        console.error('[IAP] Background task: Failed to close connection:', endError);
+      }
+    }
   }
 });
 
