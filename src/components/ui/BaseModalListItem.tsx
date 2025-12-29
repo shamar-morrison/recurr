@@ -3,6 +3,7 @@ import React, { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppColors } from '@/constants/colors';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 
 type BaseModalListItemProps = {
   /** Primary text */
@@ -68,10 +69,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    marginBottom: 8,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
+    marginBottom: SPACING.sm,
     backgroundColor: AppColors.card,
     borderWidth: 1,
     borderColor: AppColors.border,
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    gap: 12,
+    gap: SPACING.md,
   },
   leftElement: {
     // Container for custom left element
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   label: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
     color: AppColors.text,
   },
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
     color: AppColors.secondaryText,
   },
   sublabel: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     color: AppColors.secondaryText,
     marginTop: 2,
   },

@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
+import { SPACING } from '@/src/constants/theme';
 import { BILLING_CYCLES, BillingCycle } from '@/src/features/subscriptions/types';
 
 type Props = {
@@ -47,6 +48,6 @@ export function FrequencySelectorModal({
 const styles = StyleSheet.create({
   list: {
     flex: 1,
-    paddingBottom: 20,
+    paddingBottom: SPACING.xl,
   },
 });

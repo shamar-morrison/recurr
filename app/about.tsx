@@ -4,6 +4,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { CaretLeftIcon } from 'phosphor-react-native';
 
 export default function AboutScreen() {
@@ -60,19 +61,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
   },
   backButton: {
     width: 40,
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20,
+    borderRadius: BORDER_RADIUS.xxl,
     backgroundColor: AppColors.card,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.xl,
     fontWeight: '700',
     color: AppColors.text,
   },
@@ -82,17 +83,17 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: SPACING.xxl,
     paddingTop: 40,
   },
   iconContainer: {
     width: 100,
     height: 100,
-    borderRadius: 24,
+    borderRadius: BORDER_RADIUS.xxxl,
     backgroundColor: AppColors.card,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: SPACING.xl,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -102,29 +103,29 @@ const styles = StyleSheet.create({
   appIcon: {
     width: 80,
     height: 80,
-    borderRadius: 16,
+    borderRadius: BORDER_RADIUS.xl,
   },
   appName: {
-    fontSize: 28,
+    fontSize: FONT_SIZE.display,
     fontWeight: '800',
     color: AppColors.text,
     letterSpacing: -0.5,
   },
   version: {
-    fontSize: 15,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '500',
     color: AppColors.secondaryText,
-    marginTop: 4,
+    marginTop: SPACING.xs,
   },
   descriptionCard: {
     backgroundColor: AppColors.card,
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 32,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.xl,
+    marginTop: SPACING.xxxl,
     width: '100%',
   },
   description: {
-    fontSize: 15,
+    fontSize: FONT_SIZE.lg,
     lineHeight: 24,
     color: AppColors.secondaryText,
     textAlign: 'center',
@@ -135,13 +136,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   copyright: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     color: AppColors.secondaryText,
     fontWeight: '500',
   },
   madeWith: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     color: AppColors.secondaryText,
-    marginTop: 4,
+    marginTop: SPACING.xs,
   },
 });

@@ -1,8 +1,9 @@
+import { AppColors } from '@/constants/colors';
+import { BORDER_RADIUS } from '@/src/constants/theme';
+import { useServiceLogo } from '@/src/features/services/useServiceLogo';
 import { Image, ImageErrorEventData } from 'expo-image';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
-import { AppColors } from '@/constants/colors';
-import { useServiceLogo } from '@/src/features/services/useServiceLogo';
 
 type ServiceLogoProps = {
   /** Service name (used for fallback initials) */
@@ -11,7 +12,7 @@ type ServiceLogoProps = {
   domain?: string;
   /** Size of the logo container (default: 52) */
   size?: number;
-  /** Border radius (default: 16) */
+  /** Border radius (default: BORDER_RADIUS.xl) */
   borderRadius?: number;
   /** Background color for fallback (default: #F2F4F7) */
   fallbackBackgroundColor?: string;
@@ -29,7 +30,7 @@ export function ServiceLogo({
   serviceName,
   domain,
   size = 52,
-  borderRadius = 16,
+  borderRadius = BORDER_RADIUS.xl,
   fallbackBackgroundColor = '#F2F4F7',
   style,
 }: ServiceLogoProps) {

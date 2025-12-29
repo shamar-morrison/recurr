@@ -6,6 +6,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppColors } from '@/constants/colors';
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { REMINDER_TIME_OPTIONS, ReminderHour } from '@/src/features/subscriptions/types';
 
 type Props = {
@@ -85,19 +86,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: AppColors.selectedBackground,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 16,
-    gap: 12,
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.lg,
+    marginBottom: SPACING.lg,
+    gap: SPACING.md,
   },
   infoText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     color: AppColors.secondaryText,
     lineHeight: 20,
   },
   list: {
     flex: 1,
-    paddingBottom: 20,
+    paddingBottom: SPACING.xl,
   },
 });

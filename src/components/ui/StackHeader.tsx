@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { CaretLeftIcon } from 'phosphor-react-native';
 
 interface StackHeaderProps {
@@ -85,8 +86,8 @@ export function StackHeader({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
   },
   content: {
     flexDirection: 'row',
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 14,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -115,12 +116,12 @@ const styles = StyleSheet.create({
     paddingLeft: 0,
   },
   title: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xxl,
     fontWeight: '800',
     letterSpacing: -0.4,
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     fontWeight: '500',
   },
   rightContainer: {

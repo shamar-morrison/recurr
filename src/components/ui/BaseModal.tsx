@@ -4,6 +4,7 @@ import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 
 type BaseModalProps = {
   /** Controls modal visibility */
@@ -85,20 +86,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.background,
-    paddingHorizontal: 16,
+    paddingHorizontal: SPACING.lg,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingTop: SPACING.xl,
+    paddingBottom: SPACING.lg,
   },
   headerSpacer: {
     width: 40,
   },
   title: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.xl,
     fontWeight: '700',
     color: AppColors.text,
     textAlign: 'center',
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
   closeButton: {
     width: 40,
     height: 40,
-    borderRadius: 14,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: AppColors.tertiaryBackground,
@@ -116,16 +117,16 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 14,
+    gap: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
     backgroundColor: AppColors.inputBackground,
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     color: AppColors.text,
     padding: 0,
   },
@@ -133,6 +134,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footer: {
-    paddingVertical: 16,
+    paddingVertical: SPACING.lg,
   },
 });

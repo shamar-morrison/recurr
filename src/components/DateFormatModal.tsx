@@ -5,6 +5,7 @@ import { AppColors } from '@/constants/colors';
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
 import { DATE_FORMAT_OPTIONS, DateFormatId, formatDate } from '@/src/constants/dateFormats';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 
 type Props = {
   visible: boolean;
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
   radio: {
     width: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: BORDER_RADIUS.full,
     borderWidth: 2,
     borderColor: AppColors.border,
     alignItems: 'center',
@@ -80,15 +81,15 @@ const styles = StyleSheet.create({
   radioInner: {
     width: 12,
     height: 12,
-    borderRadius: 6,
+    borderRadius: BORDER_RADIUS.full,
     backgroundColor: AppColors.tint,
   },
   cancelButton: {
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: SPACING.lg,
   },
   cancelText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
     color: AppColors.tint,
   },

@@ -6,6 +6,7 @@ import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 import { AppColors } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   BellRingingIcon,
@@ -393,14 +394,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingHorizontal: SPACING.xxl,
+    paddingTop: SPACING.lg,
   },
   pageContainer: {
     width,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: SPACING.xxl,
   },
   visualContainer: {
     width: width * 0.85,
@@ -419,7 +420,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 30,
     elevation: 5,
-    padding: 24,
+    padding: SPACING.xxl,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -427,8 +428,8 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     alignItems: 'center',
-    gap: 16,
-    paddingHorizontal: 16,
+    gap: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
   },
   title: {
     fontSize: 36,
@@ -438,28 +439,28 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   description: {
-    fontSize: 17,
+    fontSize: FONT_SIZE.xl,
     color: AppColors.secondaryText,
     textAlign: 'center',
     lineHeight: 24,
     maxWidth: 280,
   },
   bottomBar: {
-    paddingHorizontal: 32,
-    paddingBottom: Platform.OS === 'ios' ? 0 : 24,
+    paddingHorizontal: SPACING.xxxl,
+    paddingBottom: Platform.OS === 'ios' ? 0 : SPACING.xxl,
     height: 130,
     justifyContent: 'flex-start',
-    gap: 32,
+    gap: SPACING.xxxl,
   },
   dots: {
     flexDirection: 'row',
-    gap: 8,
+    gap: SPACING.sm,
     justifyContent: 'center',
     height: 8,
   },
   dot: {
     height: 8,
-    borderRadius: 4,
+    borderRadius: BORDER_RADIUS.xs,
   },
   buttonContainer: {
     width: '100%',
@@ -475,54 +476,54 @@ const styles = StyleSheet.create({
 
   trackList: {
     width: '100%',
-    gap: 12,
+    gap: SPACING.md,
   },
   // Visual Track Styles
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: SPACING.lg,
     width: '100%',
     backgroundColor: '#F9FAFB',
-    padding: 12,
-    borderRadius: 20,
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.xxl,
     // marginBottom: 12, // Removed
   },
   iconBox: {
     width: 48,
     height: 48,
-    borderRadius: 14,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: FONT_SIZE.xxl,
   },
   rowText: {
     flex: 1,
   },
   rowTitle: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '700',
     color: '#1F2937',
   },
   rowSubtitle: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     color: '#6B7280',
     marginTop: 2,
   },
   floatBadge: {
     position: 'absolute',
-    bottom: 12,
-    borderRadius: 20,
+    bottom: SPACING.md,
+    borderRadius: BORDER_RADIUS.xxl,
     backgroundColor: '#111827',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: SPACING.sm,
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowRadius: 10,
@@ -530,7 +531,7 @@ const styles = StyleSheet.create({
   floatBadgeText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
   },
 
   // Visual Alerts Styles
@@ -538,17 +539,17 @@ const styles = StyleSheet.create({
     width: '85%',
     aspectRatio: 0.8,
     backgroundColor: '#fff',
-    borderRadius: 24,
+    borderRadius: BORDER_RADIUS.xxxl,
     borderWidth: 1,
     borderColor: '#F3F4F6',
-    padding: 24,
+    padding: SPACING.xxl,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
   },
   alertCardBack: {
     position: 'absolute',
-    top: 32,
+    top: SPACING.xxxl,
     transform: [{ scale: 0.9 }, { translateY: 10 }],
     zIndex: 1,
     backgroundColor: '#F9FAFB',
@@ -557,33 +558,33 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 64,
     height: 64,
-    borderRadius: 32,
+    borderRadius: BORDER_RADIUS.xxxl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: SPACING.xl,
   },
   alertTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.xl,
     fontWeight: '800',
     color: '#1F2937',
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
   },
   alertDesc: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     color: '#6B7280',
-    marginBottom: 24,
+    marginBottom: SPACING.xxl,
     textAlign: 'center',
   },
   alertAmount: {
     backgroundColor: '#FEF2F2',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
   },
   alertAmountText: {
     color: '#EF4444',
     fontWeight: 'bold',
-    fontSize: 18,
+    fontSize: FONT_SIZE.xl,
   },
 
   // Visual Insights Styles
@@ -596,13 +597,13 @@ const styles = StyleSheet.create({
   chartBarGroup: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 16,
-    marginBottom: 32,
+    gap: SPACING.lg,
+    marginBottom: SPACING.xxxl,
     height: 120,
   },
   chartBar: {
     width: 24,
-    borderRadius: 8,
+    borderRadius: BORDER_RADIUS.sm,
   },
   doughnut: {
     width: 140,
@@ -627,7 +628,7 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   doughnutLabel: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     color: '#6B7280',
     fontWeight: '600',
   },
@@ -637,22 +638,22 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     backgroundColor: 'rgba(94, 56, 248, 0.1)',
-    borderRadius: 32,
+    borderRadius: BORDER_RADIUS.xxxl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 32,
+    marginBottom: SPACING.xxxl,
   },
   bulletList: {
-    gap: 16,
+    gap: SPACING.lg,
     alignItems: 'flex-start',
   },
   bulletRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: SPACING.md,
   },
   bulletText: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.xl,
     fontWeight: '700',
     color: '#1F2937',
   },
