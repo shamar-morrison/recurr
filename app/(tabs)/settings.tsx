@@ -80,10 +80,17 @@ function SettingRow({
 }
 
 export default function SettingsScreen() {
-  const { user, isPremium, signOutUser, settings, setReminderDays, setCurrency, setDateFormat } =
-    useAuth();
+  const {
+    user,
+    isPremium,
+    signOutUser,
+    settings,
+    setReminderDays,
+    setCurrency,
+    setDateFormat,
+    setPushNotificationsEnabled,
+  } = useAuth();
 
-  const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(false);
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [dateFormatModalVisible, setDateFormatModalVisible] = useState(false);
@@ -184,8 +191,8 @@ export default function SettingsScreen() {
               iconBg="#FFEDD5"
               label="Push Notifications"
               isSwitch
-              switchValue={pushEnabled}
-              onSwitchChange={setPushEnabled}
+              switchValue={settings.pushNotificationsEnabled}
+              onSwitchChange={setPushNotificationsEnabled}
               showChevron={false}
             />
 

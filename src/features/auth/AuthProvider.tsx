@@ -29,6 +29,7 @@ export type UserSettings = {
   remindDaysBeforeBilling: number;
   currency: string;
   dateFormat: DateFormatId;
+  pushNotificationsEnabled: boolean;
 };
 
 export type PlanStatus = {
@@ -47,6 +48,7 @@ export type AuthState = {
   setReminderDays: (days: number) => Promise<void>;
   setCurrency: (currency: string) => Promise<void>;
   setDateFormat: (format: DateFormatId) => Promise<void>;
+  setPushNotificationsEnabled: (enabled: boolean) => Promise<void>;
   setPremiumMock: (value: boolean) => Promise<void>;
   markOnboardingComplete: () => Promise<void>;
   hasCompletedOnboarding: boolean;
@@ -56,6 +58,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   remindDaysBeforeBilling: 3,
   currency: 'USD',
   dateFormat: DEFAULT_DATE_FORMAT,
+  pushNotificationsEnabled: true,
 };
 
 const ONBOARDING_KEY = 'onboardingComplete:v1';
@@ -174,6 +177,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
               data.settings?.remindDaysBeforeBilling ?? DEFAULT_SETTINGS.remindDaysBeforeBilling,
             currency: data.settings?.currency ?? DEFAULT_SETTINGS.currency,
             dateFormat: validatedDateFormat,
+            pushNotificationsEnabled:
+              data.settings?.pushNotificationsEnabled ?? DEFAULT_SETTINGS.pushNotificationsEnabled,
           });
         }
       } catch (e) {
@@ -358,6 +363,24 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
     [isFirebaseReady, user]
   );
 
+  const setPushNotificationsEnabled = useCallback(
+    async (enabled: boolean) => {
+      try {
+        setSettings((prev) => ({ ...prev, pushNotificationsEnabled: enabled }));
+
+        if (!isFirebaseReady || !user) return;
+
+        const userRef = doc(firestore, 'users', user.uid);
+        await updateDoc(userRef, {
+          'settings.pushNotificationsEnabled': enabled,
+        });
+      } catch (e) {
+        console.log('[auth] setPushNotificationsEnabled update failed', e);
+      }
+    },
+    [isFirebaseReady, user]
+  );
+
   const setPremiumMock = useCallback(
     async (value: boolean) => {
       console.log('[auth] setPremiumMock', { value });
@@ -398,6 +421,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       setReminderDays,
       setCurrency,
       setDateFormat,
+      setPushNotificationsEnabled,
       setPremiumMock,
       markOnboardingComplete,
       hasCompletedOnboarding,
@@ -413,6 +437,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       setReminderDays,
       setCurrency,
       setDateFormat,
+      setPushNotificationsEnabled,
       setPremiumMock,
       markOnboardingComplete,
       hasCompletedOnboarding,
