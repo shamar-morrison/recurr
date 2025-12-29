@@ -1,5 +1,12 @@
 import { router, Stack } from 'expo-router';
-import { BellIcon, BellSlashIcon, CheckIcon, FunnelSimpleIcon, XIcon } from 'phosphor-react-native';
+import {
+  BellIcon,
+  BellSlashIcon,
+  CheckIcon,
+  FlaskIcon,
+  FunnelSimpleIcon,
+  XIcon,
+} from 'phosphor-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -29,6 +36,7 @@ import {
   SUBSCRIPTION_CATEGORIES,
   SubscriptionCategory,
 } from '@/src/features/subscriptions/types';
+import { scheduleTestNotification } from '@/src/utils/devUtils';
 
 type FilterCategory = SubscriptionCategory | 'All';
 
@@ -272,16 +280,23 @@ export default function RemindersScreen() {
 
   const headerRight = useMemo(
     () => (
-      <Pressable
-        onPress={() => setShowFilterModal(true)}
-        style={[styles.filterButton, selectedCategory !== 'All' && styles.filterButtonActive]}
-      >
-        <FunnelSimpleIcon
-          color={selectedCategory !== 'All' ? '#fff' : AppColors.text}
-          size={20}
-          weight={selectedCategory !== 'All' ? 'fill' : 'regular'}
-        />
-      </Pressable>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        {__DEV__ && (
+          <Pressable onPress={scheduleTestNotification} style={styles.filterButton}>
+            <FlaskIcon color={AppColors.text} size={20} weight="regular" />
+          </Pressable>
+        )}
+        <Pressable
+          onPress={() => setShowFilterModal(true)}
+          style={[styles.filterButton, selectedCategory !== 'All' && styles.filterButtonActive]}
+        >
+          <FunnelSimpleIcon
+            color={selectedCategory !== 'All' ? '#fff' : AppColors.text}
+            size={20}
+            weight={selectedCategory !== 'All' ? 'fill' : 'regular'}
+          />
+        </Pressable>
+      </View>
     ),
     [selectedCategory]
   );
