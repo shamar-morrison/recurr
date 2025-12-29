@@ -2,6 +2,7 @@ import { router, Stack } from 'expo-router';
 import { BellIcon, BellSlashIcon, CheckIcon, FunnelIcon, XIcon } from 'phosphor-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   Modal,
@@ -38,6 +39,7 @@ export default function RemindersScreen() {
 
   const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('All');
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [isClearingAll, setIsClearingAll] = useState(false);
 
   // Filter to only subscriptions with reminders set
   const subscriptionsWithReminders = useMemo(() => {
@@ -121,20 +123,47 @@ export default function RemindersScreen() {
           text: 'Clear All',
           style: 'destructive',
           onPress: async () => {
+            setIsClearingAll(true);
             try {
-              for (const sub of subscriptionsWithReminders) {
-                if (sub.notificationId) {
-                  await cancelNotification(sub.notificationId);
-                }
-                await upsertMutation.mutateAsync({
-                  ...sub,
-                  reminderDays: null,
-                  notificationId: null,
-                });
+              const results = await Promise.allSettled(
+                subscriptionsWithReminders.map(async (sub) => {
+                  try {
+                    if (sub.notificationId) {
+                      await cancelNotification(sub.notificationId);
+                    }
+                    await upsertMutation.mutateAsync({
+                      ...sub,
+                      reminderDays: null,
+                      notificationId: null,
+                    });
+                    return sub.id;
+                  } catch (err) {
+                    console.error(
+                      `[reminders] Failed to clear reminder for ${sub.serviceName}:`,
+                      err
+                    );
+                    throw new Error(sub.serviceName); // Throw service name to identify failure
+                  }
+                })
+              );
+
+              const failures = results
+                .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+                .map((r) => r.reason.message);
+
+              if (failures.length > 0) {
+                Alert.alert(
+                  'Partial Success',
+                  `Failed to clear reminders for: ${failures.join(', ')}. Please try again.`
+                );
+              } else {
+                Alert.alert('Success', 'All reminders cleared successfully.');
               }
             } catch (e) {
-              console.error('[reminders] Failed to clear all reminders:', e);
-              Alert.alert('Error', 'Failed to clear reminders. Please try again.');
+              console.error('[reminders] Unexpected error during bulk clear:', e);
+              Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+            } finally {
+              setIsClearingAll(false);
             }
           },
         },
@@ -226,12 +255,20 @@ export default function RemindersScreen() {
           {subscriptionsWithReminders.length !== 1 ? 's' : ''} set
           {selectedCategory !== 'All' ? ` (${selectedCategory})` : ''}
         </Text>
-        <Pressable onPress={handleClearAll} style={styles.clearAllButton}>
-          <Text style={styles.clearAllText}>Clear All</Text>
+        <Pressable
+          onPress={handleClearAll}
+          style={[styles.clearAllButton, isClearingAll && { opacity: 0.7 }]}
+          disabled={isClearingAll}
+        >
+          {isClearingAll ? (
+            <ActivityIndicator size="small" color={AppColors.negative} />
+          ) : (
+            <Text style={styles.clearAllText}>Clear All</Text>
+          )}
         </Pressable>
       </View>
     );
-  }, [subscriptionsWithReminders.length, selectedCategory, handleClearAll]);
+  }, [subscriptionsWithReminders.length, selectedCategory, handleClearAll, isClearingAll]);
 
   const headerRight = useMemo(
     () => (
