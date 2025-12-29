@@ -17,6 +17,7 @@ import {
   DATE_FORMAT_OPTIONS,
   DateFormatId,
   DEFAULT_DATE_FORMAT,
+  isValidDateFormatId,
 } from '@/src/constants/dateFormats';
 import { firestore, getFirebaseAuth, isFirebaseConfigured } from '@/src/lib/firebase';
 import { getFirestoreErrorMessage } from '@/src/lib/firestore';
@@ -162,11 +163,17 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
           }
 
           setIsPremium(Boolean(data.isPremium));
+          // Validate dateFormat from Firestore - fall back to default if invalid or missing
+          const rawDateFormat = data.settings?.dateFormat;
+          const validatedDateFormat = isValidDateFormatId(rawDateFormat)
+            ? rawDateFormat
+            : DEFAULT_SETTINGS.dateFormat;
+
           setSettings({
             remindDaysBeforeBilling:
               data.settings?.remindDaysBeforeBilling ?? DEFAULT_SETTINGS.remindDaysBeforeBilling,
             currency: data.settings?.currency ?? DEFAULT_SETTINGS.currency,
-            dateFormat: (data.settings?.dateFormat as DateFormatId) ?? DEFAULT_SETTINGS.dateFormat,
+            dateFormat: validatedDateFormat,
           });
         }
       } catch (e) {

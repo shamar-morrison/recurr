@@ -32,6 +32,24 @@ export const DATE_FORMAT_OPTIONS: DateFormatOption[] = [
   { id: 'DD.MM.YYYY', label: 'DD.MM.YYYY', example: '31.12.2024' },
 ];
 
+/**
+ * Set of all valid DateFormatId values for O(1) validation lookup.
+ * Used to validate values from external sources like Firestore.
+ */
+export const VALID_DATE_FORMAT_IDS: ReadonlySet<string> = new Set(
+  DATE_FORMAT_OPTIONS.map((o) => o.id)
+);
+
+/**
+ * Type guard to check if a value is a valid DateFormatId.
+ * Use this to safely validate values from external sources before casting.
+ * @param value - The value to check
+ * @returns True if value is a valid DateFormatId
+ */
+export function isValidDateFormatId(value: unknown): value is DateFormatId {
+  return typeof value === 'string' && VALID_DATE_FORMAT_IDS.has(value);
+}
+
 /** Default date format */
 export const DEFAULT_DATE_FORMAT: DateFormatId = 'MM/DD/YYYY';
 
@@ -76,8 +94,11 @@ export function formatDate(date: Date, formatId: DateFormatId = DEFAULT_DATE_FOR
       return `${year}-${month}-${day}`;
     case 'DD.MM.YYYY':
       return `${day}.${month}.${year}`;
-    default:
-      return `${month}/${day}/${year}`;
+    default: {
+      // Exhaustiveness check: ensures all DateFormatId cases are handled
+      const _exhaustiveCheck: never = formatId;
+      return _exhaustiveCheck;
+    }
   }
 }
 
