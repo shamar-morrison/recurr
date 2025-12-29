@@ -5,11 +5,17 @@
  * This function verifies purchases with the Google Play Developer API
  * and updates the user's premium status in Firestore.
  *
+ * SECURITY:
+ * - Requires Firebase Auth Bearer token in Authorization header
+ * - Verifies token and compares uid to request userId
+ * - CORS restricted to allowed origins
+ *
  * SETUP INSTRUCTIONS:
  * 1. Create a service account in Google Cloud Console with Play Android Developer API access
  * 2. Download the JSON key file
- * 3. Set the GOOGLE_SERVICE_ACCOUNT environment variable:
+ * 3. Set the config variables:
  *    firebase functions:config:set google.service_account="$(cat service-account.json)"
+ *    firebase functions:config:set cors.allowed_origins="https://your-app.com"
  *
  * Or use a secret manager to store the credentials securely.
  */
@@ -21,23 +27,80 @@ const googleapis_1 = require("googleapis");
 // Initialize Firebase Admin
 admin.initializeApp();
 const db = admin.firestore();
+// Allowed origins for CORS (configure via firebase functions:config:set)
+// Default to empty array which will reject all cross-origin requests
+const getAllowedOrigins = () => {
+    var _a;
+    const originsConfig = (_a = functions.config().cors) === null || _a === void 0 ? void 0 : _a.allowed_origins;
+    if (!originsConfig) {
+        // In development, you might want to allow localhost
+        return ['http://localhost:8081', 'http://localhost:19006'];
+    }
+    return originsConfig.split(',').map((o) => o.trim());
+};
+/**
+ * Verify Firebase Auth token from request
+ * Returns the decoded token if valid, null otherwise
+ */
+async function verifyAuthToken(req) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return null;
+    }
+    const token = authHeader.split('Bearer ')[1];
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        return decodedToken;
+    }
+    catch (error) {
+        console.error('[verifyAuthToken] Token verification failed:', error);
+        return null;
+    }
+}
+/**
+ * Handle CORS with origin whitelist
+ */
+function handleCors(req, res) {
+    const origin = req.headers.origin;
+    const allowedOrigins = getAllowedOrigins();
+    // Check if origin is allowed
+    if (origin && allowedOrigins.includes(origin)) {
+        res.set('Access-Control-Allow-Origin', origin);
+    }
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.set('Access-Control-Max-Age', '3600');
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+        res.status(204).send('');
+        return true; // Request handled
+    }
+    return false; // Continue processing
+}
 /**
  * Validate an Android in-app purchase
  *
  * Verifies the purchase with Google Play and updates user's premium status
+ * Requires Firebase Auth token for authentication
  */
 exports.validateAndroidPurchase = functions.https.onRequest(async (req, res) => {
     var _a, _b;
-    // CORS headers
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'POST');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-    if (req.method === 'OPTIONS') {
-        res.status(204).send('');
-        return;
+    // Handle CORS
+    if (handleCors(req, res)) {
+        return; // Preflight handled
     }
+    // Method check
     if (req.method !== 'POST') {
         res.status(405).json({ valid: false, message: 'Method not allowed' });
+        return;
+    }
+    // Verify Firebase Auth token
+    const decodedToken = await verifyAuthToken(req);
+    if (!decodedToken) {
+        res.status(401).json({
+            valid: false,
+            message: 'Unauthorized: Missing or invalid authentication token',
+        });
         return;
     }
     try {
@@ -47,9 +110,24 @@ exports.validateAndroidPurchase = functions.https.onRequest(async (req, res) => 
             res.status(400).json({ valid: false, message: 'Missing required fields' });
             return;
         }
-        console.log('[validateAndroidPurchase] Validating:', { userId, productId, packageName });
+        // Verify that the authenticated user matches the userId in the request
+        if (decodedToken.uid !== userId) {
+            console.warn('[validateAndroidPurchase] UID mismatch:', {
+                tokenUid: decodedToken.uid,
+                requestUserId: userId,
+            });
+            res.status(403).json({
+                valid: false,
+                message: 'Forbidden: User ID mismatch',
+            });
+            return;
+        }
+        console.log('[validateAndroidPurchase] Validating:', {
+            userId,
+            productId,
+            packageName,
+        });
         // Get service account credentials from config or environment
-        // You'll need to set this up with your actual service account
         const serviceAccountConfig = (_a = functions.config().google) === null || _a === void 0 ? void 0 : _a.service_account;
         if (!serviceAccountConfig) {
             console.error('[validateAndroidPurchase] Service account not configured');

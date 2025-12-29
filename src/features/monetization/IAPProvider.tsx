@@ -31,6 +31,7 @@ import {
   restorePurchases,
   validatePurchaseOnServer,
 } from '@/src/features/monetization/iapService';
+import { getFirebaseAuth } from '@/src/lib/firebase';
 
 export type IAPState = {
   isReady: boolean;
@@ -80,6 +81,40 @@ export const [IAPProvider, useIAP] = createContextHook<IAPState>(() => {
     };
   }, []);
 
+  // Retry acknowledgePurchase with exponential backoff
+  const acknowledgeWithRetry = useCallback(
+    async (
+      purchase: Purchase,
+      maxAttempts: number = 3,
+      baseDelayMs: number = 500
+    ): Promise<{ success: boolean; error?: Error }> => {
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          await acknowledgePurchase(purchase);
+          console.log(`[IAPProvider] Acknowledgement succeeded on attempt ${attempt}`);
+          return { success: true };
+        } catch (error) {
+          const delay = baseDelayMs * Math.pow(2, attempt - 1); // 500ms, 1000ms, 2000ms
+          console.error(`[IAPProvider] Acknowledgement attempt ${attempt}/${maxAttempts} failed`, {
+            productId: purchase.productId,
+            purchaseToken: purchase.purchaseToken?.slice(0, 20) + '...',
+            transactionId: purchase.transactionId,
+            error: (error as Error).message,
+          });
+
+          if (attempt < maxAttempts) {
+            console.log(`[IAPProvider] Retrying acknowledgement in ${delay}ms...`);
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          } else {
+            return { success: false, error: error as Error };
+          }
+        }
+      }
+      return { success: false, error: new Error('Max retry attempts reached') };
+    },
+    []
+  );
+
   // Handle successful purchases
   const handlePurchaseSuccess = useCallback(
     async (purchase: Purchase) => {
@@ -91,25 +126,61 @@ export const [IAPProvider, useIAP] = createContextHook<IAPState>(() => {
       }
 
       try {
+        // Get Firebase Auth token
+        const auth = getFirebaseAuth();
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+          Alert.alert('Authentication Error', 'Please sign in again.');
+          return;
+        }
+        const authToken = await currentUser.getIdToken();
+
         // Validate on server
-        const validation = await validatePurchaseOnServer(user.uid, purchase);
+        const validation = await validatePurchaseOnServer(user.uid, purchase, authToken);
 
         if (validation.valid) {
-          // Acknowledge the purchase
-          await acknowledgePurchase(purchase);
-          // Navigate to success screen
-          router.replace('/payment-success');
+          // Acknowledge the purchase with retry strategy
+          const ackResult = await acknowledgeWithRetry(purchase);
+
+          if (ackResult.success) {
+            // Navigate to success screen
+            router.replace('/payment-success');
+          } else {
+            // Log detailed failure for debugging/support
+            console.error('[IAPProvider] Acknowledgement failed after all retries', {
+              userId: user.uid,
+              productId: purchase.productId,
+              purchaseToken: purchase.purchaseToken,
+              transactionId: purchase.transactionId,
+              transactionDate: purchase.transactionDate,
+              error: ackResult.error?.message,
+            });
+
+            // Purchase is validated, premium is granted on server
+            // Navigate to success but inform user about pending acknowledgement
+            Alert.alert(
+              'Purchase Complete',
+              'Your premium access is active! There was a minor issue finalizing the transaction. ' +
+                'If you experience any problems, please contact support with your purchase details.',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => router.replace('/payment-success'),
+                },
+              ]
+            );
+          }
         } else {
           Alert.alert('Purchase Error', validation.message || 'Purchase validation failed.');
         }
       } catch (error) {
         console.error('[IAPProvider] Purchase processing error:', error);
-        Alert.alert('Purchase Error', 'Failed to process purchase. Please contact support.');
+        Alert.alert('Purchase Error', (error as Error).message || 'Failed to process purchase.');
       } finally {
         setIsLoading(false);
       }
     },
-    [user]
+    [user, acknowledgeWithRetry]
   );
 
   // Listen for purchase updates
@@ -201,12 +272,67 @@ export const [IAPProvider, useIAP] = createContextHook<IAPState>(() => {
         return false;
       }
 
-      // Validate the most recent purchase
-      const latestPurchase = purchases[0];
-      const validation = await validatePurchaseOnServer(user.uid, latestPurchase);
+      // Get Firebase Auth token
+      const auth = getFirebaseAuth();
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        Alert.alert('Authentication Error', 'Please sign in again.');
+        setIsLoading(false);
+        return false;
+      }
+      const authToken = await currentUser.getIdToken();
+
+      // Sort purchases by transactionDate (newest first) to get the most recent
+      // Handle missing, string, or number date formats by normalizing to timestamp
+      const parseTransactionDate = (date: string | number | undefined): number => {
+        if (date === undefined || date === null) return 0;
+        if (typeof date === 'number') return date;
+        if (typeof date === 'string') {
+          const parsed = parseInt(date, 10);
+          return isNaN(parsed) ? new Date(date).getTime() || 0 : parsed;
+        }
+        return 0;
+      };
+
+      const sortedPurchases = [...purchases].sort((a, b) => {
+        const dateA = parseTransactionDate(a.transactionDate);
+        const dateB = parseTransactionDate(b.transactionDate);
+        return dateB - dateA; // newest first
+      });
+
+      const latestPurchase = sortedPurchases[0];
+
+      // Guard against empty array after processing
+      if (!latestPurchase) {
+        Alert.alert('No Valid Purchases', 'Could not find a valid purchase to restore.');
+        setIsLoading(false);
+        return false;
+      }
+
+      const validation = await validatePurchaseOnServer(user.uid, latestPurchase, authToken);
 
       if (validation.valid) {
-        await acknowledgePurchase(latestPurchase);
+        // Acknowledge with retry strategy
+        const ackResult = await acknowledgeWithRetry(latestPurchase);
+
+        if (!ackResult.success) {
+          // Log detailed failure for debugging/support
+          console.error('[IAPProvider] Restore acknowledgement failed after all retries', {
+            userId: user.uid,
+            productId: latestPurchase.productId,
+            purchaseToken: latestPurchase.purchaseToken,
+            transactionId: latestPurchase.transactionId,
+            error: ackResult.error?.message,
+          });
+
+          // Still return success since validation passed and premium is granted
+          Alert.alert(
+            'Restore Complete',
+            'Your premium access has been restored! There was a minor issue finalizing. ' +
+              'If you experience any problems, please contact support.'
+          );
+        }
+
         setIsLoading(false);
         return true;
       } else {
@@ -220,7 +346,7 @@ export const [IAPProvider, useIAP] = createContextHook<IAPState>(() => {
       setIsLoading(false);
       return false;
     }
-  }, [user]);
+  }, [user, acknowledgeWithRetry]);
 
   return useMemo(
     () => ({
