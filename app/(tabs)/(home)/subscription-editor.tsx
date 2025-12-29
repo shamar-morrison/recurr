@@ -328,19 +328,32 @@ export default function SubscriptionEditorScreen() {
 
           // Step 3: Persist the notificationId back to the subscription if we got one
           if (notificationId) {
-            await upsertMutation.mutateAsync({
-              ...savedSubscription,
-              notificationId,
-            });
+            try {
+              await upsertMutation.mutateAsync({
+                ...savedSubscription,
+                notificationId,
+              });
+            } catch (notificationError) {
+              console.log(
+                '[subscription-editor] failed to persist notification ID, cleaning up',
+                notificationError
+              );
+              // Clean up the notification to prevent orphans since persistence failed
+              await cancelNotification(notificationId);
+            }
           }
         }
       } else if (existing?.notificationId) {
         // Reminder was removed, cancel existing notification and clear notificationId
         await cancelNotification(existing.notificationId);
-        await upsertMutation.mutateAsync({
-          ...savedSubscription,
-          notificationId: null,
-        });
+        try {
+          await upsertMutation.mutateAsync({
+            ...savedSubscription,
+            notificationId: null,
+          });
+        } catch (notificationError) {
+          console.log('[subscription-editor] failed to clear notification ID', notificationError);
+        }
       }
 
       router.back();
