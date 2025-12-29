@@ -52,8 +52,13 @@ export async function hasNotificationPermissions(): Promise<boolean> {
 
 /**
  * Calculate the reminder date based on the next billing date and reminder days
+ * @param reminderHour Hour of day for the reminder (0-23), defaults to 12 (noon)
  */
-function calculateReminderDate(subscription: Subscription, reminderDays: number): Date | null {
+function calculateReminderDate(
+  subscription: Subscription,
+  reminderDays: number,
+  reminderHour: number = 12
+): Date | null {
   const now = new Date();
 
   let billingDate: Date;
@@ -70,8 +75,8 @@ function calculateReminderDate(subscription: Subscription, reminderDays: number)
   const reminderDate = new Date(billingDate);
   reminderDate.setDate(reminderDate.getDate() - reminderDays);
 
-  // Set reminder time to 9:00 AM
-  reminderDate.setHours(9, 0, 0, 0);
+  // Set reminder time to the specified hour
+  reminderDate.setHours(reminderHour, 0, 0, 0);
 
   // Don't schedule if the reminder date is in the past
   if (reminderDate <= now) {
@@ -81,7 +86,7 @@ function calculateReminderDate(subscription: Subscription, reminderDays: number)
       nextMonth.setMonth(nextMonth.getMonth() + (subscription.billingCycle === 'Yearly' ? 12 : 1));
       const nextReminderDate = new Date(nextMonth);
       nextReminderDate.setDate(nextReminderDate.getDate() - reminderDays);
-      nextReminderDate.setHours(9, 0, 0, 0);
+      nextReminderDate.setHours(reminderHour, 0, 0, 0);
 
       if (nextReminderDate > now) {
         return nextReminderDate;
@@ -114,11 +119,13 @@ function formatNotificationDate(date: Date): string {
 
 /**
  * Schedule a reminder notification for a subscription
+ * @param reminderHour Hour of day for the reminder (0-23), defaults to 12 (noon)
  * @returns The notification identifier, or null if scheduling failed
  */
 export async function scheduleSubscriptionReminder(
   subscription: Subscription,
-  reminderDays: number
+  reminderDays: number,
+  reminderHour: number = 12
 ): Promise<string | null> {
   try {
     // Check permissions first
@@ -129,7 +136,7 @@ export async function scheduleSubscriptionReminder(
     }
 
     // Calculate when to send the reminder
-    const reminderDate = calculateReminderDate(subscription, reminderDays);
+    const reminderDate = calculateReminderDate(subscription, reminderDays, reminderHour);
     if (!reminderDate) {
       console.log('[notifications] Reminder date is in the past, skipping');
       return null;
@@ -271,7 +278,11 @@ export async function rescheduleAllReminders(
     // Skip archived subscriptions and those with past end dates
     const hasEnded = sub.endDate && sub.endDate < now;
     if (sub.reminderDays && sub.reminderDays > 0 && !sub.isArchived && !hasEnded) {
-      const notificationId = await scheduleSubscriptionReminder(sub, sub.reminderDays);
+      const notificationId = await scheduleSubscriptionReminder(
+        sub,
+        sub.reminderDays,
+        sub.reminderHour ?? 12
+      );
       if (notificationId) {
         notificationMap.set(sub.id, notificationId);
       }

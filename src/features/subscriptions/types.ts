@@ -39,6 +39,7 @@ export type Subscription = {
   notes?: string;
   isArchived?: boolean;
   reminderDays?: number | null; // Days before billing to remind (null = no reminder)
+  reminderHour?: number | null; // Hour of day for reminder (0-23, null = default noon)
   notificationId?: string | null; // Scheduled notification identifier
   createdAt: number;
   updatedAt: number;
@@ -55,6 +56,16 @@ export const REMINDER_OPTIONS = [
 ] as const;
 
 export type ReminderDays = (typeof REMINDER_OPTIONS)[number]['value'];
+
+// Generate 24-hour time options (0-23)
+export const REMINDER_TIME_OPTIONS: readonly { value: number }[] = Array.from(
+  { length: 24 },
+  (_, hour) => ({
+    value: hour,
+  })
+);
+
+export type ReminderHour = number | null;
 
 export type SubscriptionInput = Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'> & {
   id?: string;
