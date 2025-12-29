@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text } from 'react-native';
+import { FlatList, StyleSheet } from 'react-native';
 
 import { AppColors } from '@/constants/colors';
 import { BaseModal } from '@/src/components/ui/BaseModal';
@@ -55,7 +55,6 @@ export function CurrencySelectorModal({
           sublabel={item.name}
           isSelected={isSelected}
           onPress={() => handleSelect(item)}
-          leftElement={<Text style={styles.currencySymbol}>{item.symbol}</Text>}
         />
       );
     },
