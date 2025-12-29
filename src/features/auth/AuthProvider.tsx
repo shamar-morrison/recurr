@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import { GoogleAuth } from 'react-native-google-auth';
 
+import { CURRENCIES } from '@/src/constants/currencies';
 import { firestore, getFirebaseAuth, isFirebaseConfigured } from '@/src/lib/firebase';
 import { getFirestoreErrorMessage } from '@/src/lib/firestore';
 
@@ -288,11 +289,20 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
 
   const setCurrency = useCallback(
     async (currency: string) => {
-      setSettings((prev) => ({ ...prev, currency }));
-
-      if (!isFirebaseReady || !user) return;
+      // Validate currency is a valid ISO-4217 code from our allowed list
+      const isValidCurrency = CURRENCIES.some((c) => c.code === currency);
+      if (!isValidCurrency) {
+        console.warn(
+          `[auth] setCurrency: invalid currency code "${currency}". Must be a valid ISO-4217 code.`
+        );
+        return;
+      }
 
       try {
+        setSettings((prev) => ({ ...prev, currency }));
+
+        if (!isFirebaseReady || !user) return;
+
         const userRef = doc(firestore, 'users', user.uid);
         await updateDoc(userRef, {
           'settings.currency': currency,

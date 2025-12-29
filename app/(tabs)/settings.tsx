@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
@@ -100,6 +100,7 @@ export default function SettingsScreen() {
       router.replace('/auth');
     } catch (error) {
       console.error('Sign out failed:', error);
+      Alert.alert('Sign Out Failed', 'Unable to sign out. Please try again.', [{ text: 'OK' }]);
       // User stays on settings screen if sign-out fails
     }
   };
