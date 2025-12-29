@@ -1,21 +1,32 @@
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
+import { DateFormatId, formatDate as formatDateBase } from '@/src/constants/dateFormats';
 import { Subscription } from '@/src/features/subscriptions/types';
 
 /**
- * Formats a timestamp to a human-readable date string using the device's locale
+ * Formats a timestamp to a date string using the user's preferred format.
+ * Includes time for timestamps that need it (createdAt, updatedAt).
  */
-function formatDate(timestamp: number | undefined): string {
+function formatTimestamp(
+  timestamp: number | undefined,
+  dateFormat: DateFormatId,
+  includeTime: boolean = false
+): string {
   if (!timestamp) return '';
-  // Uses device's default locale for date formatting
-  return new Date(timestamp).toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  const date = new Date(timestamp);
+  const formattedDate = formatDateBase(date, dateFormat);
+
+  if (!includeTime) {
+    return formattedDate;
+  }
+
+  // Append time in user's locale format
+  const time = date.toLocaleTimeString(undefined, {
     hour: 'numeric',
     minute: '2-digit',
   });
+  return `${formattedDate} ${time}`;
 }
 
 /**
@@ -55,7 +66,7 @@ const CSV_HEADERS = [
 /**
  * Generates CSV content from subscriptions
  */
-export function generateCSV(subscriptions: Subscription[]): string {
+export function generateCSV(subscriptions: Subscription[], dateFormat: DateFormatId): string {
   const rows: string[] = [];
 
   // Header row
@@ -71,15 +82,15 @@ export function generateCSV(subscriptions: Subscription[]): string {
       escapeCSV(sub.currency),
       escapeCSV(sub.billingCycle),
       escapeCSV(sub.billingDay),
-      escapeCSV(formatDate(sub.startDate)),
-      escapeCSV(formatDate(sub.endDate)),
+      escapeCSV(formatTimestamp(sub.startDate, dateFormat)),
+      escapeCSV(formatTimestamp(sub.endDate, dateFormat)),
       escapeCSV(sub.paymentMethod ?? ''),
       escapeCSV(sub.notes ?? ''),
       escapeCSV(sub.isArchived ? 'Yes' : 'No'),
       escapeCSV(sub.reminderDays ?? ''),
       escapeCSV(sub.reminderHour ?? ''),
-      escapeCSV(formatDate(sub.createdAt)),
-      escapeCSV(formatDate(sub.updatedAt)),
+      escapeCSV(formatTimestamp(sub.createdAt, dateFormat, true)),
+      escapeCSV(formatTimestamp(sub.updatedAt, dateFormat, true)),
     ];
     rows.push(row.join(','));
   }
@@ -138,7 +149,8 @@ export type ExportFormat = 'csv' | 'markdown';
 export async function exportData(
   subscriptions: Subscription[],
   format: ExportFormat,
-  includeArchived: boolean
+  includeArchived: boolean,
+  dateFormat: DateFormatId
 ): Promise<void> {
   // Filter subscriptions based on archive preference
   const filteredSubs = includeArchived
@@ -146,7 +158,8 @@ export async function exportData(
     : subscriptions.filter((sub) => !sub.isArchived);
 
   // Generate content based on format
-  const content = format === 'csv' ? generateCSV(filteredSubs) : generateMarkdown(filteredSubs);
+  const content =
+    format === 'csv' ? generateCSV(filteredSubs, dateFormat) : generateMarkdown(filteredSubs);
 
   // Determine file extension and name
   const extension = format === 'csv' ? 'csv' : 'md';

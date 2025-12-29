@@ -270,7 +270,7 @@ export default function SettingsScreen() {
     }
 
     try {
-      await exportData(subscriptions, format, includeArchived);
+      await exportData(subscriptions, format, includeArchived, settings.dateFormat);
     } catch (error) {
       console.error('Export failed:', error);
       Alert.alert('Export Failed', 'Unable to export your data. Please try again.');
