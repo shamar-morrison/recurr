@@ -230,9 +230,8 @@ export default function SubscriptionEditorScreen() {
   }, [reminderDays]);
 
   const reminderTimeLabel = useMemo(() => {
-    if (reminderHour === null) return '12:00 PM';
     const date = new Date();
-    date.setHours(reminderHour, 0, 0, 0);
+    date.setHours(reminderHour ?? 12, 0, 0, 0);
     return date.toLocaleTimeString(undefined, {
       hour: 'numeric',
       minute: '2-digit',
@@ -325,7 +324,7 @@ export default function SubscriptionEditorScreen() {
       let notificationIdToSave: string | null = null;
 
       // If reminder is enabled, try to schedule notification
-      if (reminderDays && reminderDays > 0) {
+      if (reminderDays !== null && reminderDays > 0) {
         const hasPermission = await requestNotificationPermissions();
         if (hasPermission) {
           // For existing subscriptions, we can schedule with the existing data
@@ -373,7 +372,7 @@ export default function SubscriptionEditorScreen() {
       const savedSubscription = await upsertMutation.mutateAsync(payloadWithNotification);
 
       // For NEW subscriptions with reminders, we need to schedule after save to get the ID
-      if (!existing && reminderDays && reminderDays > 0) {
+      if (!existing && reminderDays !== null && reminderDays > 0) {
         const hasPermission = await requestNotificationPermissions();
         if (hasPermission) {
           const notificationId = await scheduleSubscriptionReminder(
