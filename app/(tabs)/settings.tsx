@@ -5,10 +5,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
 import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
+import { DateFormatModal } from '@/src/components/DateFormatModal';
 import { getCurrencySymbol } from '@/src/constants/currencies';
+import { DateFormatId, getDateFormatLabel } from '@/src/constants/dateFormats';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   BellIcon,
+  CalendarIcon,
   CaretRightIcon,
   CoinsIcon,
   CrownIcon,
@@ -77,11 +80,13 @@ function SettingRow({
 }
 
 export default function SettingsScreen() {
-  const { user, isPremium, signOutUser, settings, setReminderDays, setCurrency } = useAuth();
+  const { user, isPremium, signOutUser, settings, setReminderDays, setCurrency, setDateFormat } =
+    useAuth();
 
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(false);
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
+  const [dateFormatModalVisible, setDateFormatModalVisible] = useState(false);
 
   const billingRemindersEnabled = settings.remindDaysBeforeBilling > 0;
   const toggleBillingReminders = (val: boolean) => {
@@ -91,6 +96,11 @@ export default function SettingsScreen() {
   const handleCurrencySelect = (currencyCode: string) => {
     setCurrency(currencyCode);
     setCurrencyModalVisible(false);
+  };
+
+  const handleDateFormatSelect = (format: DateFormatId) => {
+    setDateFormat(format);
+    setDateFormatModalVisible(false);
   };
 
   const handleSignOut = () => {
@@ -219,6 +229,17 @@ export default function SettingsScreen() {
               value={`${settings.currency} (${getCurrencySymbol(settings.currency)})`}
               onPress={() => setCurrencyModalVisible(true)}
             />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<CalendarIcon />}
+              iconColor="#6366F1"
+              iconBg="#E0E7FF"
+              label="Date Format"
+              value={getDateFormatLabel(settings.dateFormat)}
+              onPress={() => setDateFormatModalVisible(true)}
+            />
           </View>
         </View>
 
@@ -238,6 +259,13 @@ export default function SettingsScreen() {
         selectedCurrency={settings.currency}
         onSelect={handleCurrencySelect}
         onClose={() => setCurrencyModalVisible(false)}
+      />
+
+      <DateFormatModal
+        visible={dateFormatModalVisible}
+        selectedFormat={settings.dateFormat}
+        onSelect={handleDateFormatSelect}
+        onClose={() => setDateFormatModalVisible(false)}
       />
     </SafeAreaView>
   );

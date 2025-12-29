@@ -9,6 +9,7 @@ import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
+import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
 import { getServiceByName, getServiceDomain } from '@/src/constants/services';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -116,13 +117,12 @@ export default function SubscriptionEditorScreen() {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
-  const formatDate = useCallback((date: Date) => {
-    return date.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  }, []);
+  const formatDate = useCallback(
+    (date: Date) => {
+      return formatDateUtil(date, settings.dateFormat);
+    },
+    [settings.dateFormat]
+  );
 
   const [showServiceModal, setShowServiceModal] = useState(false);
 
