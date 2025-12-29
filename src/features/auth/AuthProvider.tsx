@@ -37,6 +37,7 @@ export type AuthState = {
   signOutUser: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   setReminderDays: (days: number) => Promise<void>;
+  setCurrency: (currency: string) => Promise<void>;
   setPremiumMock: (value: boolean) => Promise<void>;
   markOnboardingComplete: () => Promise<void>;
   hasCompletedOnboarding: boolean;
@@ -285,6 +286,24 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
     [isFirebaseReady, user]
   );
 
+  const setCurrency = useCallback(
+    async (currency: string) => {
+      setSettings((prev) => ({ ...prev, currency }));
+
+      if (!isFirebaseReady || !user) return;
+
+      try {
+        const userRef = doc(firestore, 'users', user.uid);
+        await updateDoc(userRef, {
+          'settings.currency': currency,
+        });
+      } catch (e) {
+        console.log('[auth] setCurrency update failed', e);
+      }
+    },
+    [isFirebaseReady, user]
+  );
+
   const setPremiumMock = useCallback(
     async (value: boolean) => {
       console.log('[auth] setPremiumMock', { value });
@@ -323,6 +342,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       signOutUser,
       signInWithGoogle,
       setReminderDays,
+      setCurrency,
       setPremiumMock,
       markOnboardingComplete,
       hasCompletedOnboarding,
@@ -336,6 +356,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       signOutUser,
       signInWithGoogle,
       setReminderDays,
+      setCurrency,
       setPremiumMock,
       markOnboardingComplete,
       hasCompletedOnboarding,

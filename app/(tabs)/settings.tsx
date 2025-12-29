@@ -4,6 +4,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
+import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { getCurrencySymbol } from '@/src/constants/currencies';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -77,14 +78,20 @@ function SettingRow({
 }
 
 export default function SettingsScreen() {
-  const { user, isPremium, signOutUser, settings, setReminderDays } = useAuth();
+  const { user, isPremium, signOutUser, settings, setReminderDays, setCurrency } = useAuth();
 
   const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(false);
+  const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
 
   const billingRemindersEnabled = settings.remindDaysBeforeBilling > 0;
   const toggleBillingReminders = (val: boolean) => {
     setReminderDays(val ? 1 : 0);
+  };
+
+  const handleCurrencySelect = (currencyCode: string) => {
+    setCurrency(currencyCode);
+    setCurrencyModalVisible(false);
   };
 
   const handleSignOut = async () => {
@@ -202,6 +209,7 @@ export default function SettingsScreen() {
               iconBg="#D1FAE5"
               label="Default Currency"
               value={`${settings.currency} (${getCurrencySymbol(settings.currency)})`}
+              onPress={() => setCurrencyModalVisible(true)}
             />
           </View>
         </View>
@@ -216,6 +224,13 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
       </ScrollView>
+
+      <CurrencySelectorModal
+        visible={currencyModalVisible}
+        selectedCurrency={settings.currency}
+        onSelect={handleCurrencySelect}
+        onClose={() => setCurrencyModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

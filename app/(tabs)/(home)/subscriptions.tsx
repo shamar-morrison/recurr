@@ -25,7 +25,6 @@ import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
 import {
   CirclesThreePlusIcon,
-  CloudSnowIcon,
   CrownIcon,
   PlusCircleIcon,
   PlusIcon,
@@ -160,7 +159,6 @@ export default function SubscriptionsHomeScreen() {
               <Text style={styles.heroAmount}>
                 {formatMoney(totalMonthlySpend, settings.currency)}
               </Text>
-              <Text style={styles.heroAmountSuffix}>/ month</Text>
             </View>
           </View>
 
@@ -421,11 +419,6 @@ const styles = StyleSheet.create({
     fontSize: 42,
     fontWeight: '800',
     letterSpacing: -1.5,
-  },
-  heroAmountSuffix: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 18,
-    fontWeight: '600',
   },
   activeSubsPill: {
     flexDirection: 'row',
