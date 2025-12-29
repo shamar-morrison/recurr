@@ -80,10 +80,17 @@ function SettingRow({
 }
 
 export default function SettingsScreen() {
-  const { user, isPremium, signOutUser, settings, setReminderDays, setCurrency, setDateFormat } =
-    useAuth();
+  const {
+    user,
+    isPremium,
+    signOutUser,
+    settings,
+    setReminderDays,
+    setCurrency,
+    setDateFormat,
+    setPushNotificationsEnabled,
+  } = useAuth();
 
-  const [pushEnabled, setPushEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(false);
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [dateFormatModalVisible, setDateFormatModalVisible] = useState(false);
@@ -184,8 +191,8 @@ export default function SettingsScreen() {
               iconBg="#FFEDD5"
               label="Push Notifications"
               isSwitch
-              switchValue={pushEnabled}
-              onSwitchChange={setPushEnabled}
+              switchValue={settings.pushNotificationsEnabled}
+              onSwitchChange={setPushNotificationsEnabled}
               showChevron={false}
             />
 
@@ -209,10 +216,7 @@ export default function SettingsScreen() {
               iconColor="#A855F7"
               iconBg="#F3E8FF"
               label="Billing Reminders"
-              isSwitch
-              switchValue={billingRemindersEnabled}
-              onSwitchChange={toggleBillingReminders}
-              showChevron={false}
+              onPress={() => router.push('/reminders')}
             />
           </View>
         </View>

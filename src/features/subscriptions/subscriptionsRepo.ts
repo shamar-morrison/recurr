@@ -55,6 +55,8 @@ function normalizeSubscription(raw: unknown): Subscription | null {
         ? (r.paymentMethod as Subscription['paymentMethod'])
         : undefined,
     isArchived: Boolean(r.isArchived),
+    reminderDays: typeof r.reminderDays === 'number' ? r.reminderDays : null,
+    notificationId: typeof r.notificationId === 'string' ? r.notificationId : null,
     createdAt: typeof r.createdAt === 'number' ? r.createdAt : nowMillis(),
     updatedAt: typeof r.updatedAt === 'number' ? r.updatedAt : nowMillis(),
   };
@@ -129,6 +131,8 @@ export async function listSubscriptions(userId: string): Promise<Subscription[]>
             ? (data.paymentMethod as Subscription['paymentMethod'])
             : undefined,
         isArchived: Boolean(data.isArchived),
+        reminderDays: typeof data.reminderDays === 'number' ? data.reminderDays : null,
+        notificationId: typeof data.notificationId === 'string' ? data.notificationId : null,
         createdAt: timestampToMillis(data.createdAt),
         updatedAt: timestampToMillis(data.updatedAt),
       };
@@ -166,6 +170,8 @@ export async function upsertSubscription(
     endDate: input.endDate,
     paymentMethod: input.paymentMethod,
     isArchived: Boolean(input.isArchived),
+    reminderDays: input.reminderDays ?? null,
+    notificationId: input.notificationId ?? null,
     createdAt: (input as Partial<Subscription>).createdAt ?? now,
     updatedAt: now,
   };
@@ -197,6 +203,8 @@ export async function upsertSubscription(
         endDate: sub.endDate ?? null,
         paymentMethod: sub.paymentMethod ?? null,
         isArchived: sub.isArchived ?? false,
+        reminderDays: sub.reminderDays ?? null,
+        notificationId: sub.notificationId ?? null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -221,6 +229,8 @@ export async function upsertSubscription(
         endDate: sub.endDate ?? null,
         paymentMethod: sub.paymentMethod ?? null,
         isArchived: sub.isArchived ?? false,
+        reminderDays: sub.reminderDays ?? null,
+        notificationId: sub.notificationId ?? null,
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
       },

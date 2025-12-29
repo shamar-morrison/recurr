@@ -15,6 +15,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppErrorBoundary } from '@/src/components/AppErrorBoundary';
 import { AuthProvider } from '@/src/features/auth/AuthProvider';
 import { RemoteConfigProvider } from '@/src/features/config/RemoteConfigContext';
+import { setupNotificationHandler } from '@/src/features/notifications/notificationService';
 import { initCurrencyRates } from '@/src/lib/currencyConversion';
 
 SplashScreen.preventAutoHideAsync();
@@ -29,6 +30,12 @@ const queryClient = new QueryClient({
 });
 
 function RootLayoutNav() {
+  // Set up notification response handler on app mount
+  useEffect(() => {
+    const cleanup = setupNotificationHandler();
+    return cleanup;
+  }, []);
+
   return (
     <>
       <StatusBar style="dark" />

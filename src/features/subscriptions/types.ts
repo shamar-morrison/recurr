@@ -38,9 +38,23 @@ export type Subscription = {
   paymentMethod?: PaymentMethod;
   notes?: string;
   isArchived?: boolean;
+  reminderDays?: number | null; // Days before billing to remind (null = no reminder)
+  notificationId?: string | null; // Scheduled notification identifier
   createdAt: number;
   updatedAt: number;
 };
+
+export const REMINDER_OPTIONS = [
+  { label: 'None', value: null },
+  { label: '1 day before', value: 1 },
+  { label: '2 days before', value: 2 },
+  { label: '3 days before', value: 3 },
+  { label: '1 week before', value: 7 },
+  { label: '2 weeks before', value: 14 },
+  { label: '1 month before', value: 30 },
+] as const;
+
+export type ReminderDays = (typeof REMINDER_OPTIONS)[number]['value'];
 
 export type SubscriptionInput = Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'> & {
   id?: string;

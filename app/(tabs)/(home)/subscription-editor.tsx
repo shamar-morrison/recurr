@@ -5,6 +5,7 @@ import { AppColors, CATEGORY_COLORS } from '@/constants/colors';
 import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { FrequencySelectorModal } from '@/src/components/FrequencySelectorModal';
 import { PAYMENT_METHOD_CONFIG, PaymentMethodModal } from '@/src/components/PaymentMethodModal';
+import { ReminderSelectorModal } from '@/src/components/ReminderSelectorModal';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { Button } from '@/src/components/ui/Button';
@@ -12,6 +13,11 @@ import { CURRENCIES } from '@/src/constants/currencies';
 import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
 import { getServiceByName, getServiceDomain } from '@/src/constants/services';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import {
+  cancelNotification,
+  requestNotificationPermissions,
+  scheduleSubscriptionReminder,
+} from '@/src/features/notifications/notificationService';
 import {
   useDeleteSubscriptionMutation,
   useSubscriptionsQuery,
@@ -21,6 +27,8 @@ import { clampBillingDay } from '@/src/features/subscriptions/subscriptionsUtils
 import {
   BillingCycle,
   PaymentMethod,
+  REMINDER_OPTIONS,
+  ReminderDays,
   Subscription,
   SUBSCRIPTION_CATEGORIES,
   SubscriptionCategory,
@@ -28,6 +36,7 @@ import {
 import { getDefaultPriceInCurrency } from '@/src/lib/currencyConversion';
 import {
   AppWindowIcon,
+  BellIcon,
   CaretDownIcon,
   CaretLeftIcon,
   CheckIcon,
@@ -196,6 +205,19 @@ export default function SubscriptionEditorScreen() {
     return <IconComponent color={AppColors.text} size={20} />;
   }, [paymentMethod]);
 
+  const [reminderDays, setReminderDays] = useState<ReminderDays>(null);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+
+  const handleReminderSelect = useCallback((reminder: ReminderDays) => {
+    setReminderDays(reminder);
+    setShowReminderModal(false);
+  }, []);
+
+  const reminderLabel = useMemo(() => {
+    const option = REMINDER_OPTIONS.find((o) => o.value === reminderDays);
+    return option?.label ?? 'None';
+  }, [reminderDays]);
+
   React.useEffect(() => {
     if (!editingId) return;
     if (!existing) return;
@@ -213,9 +235,12 @@ export default function SubscriptionEditorScreen() {
     );
     setEndDate(existing.endDate ? normalizeToMidnight(new Date(existing.endDate)) : null);
     setPaymentMethod(existing.paymentMethod);
+    // Validate reminderDays against allowed options
+    const validReminderDays = REMINDER_OPTIONS.find((o) => o.value === existing.reminderDays);
+    setReminderDays(validReminderDays ? validReminderDays.value : null);
     // Reset manual edit flag for clean state when loading existing data
     setHasManuallyEditedAmount(false);
-  }, [defaultCurrency, editingId, existing]);
+  }, [defaultCurrency, editingId, existing, normalizeToMidnight]);
 
   const amount = useMemo(() => {
     const n = Number(amountText.replace(/[^0-9.]/g, ''));
@@ -279,9 +304,58 @@ export default function SubscriptionEditorScreen() {
         startDate: startDate.getTime(),
         endDate: effectiveEndDate,
         paymentMethod: paymentMethod,
+        reminderDays: reminderDays,
       });
 
-      await upsertMutation.mutateAsync(payload);
+      // Step 1: Save the subscription first to get a persisted ID
+      const savedSubscription = await upsertMutation.mutateAsync(payload);
+
+      // Step 2: Handle notification scheduling AFTER successful save
+      if (reminderDays && reminderDays > 0) {
+        // Request permissions if not already granted
+        const hasPermission = await requestNotificationPermissions();
+        if (hasPermission) {
+          // Cancel existing notification if any
+          if (existing?.notificationId) {
+            await cancelNotification(existing.notificationId);
+          }
+
+          // Schedule new notification with the persisted subscription
+          const notificationId = await scheduleSubscriptionReminder(
+            savedSubscription,
+            reminderDays
+          );
+
+          // Step 3: Persist the notificationId back to the subscription if we got one
+          if (notificationId) {
+            try {
+              await upsertMutation.mutateAsync({
+                ...savedSubscription,
+                notificationId,
+              });
+            } catch (notificationError) {
+              console.log(
+                '[subscription-editor] failed to persist notification ID, cleaning up',
+                notificationError
+              );
+              // Clean up the notification to prevent orphans since persistence failed
+              await cancelNotification(notificationId);
+            }
+          }
+        }
+      } else if (existing?.notificationId) {
+        // Reminder was removed, cancel existing notification and clear notificationId
+        await cancelNotification(existing.notificationId);
+        try {
+          await upsertMutation.mutateAsync({
+            ...savedSubscription,
+            notificationId: null,
+          });
+        } catch (notificationError) {
+          console.log('[subscription-editor] failed to clear notification ID', notificationError);
+        }
+      }
+
       router.back();
     } catch (e) {
       console.log('[subscription-editor] save failed', e);
@@ -298,6 +372,7 @@ export default function SubscriptionEditorScreen() {
     existing,
     notes,
     paymentMethod,
+    reminderDays,
     serviceName,
     startDate,
     upsertMutation,
@@ -706,6 +781,25 @@ export default function SubscriptionEditorScreen() {
                 </Pressable>
               </View>
 
+              {/* Reminder */}
+              <View style={styles.section}>
+                <Text style={styles.label}>Reminder</Text>
+                <Pressable
+                  style={[styles.dropdownButton, isSaving && styles.disabledInput]}
+                  onPress={() => setShowReminderModal(true)}
+                  disabled={isSaving}
+                  testID="subscriptionEditorReminder"
+                >
+                  <View style={styles.paymentMethodRow}>
+                    <BellIcon color={AppColors.text} size={20} />
+                    <Text style={[styles.dropdownText, !reminderDays && styles.placeholderText]}>
+                      {reminderLabel}
+                    </Text>
+                  </View>
+                  <CaretDownIcon color={AppColors.secondaryText} size={16} />
+                </Pressable>
+              </View>
+
               <View style={styles.section}>
                 <Text style={styles.label}>Notes (optional)</Text>
                 <TextInput
@@ -773,6 +867,12 @@ export default function SubscriptionEditorScreen() {
         onSelect={handlePaymentMethodSelect}
         onClose={() => setShowPaymentMethodModal(false)}
       />
+      <ReminderSelectorModal
+        visible={showReminderModal}
+        selectedReminder={reminderDays}
+        onSelect={handleReminderSelect}
+        onClose={() => setShowReminderModal(false)}
+      />
     </>
   );
 }
@@ -791,6 +891,7 @@ function buildSubscriptionPayload(
     startDate?: number;
     endDate?: number;
     paymentMethod?: PaymentMethod;
+    reminderDays?: number | null;
   }
 ) {
   return {
@@ -806,6 +907,7 @@ function buildSubscriptionPayload(
     startDate: base.startDate,
     endDate: base.endDate,
     paymentMethod: base.paymentMethod,
+    reminderDays: base.reminderDays ?? null,
     isArchived: false,
   };
 }
