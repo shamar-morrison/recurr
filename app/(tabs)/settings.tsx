@@ -1,11 +1,19 @@
 import { router } from 'expo-router';
-import { Bell, ChevronRight, DollarSign, Lock, Mail, Zap } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import {
+  BellIcon,
+  CaretRightIcon,
+  CoinsIcon,
+  EnvelopeIcon,
+  InvoiceIcon,
+  LockIcon,
+  MailboxIcon,
+} from 'phosphor-react-native';
 
 function getCurrencySymbol(currency: string): string {
   const symbols: Record<string, string> = {
@@ -66,8 +74,8 @@ function SettingRow({
         <Switch
           value={switchValue}
           onValueChange={onSwitchChange}
-          trackColor={{ false: '#E2E8F0', true: AppColors.primary }}
-          thumbColor="#FFFFFF"
+          trackColor={{ false: AppColors.border, true: AppColors.primary }}
+          thumbColor={AppColors.card}
         />
       ) : (
         <View style={styles.rowRight}>
@@ -76,7 +84,7 @@ function SettingRow({
               {value}
             </Text>
           )}
-          {showChevron && <ChevronRight size={20} color="#94A3B8" />}
+          {showChevron && <CaretRightIcon size={20} color={AppColors.secondaryText} />}
         </View>
       )}
     </Pressable>
@@ -132,13 +140,13 @@ export default function SettingsScreen() {
                   </Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#94A3B8" />
+              <CaretRightIcon size={20} color={AppColors.secondaryText} />
             </Pressable>
 
             <View style={styles.divider} />
 
             <SettingRow
-              icon={<Mail />}
+              icon={<MailboxIcon />}
               iconColor="#7C3AED"
               iconBg="#F3E8FF"
               label="Email Address"
@@ -148,7 +156,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
-              icon={<Lock />}
+              icon={<LockIcon />}
               iconColor="#7C3AED"
               iconBg="#F3E8FF"
               label="Security & Password"
@@ -161,7 +169,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
           <View style={styles.card}>
             <SettingRow
-              icon={<Bell />}
+              icon={<BellIcon />}
               iconColor="#F97316"
               iconBg="#FFEDD5"
               label="Push Notifications"
@@ -174,7 +182,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
-              icon={<Mail />}
+              icon={<EnvelopeIcon />}
               iconColor="#3B82F6"
               iconBg="#DBEAFE"
               label="Email Alerts"
@@ -187,7 +195,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
-              icon={<Zap />}
+              icon={<InvoiceIcon />}
               iconColor="#A855F7"
               iconBg="#F3E8FF"
               label="Billing Reminders"
@@ -204,7 +212,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>PREFERENCES</Text>
           <View style={styles.card}>
             <SettingRow
-              icon={<DollarSign />}
+              icon={<CoinsIcon />}
               iconColor="#10B981"
               iconBg="#D1FAE5"
               label="Default Currency"
@@ -228,7 +236,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: AppColors.background,
   },
   header: {
     paddingHorizontal: 20,
@@ -238,13 +246,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#0F172A',
+    color: AppColors.text,
     letterSpacing: -0.4,
   },
   headerSubtitle: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#64748B',
+    color: AppColors.secondaryText,
     marginTop: 2,
   },
   scrollContent: {
@@ -257,27 +265,22 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#64748B',
+    color: AppColors.secondaryText,
     marginLeft: 4,
     marginBottom: 8,
     letterSpacing: 0.5,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.card,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.card,
   },
   iconContainer: {
     width: 36,
@@ -291,7 +294,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: '500',
-    color: '#0F172A',
+    color: AppColors.text,
   },
   rowRight: {
     flexDirection: 'row',
@@ -300,13 +303,13 @@ const styles = StyleSheet.create({
   },
   rowValue: {
     fontSize: 15,
-    color: '#64748B',
+    color: AppColors.secondaryText,
     marginRight: 6,
     maxWidth: 160,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: AppColors.border,
     marginLeft: 64,
   },
   profileRow: {
@@ -330,7 +333,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: AppColors.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -338,16 +341,16 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#64748B',
+    color: AppColors.secondaryText,
   },
   profileName: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#0F172A',
+    color: AppColors.text,
   },
   profilePlan: {
     fontSize: 14,
-    color: '#64748B',
+    color: AppColors.secondaryText,
   },
   logoutContainer: {
     alignItems: 'center',
@@ -364,7 +367,7 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: AppColors.secondaryText,
     marginTop: 12,
   },
 });

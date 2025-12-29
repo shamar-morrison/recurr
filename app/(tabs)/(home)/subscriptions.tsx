@@ -1,5 +1,4 @@
 import { router, Stack } from 'expo-router';
-import { CirclePlus, Crown, Filter, Plus } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -24,7 +23,15 @@ import {
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 
 import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
-import { CloudSnowIcon, XCircleIcon } from 'phosphor-react-native';
+import {
+  CirclesThreePlusIcon,
+  CloudSnowIcon,
+  CrownIcon,
+  PlusCircleIcon,
+  PlusIcon,
+  SlidersIcon,
+  XCircleIcon,
+} from 'phosphor-react-native';
 
 type FilterChip = SubscriptionCategory | 'All';
 
@@ -78,7 +85,7 @@ export default function SubscriptionsHomeScreen() {
   const headerRight = useCallback(() => {
     return (
       <Pressable onPress={handleAdd} style={styles.headerButton} testID="subscriptionsHeaderAdd">
-        <Plus color={AppColors.tint} size={20} />
+        <CirclesThreePlusIcon color={AppColors.tint} size={20} />
       </Pressable>
     );
   }, [handleAdd]);
@@ -179,7 +186,7 @@ export default function SubscriptionsHomeScreen() {
                   testID="unlockPremiumCta"
                 >
                   <Text style={[styles.limitCtaText, { color: AppColors.tint }]}>Unlock</Text>
-                  <Crown color={AppColors.tint} size={16} />
+                  <CrownIcon color={AppColors.tint} size={16} />
                 </Pressable>
               ) : null}
             </View>
@@ -188,7 +195,7 @@ export default function SubscriptionsHomeScreen() {
 
         <View style={styles.filters}>
           <View style={styles.filtersLeft}>
-            <Filter color={AppColors.secondaryText} size={16} />
+            <SlidersIcon color={AppColors.secondaryText} size={16} />
             <Text style={styles.filtersLabel}>Filter</Text>
           </View>
           <View style={styles.chipsRow}>
@@ -242,7 +249,7 @@ export default function SubscriptionsHomeScreen() {
           <View style={styles.empty} testID="subscriptionsEmpty">
             <View style={styles.emptyIcon}>
               {filter === 'All' ? (
-                <CirclePlus color={AppColors.tint} size={22} />
+                <PlusCircleIcon color={AppColors.tint} size={22} />
               ) : (
                 <XCircleIcon color={AppColors.tint} size={22} />
               )}
@@ -312,7 +319,7 @@ export default function SubscriptionsHomeScreen() {
           ]}
           testID="subscriptionsFab"
         >
-          <Plus color="#fff" size={22} />
+          <PlusIcon color="#fff" size={22} />
         </Pressable>
       </View>
     </>

@@ -1,4 +1,3 @@
-import { Crown, TrendingUp } from 'lucide-react-native';
 import React, { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +9,7 @@ import {
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { ChartLineUpIcon, CrownIcon } from 'phosphor-react-native';
 
 export default function InsightsScreen() {
   const { isPremium } = useAuth();
@@ -70,7 +70,7 @@ export default function InsightsScreen() {
               <Text style={styles.heroTitle}>Spending</Text>
               {isPremium ? (
                 <View style={styles.premiumPill} testID="insightsPremiumPill">
-                  <Crown color="#fff" size={14} />
+                  <CrownIcon color="#fff" size={14} />
                   <Text style={styles.premiumPillText}>Premium</Text>
                 </View>
               ) : null}
@@ -104,7 +104,7 @@ export default function InsightsScreen() {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderLeft}>
-              <TrendingUp color={AppColors.text} size={18} />
+              <ChartLineUpIcon color={AppColors.text} size={18} />
               <Text style={styles.cardTitle}>Highlights</Text>
             </View>
           </View>
