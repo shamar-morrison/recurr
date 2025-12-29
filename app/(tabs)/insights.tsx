@@ -223,6 +223,11 @@ function groupByCategory(items: ReturnType<typeof useSubscriptionListItems>) {
     Music: [],
     Software: [],
     Utilities: [],
+    Health: [],
+    Food: [],
+    Education: [],
+    Shopping: [],
+    AI: [],
     Other: [],
   };
 

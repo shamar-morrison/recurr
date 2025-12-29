@@ -31,9 +31,14 @@ import {
   CaretLeftIcon,
   CheckIcon,
   DotsThreeCircleIcon,
+  ForkKnifeIcon,
+  GraduationCapIcon,
+  HeartbeatIcon,
   LightbulbIcon,
   MusicNotesIcon,
   PlayCircleIcon,
+  RobotIcon,
+  ShoppingCartIcon,
   TrashIcon,
   XIcon,
 } from 'phosphor-react-native';
@@ -440,6 +445,41 @@ export default function SubscriptionEditorScreen() {
                         {cat === 'Software' && <AppWindowIcon color={iconColor} size={iconSize} />}
                         {cat === 'Utilities' && (
                           <LightbulbIcon
+                            color={iconColor}
+                            size={iconSize}
+                            weight={active ? 'fill' : 'regular'}
+                          />
+                        )}
+                        {cat === 'Health' && (
+                          <HeartbeatIcon
+                            color={iconColor}
+                            size={iconSize}
+                            weight={active ? 'fill' : 'regular'}
+                          />
+                        )}
+                        {cat === 'Food' && (
+                          <ForkKnifeIcon
+                            color={iconColor}
+                            size={iconSize}
+                            weight={active ? 'fill' : 'regular'}
+                          />
+                        )}
+                        {cat === 'Education' && (
+                          <GraduationCapIcon
+                            color={iconColor}
+                            size={iconSize}
+                            weight={active ? 'fill' : 'regular'}
+                          />
+                        )}
+                        {cat === 'Shopping' && (
+                          <ShoppingCartIcon
+                            color={iconColor}
+                            size={iconSize}
+                            weight={active ? 'fill' : 'regular'}
+                          />
+                        )}
+                        {cat === 'AI' && (
+                          <RobotIcon
                             color={iconColor}
                             size={iconSize}
                             weight={active ? 'fill' : 'regular'}

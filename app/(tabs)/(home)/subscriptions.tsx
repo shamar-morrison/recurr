@@ -5,6 +5,7 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -20,7 +21,7 @@ import {
   useSubscriptionListItems,
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
-import { SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
 
 import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
 import {
@@ -196,35 +197,37 @@ export default function SubscriptionsHomeScreen() {
             <SlidersIcon color={AppColors.secondaryText} size={16} />
             <Text style={styles.filtersLabel}>Filter</Text>
           </View>
-          <View style={styles.chipsRow}>
-            {(['All', 'Streaming', 'Music', 'Software', 'Utilities', 'Other'] as const).map(
-              (chip) => {
-                const active = chip === filter;
-                return (
-                  <Pressable
-                    key={chip}
-                    onPress={() => setFilter(chip)}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipsScrollContent}
+          >
+            {(['All', ...SUBSCRIPTION_CATEGORIES] as const).map((chip) => {
+              const active = chip === filter;
+              return (
+                <Pressable
+                  key={chip}
+                  onPress={() => setFilter(chip)}
+                  style={[
+                    styles.chip,
+                    active
+                      ? { backgroundColor: AppColors.tint, borderColor: AppColors.tint }
+                      : null,
+                  ]}
+                  testID={`filterChip_${chip}`}
+                >
+                  <Text
                     style={[
-                      styles.chip,
-                      active
-                        ? { backgroundColor: AppColors.tint, borderColor: AppColors.tint }
-                        : null,
+                      styles.chipText,
+                      active ? { color: '#fff' } : { color: AppColors.text },
                     ]}
-                    testID={`filterChip_${chip}`}
                   >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        active ? { color: '#fff' } : { color: AppColors.text },
-                      ]}
-                    >
-                      {chip}
-                    </Text>
-                  </Pressable>
-                );
-              }
-            )}
-          </View>
+                    {chip}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {subscriptionsQuery.isLoading ? (
@@ -508,16 +511,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  chipsScrollContent: {
     gap: 10,
+    paddingRight: 16,
   },
   chip: {
-    width: '31%',
-    minWidth: 0,
-    borderRadius: 999,
+    paddingHorizontal: 16,
     paddingVertical: 10,
+    borderRadius: 999,
     backgroundColor: AppColors.card,
     borderWidth: 1,
     borderColor: AppColors.border,
