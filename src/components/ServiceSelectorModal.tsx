@@ -1,5 +1,5 @@
 import { LegendList } from '@legendapp/list';
-import { CheckIcon, MagnifyingGlassIcon, PlusIcon, XIcon } from 'phosphor-react-native';
+import { CheckIcon, PlusIcon, XIcon } from 'phosphor-react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,6 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
+import { BaseModal } from '@/src/components/ui/BaseModal';
+import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
 import { SERVICE_COLORS } from '@/src/constants/customServices';
 import { Service, SERVICES } from '@/src/constants/services';
 import { useCustomServices } from '@/src/features/services/useCustomServices';
@@ -148,19 +150,26 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
   const renderItem = useCallback(
     ({ item }: { item: UnifiedService }) => {
       const isSelected = item.name === selectedService;
+
+      const leftContent = (
+        <View style={styles.serviceLogoContainer}>
+          <ServiceLogo serviceName={item.name} domain={item.domain} size={32} borderRadius={8} />
+        </View>
+      );
+
+      const rightContent = isSelected ? undefined : item.isCustom ? (
+        <Text style={styles.customBadge}>Custom</Text>
+      ) : null;
+
       return (
-        <Pressable
+        <BaseModalListItem
+          label={item.name}
+          sublabel={item.category}
+          isSelected={isSelected}
           onPress={() => handleSelect(item)}
-          style={[styles.item, isSelected && styles.itemSelected]}
-        >
-          <View style={styles.serviceInfo}>
-            <ServiceLogo serviceName={item.name} domain={item.domain} size={32} borderRadius={8} />
-            <Text style={styles.serviceName}>{item.name}</Text>
-            <Text style={styles.serviceCategory}>{item.category}</Text>
-            {item.isCustom && <Text style={styles.customBadge}>Custom</Text>}
-          </View>
-          {isSelected && <CheckIcon color={AppColors.tint} size={20} weight="bold" />}
-        </Pressable>
+          leftElement={leftContent}
+          rightElement={rightContent}
+        />
       );
     },
     [handleSelect, selectedService]
@@ -175,16 +184,16 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
 
   const isValidName = editableName.trim().length > 0;
 
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={onClose}
-    >
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        {showAddMode ? (
-          // ========== ADD SERVICE VIEW ==========
+  // Render Add Custom Service Mode in a separate modal
+  if (showAddMode) {
+    return (
+      <Modal
+        visible={visible}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={handleCancelAddMode}
+      >
+        <SafeAreaView style={styles.addModeContainer} edges={['top', 'bottom']}>
           <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollViewContent}
@@ -218,15 +227,21 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
                 <Text style={styles.label}>Category</Text>
                 <View style={styles.categoryGrid}>
                   {SUBSCRIPTION_CATEGORIES.map((category) => {
-                    const isSelected = category === selectedCategory;
+                    const isCategorySelected = category === selectedCategory;
                     return (
                       <Pressable
                         key={category}
-                        style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
+                        style={[
+                          styles.categoryChip,
+                          isCategorySelected && styles.categoryChipSelected,
+                        ]}
                         onPress={() => setSelectedCategory(category)}
                       >
                         <Text
-                          style={[styles.categoryText, isSelected && styles.categoryTextSelected]}
+                          style={[
+                            styles.categoryText,
+                            isCategorySelected && styles.categoryTextSelected,
+                          ]}
                         >
                           {category}
                         </Text>
@@ -275,69 +290,57 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
               </View>
             </TouchableOpacity>
           </ScrollView>
-        ) : (
-          // ========== SERVICE LIST VIEW ==========
-          <>
-            <View style={styles.header}>
-              <View style={styles.headerSpacer} />
-              <Text style={styles.title}>Select Service</Text>
-              <Pressable onPress={onClose} style={styles.closeButton}>
-                <XIcon color={AppColors.text} size={22} />
-              </Pressable>
-            </View>
+        </SafeAreaView>
+      </Modal>
+    );
+  }
 
-            <View style={styles.searchContainer}>
-              <MagnifyingGlassIcon color={AppColors.secondaryText} size={18} />
-              <TextInput
-                value={search}
-                onChangeText={setSearch}
-                placeholder="Search services..."
-                placeholderTextColor={AppColors.secondaryText}
-                style={styles.searchInput}
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="search"
-              />
+  return (
+    <BaseModal
+      visible={visible}
+      title="Select Service"
+      onClose={onClose}
+      showSearch
+      searchPlaceholder="Search services..."
+      searchValue={search}
+      onSearchChange={setSearch}
+    >
+      {hasNoResults ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>No services found</Text>
+          <Pressable style={styles.addButton} onPress={handleOpenAddMode}>
+            <PlusIcon color="#FFFFFF" size={18} weight="bold" />
+            <Text style={styles.addButtonText}>Add "{search.trim()}"</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <>
+          {isLoadingCustomServices && (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator size="small" color={AppColors.tint} />
+              <Text style={styles.loadingText}>Loading custom services…</Text>
             </View>
-
-            {hasNoResults ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>No services found</Text>
-                <Pressable style={styles.addButton} onPress={handleOpenAddMode}>
-                  <PlusIcon color="#FFFFFF" size={18} weight="bold" />
-                  <Text style={styles.addButtonText}>Add "{search.trim()}"</Text>
-                </Pressable>
-              </View>
-            ) : (
-              <>
-                {isLoadingCustomServices && (
-                  <View style={styles.loadingRow}>
-                    <ActivityIndicator size="small" color={AppColors.tint} />
-                    <Text style={styles.loadingText}>Loading custom services…</Text>
-                  </View>
-                )}
-                <LegendList
-                  data={filteredServices}
-                  keyExtractor={keyExtractor}
-                  renderItem={renderItem}
-                  style={styles.list}
-                  showsVerticalScrollIndicator={false}
-                  recycleItems
-                  extraData={customServices}
-                />
-              </>
-            )}
-          </>
-        )}
-      </SafeAreaView>
-    </Modal>
+          )}
+          <LegendList
+            data={filteredServices}
+            keyExtractor={keyExtractor}
+            renderItem={renderItem}
+            style={styles.list}
+            showsVerticalScrollIndicator={false}
+            recycleItems
+            extraData={customServices}
+          />
+        </>
+      )}
+    </BaseModal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  // Add Mode Styles
+  addModeContainer: {
     flex: 1,
-    backgroundColor: AppColors.card,
+    backgroundColor: AppColors.background,
     paddingHorizontal: 16,
   },
   scrollView: {
@@ -363,64 +366,22 @@ const styles = StyleSheet.create({
     color: AppColors.text,
     textAlign: 'center',
     flex: 1,
+    letterSpacing: -0.3,
   },
   closeButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: AppColors.inputBackground,
+    backgroundColor: AppColors.tertiaryBackground,
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 14,
-    backgroundColor: AppColors.inputBackground,
-    marginBottom: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: AppColors.text,
-    padding: 0,
-  },
+  // List Styles
   list: {
     flex: 1,
   },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-  },
-  itemSelected: {
-    backgroundColor: AppColors.selectedBackground,
-  },
-  serviceInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  colorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  serviceName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: AppColors.text,
-  },
-  serviceCategory: {
-    fontSize: 13,
-    color: AppColors.secondaryText,
+  serviceLogoContainer: {
+    // Container for the service logo
   },
   customBadge: {
     fontSize: 10,
@@ -454,6 +415,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
+  // Add Service Form Styles
   section: {
     marginBottom: 20,
   },
