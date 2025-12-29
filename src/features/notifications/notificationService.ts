@@ -1,3 +1,4 @@
+import * as Localization from 'expo-localization';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { Platform } from 'react-native';
@@ -93,10 +94,18 @@ function calculateReminderDate(subscription: Subscription, reminderDays: number)
 }
 
 /**
+ * Get the user's preferred locale for date formatting
+ */
+function getDeviceLocale(): string {
+  const locales = Localization.getLocales();
+  return locales[0]?.languageTag ?? 'en-US';
+}
+
+/**
  * Format a date for display in notifications
  */
 function formatNotificationDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(getDeviceLocale(), {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -257,8 +266,11 @@ export async function rescheduleAllReminders(
   await cancelAllNotifications();
 
   // Schedule new reminders for subscriptions that have them configured
+  const now = Date.now();
   for (const sub of subscriptions) {
-    if (sub.reminderDays && sub.reminderDays > 0 && !sub.isArchived) {
+    // Skip archived subscriptions and those with past end dates
+    const hasEnded = sub.endDate && sub.endDate < now;
+    if (sub.reminderDays && sub.reminderDays > 0 && !sub.isArchived && !hasEnded) {
       const notificationId = await scheduleSubscriptionReminder(sub, sub.reminderDays);
       if (notificationId) {
         notificationMap.set(sub.id, notificationId);
