@@ -21,6 +21,8 @@ import { getCurrencySymbol } from '@/src/constants/currencies';
 import { DateFormatId, getDateFormatLabel } from '@/src/constants/dateFormats';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import { exportData, ExportFormat } from '@/src/features/export/exportService';
+import { useSubscriptionsQuery } from '@/src/features/subscriptions/subscriptionsHooks';
 import {
   BellIcon,
   CalendarIcon,
@@ -28,6 +30,7 @@ import {
   ChatCircleDotsIcon,
   CoinsIcon,
   CrownIcon,
+  DownloadSimpleIcon,
   EnvelopeIcon,
   GridFourIcon,
   InfoIcon,
@@ -111,6 +114,8 @@ export default function SettingsScreen() {
   const [emailEnabled, setEmailEnabled] = useState(false);
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [dateFormatModalVisible, setDateFormatModalVisible] = useState(false);
+
+  const { data: subscriptions } = useSubscriptionsQuery();
 
   const billingRemindersEnabled = settings.remindDaysBeforeBilling > 0;
   const toggleBillingReminders = (val: boolean) => {
@@ -202,6 +207,55 @@ export default function SettingsScreen() {
         },
       },
     ]);
+  };
+
+  const handleExportData = () => {
+    // Check if user is premium
+    if (!isPremium) {
+      router.push('/paywall');
+      return;
+    }
+
+    // Show format selection alert
+    Alert.alert('Export Data', 'Choose export format:', [
+      {
+        text: 'Export as CSV',
+        onPress: () => showArchivedAlert('csv'),
+      },
+      {
+        text: 'Export as Markdown',
+        onPress: () => showArchivedAlert('markdown'),
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+  const showArchivedAlert = (format: ExportFormat) => {
+    Alert.alert('Include Archived?', 'Which subscriptions do you want to export?', [
+      {
+        text: 'Active Only',
+        onPress: () => performExport(format, false),
+      },
+      {
+        text: 'Include Archived',
+        onPress: () => performExport(format, true),
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+  const performExport = async (format: ExportFormat, includeArchived: boolean) => {
+    if (!subscriptions || subscriptions.length === 0) {
+      Alert.alert('No Data', 'You have no subscriptions to export.');
+      return;
+    }
+
+    try {
+      await exportData(subscriptions, format, includeArchived);
+    } catch (error) {
+      console.error('Export failed:', error);
+      Alert.alert('Export Failed', 'Unable to export your data. Please try again.');
+    }
   };
 
   return (
@@ -316,6 +370,20 @@ export default function SettingsScreen() {
               label="Date Format"
               value={getDateFormatLabel(settings.dateFormat)}
               onPress={() => setDateFormatModalVisible(true)}
+            />
+          </View>
+        </View>
+
+        {/* Data Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>DATA</Text>
+          <View style={styles.card}>
+            <SettingRow
+              icon={<DownloadSimpleIcon />}
+              iconColor="#059669"
+              iconBg="#D1FAE5"
+              label="Export data"
+              onPress={handleExportData}
             />
           </View>
         </View>
