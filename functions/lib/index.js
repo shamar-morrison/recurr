@@ -190,20 +190,31 @@ exports.validateAndroidPurchase = functions.https.onRequest(async (req, res) => 
             productId,
             token: purchaseToken,
         });
-        // Update user's premium status in Firestore
+        // Update user's premium status in Firestore (non-sensitive data only)
         await db
             .collection('users')
             .doc(userId)
-            .update({
+            .set({
             isPremium: true,
             premiumUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
             premiumPurchase: {
                 productId,
-                purchaseToken,
                 purchaseTime: purchase.purchaseTimeMillis,
                 orderId: purchase.orderId,
                 validatedAt: admin.firestore.FieldValue.serverTimestamp(),
             },
+        }, { merge: true });
+        // Store sensitive purchaseToken in admin-only collection for refunds/verification
+        // This collection should have strict security rules blocking client access
+        await db
+            .collection('purchase_tokens')
+            .doc(purchase.orderId || `${userId}_${Date.now()}`)
+            .set({
+            userId,
+            productId,
+            purchaseToken,
+            orderId: purchase.orderId,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
         console.log('[validateAndroidPurchase] User updated:', userId);
         res.json({

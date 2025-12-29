@@ -29,8 +29,8 @@ export const PREMIUM_PRODUCT_ID = 'com.horizon.recurr.premium';
 const VALIDATE_PURCHASE_URL =
   'https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/validateAndroidPurchase';
 
-// Storage key for failed purchase acknowledgements
-const FAILED_PURCHASE_ACKS_KEY = '@iap_failed_acks';
+// Storage key prefix for failed purchase acknowledgements (per-purchase key approach)
+const FAILED_PURCHASE_KEY_PREFIX = '@iap_failed_ack_';
 // Background task name for retrying acknowledgements
 const IAP_ACK_RETRY_TASK = 'IAP_ACK_RETRY_TASK';
 
@@ -273,40 +273,74 @@ export async function acknowledgePurchase(purchase: Purchase): Promise<void> {
 }
 
 /**
- * Save a failed purchase to AsyncStorage
+ * Save a failed purchase to AsyncStorage using per-purchase keys.
+ * This approach is atomic and race-free: each purchase is stored independently
+ * under its own key, so concurrent calls won't lose data.
  */
 async function saveFailedPurchase(purchase: Purchase): Promise<void> {
-  try {
-    const failedJson = await AsyncStorage.getItem(FAILED_PURCHASE_ACKS_KEY);
-    let failedList: Purchase[] = failedJson ? JSON.parse(failedJson) : [];
+  if (!purchase.purchaseToken) {
+    console.warn('[IAP] Cannot save failed purchase: missing purchaseToken');
+    return;
+  }
 
-    // Avoid duplicates
-    if (!failedList.some((p) => p.purchaseToken === purchase.purchaseToken)) {
-      failedList.push(purchase);
-      await AsyncStorage.setItem(FAILED_PURCHASE_ACKS_KEY, JSON.stringify(failedList));
-    }
+  const key = `${FAILED_PURCHASE_KEY_PREFIX}${purchase.purchaseToken}`;
+
+  try {
+    // Each purchase has its own key - no read-modify-write needed
+    // This is atomic and safe for concurrent calls
+    await AsyncStorage.setItem(key, JSON.stringify(purchase));
+    console.log('[IAP] Saved failed purchase for retry:', purchase.purchaseToken);
   } catch (e) {
     console.error('[IAP] Failed to save persistence for ack retry:', e);
   }
 }
 
 /**
- * Remove a failed purchase from AsyncStorage (after successful ack)
+ * Remove a failed purchase from AsyncStorage (after successful ack).
+ * Uses per-purchase key so removal is atomic and race-free.
  */
 async function removeFailedPurchase(purchaseToken: string): Promise<void> {
+  const key = `${FAILED_PURCHASE_KEY_PREFIX}${purchaseToken}`;
+
   try {
-    const failedJson = await AsyncStorage.getItem(FAILED_PURCHASE_ACKS_KEY);
-    if (!failedJson) return;
-
-    let failedList: Purchase[] = JSON.parse(failedJson);
-    const initialLen = failedList.length;
-    failedList = failedList.filter((p) => p.purchaseToken !== purchaseToken);
-
-    if (failedList.length !== initialLen) {
-      await AsyncStorage.setItem(FAILED_PURCHASE_ACKS_KEY, JSON.stringify(failedList));
-    }
+    await AsyncStorage.removeItem(key);
+    console.log('[IAP] Removed failed purchase after successful ack:', purchaseToken);
   } catch (e) {
     console.error('[IAP] Failed to remove persistence for ack retry:', e);
+  }
+}
+
+/**
+ * Get all failed purchases from AsyncStorage.
+ * Uses getAllKeys + multiGet for atomic retrieval of all per-purchase keys.
+ */
+async function getFailedPurchases(): Promise<Purchase[]> {
+  try {
+    const allKeys = await AsyncStorage.getAllKeys();
+    const failedKeys = allKeys.filter((key) => key.startsWith(FAILED_PURCHASE_KEY_PREFIX));
+
+    if (failedKeys.length === 0) {
+      return [];
+    }
+
+    // multiGet is atomic and returns all values at once
+    const keyValuePairs = await AsyncStorage.multiGet(failedKeys);
+
+    const purchases: Purchase[] = [];
+    for (const [, value] of keyValuePairs) {
+      if (value) {
+        try {
+          purchases.push(JSON.parse(value) as Purchase);
+        } catch (parseError) {
+          console.error('[IAP] Failed to parse stored purchase:', parseError);
+        }
+      }
+    }
+
+    return purchases;
+  } catch (e) {
+    console.error('[IAP] Failed to get failed purchases:', e);
+    return [];
   }
 }
 
@@ -343,10 +377,9 @@ function logError(message: string, context: object) {
 TaskManager.defineTask(IAP_ACK_RETRY_TASK, async () => {
   try {
     console.log('[IAP] Background task running: retrying acknowledgements');
-    const failedJson = await AsyncStorage.getItem(FAILED_PURCHASE_ACKS_KEY);
-    if (!failedJson) return BackgroundTask.BackgroundTaskResult.Success;
 
-    const failedList: Purchase[] = JSON.parse(failedJson);
+    // Use the per-purchase key helper to get all failed purchases atomically
+    const failedList = await getFailedPurchases();
     if (failedList.length === 0) return BackgroundTask.BackgroundTaskResult.Success;
 
     let successCount = 0;
@@ -362,7 +395,7 @@ TaskManager.defineTask(IAP_ACK_RETRY_TASK, async () => {
         successCount++;
       } catch (e) {
         console.error('[IAP] Background retry failed for token:', purchase.purchaseToken, e);
-        // It stays in the list for next time
+        // It stays in storage for next time
       }
     }
 
