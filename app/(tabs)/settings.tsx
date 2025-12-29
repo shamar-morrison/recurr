@@ -115,7 +115,7 @@ export default function SettingsScreen() {
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [dateFormatModalVisible, setDateFormatModalVisible] = useState(false);
 
-  const { data: subscriptions } = useSubscriptionsQuery();
+  const { data: subscriptions, isLoading: isLoadingSubscriptions } = useSubscriptionsQuery();
 
   const billingRemindersEnabled = settings.remindDaysBeforeBilling > 0;
   const toggleBillingReminders = (val: boolean) => {
@@ -216,6 +216,12 @@ export default function SettingsScreen() {
       return;
     }
 
+    // Check if data is still loading
+    if (isLoadingSubscriptions) {
+      Alert.alert('Loading', 'Please wait while your subscriptions are being loaded.');
+      return;
+    }
+
     // Show format selection alert
     Alert.alert('Export Data', 'Choose export format:', [
       {
@@ -247,6 +253,19 @@ export default function SettingsScreen() {
   const performExport = async (format: ExportFormat, includeArchived: boolean) => {
     if (!subscriptions || subscriptions.length === 0) {
       Alert.alert('No Data', 'You have no subscriptions to export.');
+      return;
+    }
+
+    // Check filtered count based on archive preference
+    const filteredCount = includeArchived
+      ? subscriptions.length
+      : subscriptions.filter((sub) => !sub.isArchived).length;
+
+    if (filteredCount === 0) {
+      Alert.alert(
+        'No Data',
+        'No active subscriptions to export. Try including archived subscriptions.'
+      );
       return;
     }
 

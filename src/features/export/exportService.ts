@@ -4,11 +4,12 @@ import * as Sharing from 'expo-sharing';
 import { Subscription } from '@/src/features/subscriptions/types';
 
 /**
- * Formats a timestamp to a human-readable date string
+ * Formats a timestamp to a human-readable date string using the device's locale
  */
 function formatDate(timestamp: number | undefined): string {
   if (!timestamp) return '';
-  return new Date(timestamp).toLocaleString('en-US', {
+  // Uses device's default locale for date formatting
+  return new Date(timestamp).toLocaleString(undefined, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -110,13 +111,15 @@ export function generateMarkdown(subscriptions: Subscription[]): string {
   // Table rows
   for (const sub of subscriptions) {
     const amount = `${sub.currency} ${sub.amount.toFixed(2)}`;
+    // Escape pipe characters to prevent table formatting issues
+    const escapeCell = (val: string | number) => String(val).replace(/\|/g, '\\|');
     const row = [
-      sub.serviceName,
-      sub.category,
-      amount,
-      sub.billingCycle,
-      sub.billingDay,
-      sub.paymentMethod ?? '-',
+      escapeCell(sub.serviceName),
+      escapeCell(sub.category),
+      escapeCell(amount),
+      escapeCell(sub.billingCycle),
+      escapeCell(sub.billingDay),
+      escapeCell(sub.paymentMethod ?? '-'),
     ];
     lines.push(`| ${row.join(' | ')} |`);
   }
@@ -165,4 +168,11 @@ export async function exportData(
     mimeType: format === 'csv' ? 'text/csv' : 'text/markdown',
     dialogTitle: 'Export Subscriptions',
   });
+
+  // Clean up temp file after sharing
+  try {
+    await file.delete();
+  } catch {
+    // Ignore cleanup errors - OS will eventually clear cache
+  }
 }
