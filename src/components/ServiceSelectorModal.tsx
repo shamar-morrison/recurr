@@ -56,6 +56,8 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
   const [editableName, setEditableName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<SubscriptionCategory>('Other');
   const [selectedColor, setSelectedColor] = useState<string>(SERVICE_COLORS[1]);
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   // Reset state when modal opens
@@ -66,6 +68,8 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
       setEditableName('');
       setSelectedCategory('Other');
       setSelectedColor(SERVICE_COLORS[1]);
+      setWebsiteUrl('');
+      setNotes('');
     }
   }, [visible]);
 
@@ -102,6 +106,8 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
     setEditableName(search.trim());
     setSelectedCategory('Other');
     setSelectedColor(SERVICE_COLORS[1]);
+    setWebsiteUrl('');
+    setNotes('');
     setShowAddMode(true);
   }, [search]);
 
@@ -110,6 +116,8 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
     setEditableName('');
     setSelectedCategory('Other');
     setSelectedColor(SERVICE_COLORS[1]);
+    setWebsiteUrl('');
+    setNotes('');
   }, []);
 
   const handleSaveCustomService = useCallback(async () => {
@@ -136,6 +144,8 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
         name: trimmedName,
         category: selectedCategory,
         color: selectedColor,
+        websiteUrl: websiteUrl.trim() || undefined,
+        notes: notes.trim() || undefined,
       });
 
       if (!newService) return;
@@ -147,7 +157,16 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
     } finally {
       setIsSaving(false);
     }
-  }, [editableName, selectedCategory, selectedColor, addCustomService, allServices, onSelect]);
+  }, [
+    editableName,
+    selectedCategory,
+    selectedColor,
+    websiteUrl,
+    notes,
+    addCustomService,
+    allServices,
+    onSelect,
+  ]);
 
   const renderItem = useCallback(
     ({ item }: { item: UnifiedService }) => {
@@ -269,6 +288,34 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
                     );
                   })}
                 </View>
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.label}>Website Link (optional)</Text>
+                <TextInput
+                  value={websiteUrl}
+                  onChangeText={setWebsiteUrl}
+                  placeholder="https://example.com"
+                  placeholderTextColor={AppColors.secondaryText}
+                  style={styles.nameInput}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                />
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.label}>Notes (optional)</Text>
+                <TextInput
+                  value={notes}
+                  onChangeText={setNotes}
+                  placeholder="Add any notes about this service..."
+                  placeholderTextColor={AppColors.secondaryText}
+                  style={[styles.nameInput, styles.notesInput]}
+                  multiline
+                  numberOfLines={3}
+                  textAlignVertical="top"
+                />
               </View>
 
               <View style={styles.buttonRow}>
@@ -432,6 +479,10 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.lg,
     fontWeight: '600',
     color: AppColors.text,
+  },
+  notesInput: {
+    minHeight: 80,
+    paddingTop: SPACING.md,
   },
   categoryGrid: {
     flexDirection: 'row',

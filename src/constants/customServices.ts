@@ -11,6 +11,10 @@ export interface CustomService {
   category: SubscriptionCategory;
   color: string;
   createdAt: number;
+  /** Optional website URL for the service */
+  websiteUrl?: string;
+  /** Optional notes for the service */
+  notes?: string;
 }
 
 export type CustomServiceInput = Omit<CustomService, 'id' | 'createdAt'>;
