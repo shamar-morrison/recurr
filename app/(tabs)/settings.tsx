@@ -104,6 +104,12 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Preferences</Text>
+        <Text style={styles.headerSubtitle}>Manage your account and settings</Text>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Account Section */}
         <View style={styles.section}>
@@ -223,6 +229,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.4,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#64748B',
+    marginTop: 2,
   },
   scrollContent: {
     padding: 20,
