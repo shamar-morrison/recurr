@@ -93,15 +93,25 @@ export default function SettingsScreen() {
     setCurrencyModalVisible(false);
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOutUser();
-      router.replace('/auth');
-    } catch (error) {
-      console.error('Sign out failed:', error);
-      Alert.alert('Sign Out Failed', 'Unable to sign out. Please try again.', [{ text: 'OK' }]);
-      // User stays on settings screen if sign-out fails
-    }
+  const handleSignOut = () => {
+    Alert.alert('Log Out', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Log Out',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await signOutUser();
+            router.replace('/auth');
+          } catch (error) {
+            console.error('Sign out failed:', error);
+            Alert.alert('Sign Out Failed', 'Unable to sign out. Please try again.', [
+              { text: 'OK' },
+            ]);
+          }
+        },
+      },
+    ]);
   };
 
   return (
