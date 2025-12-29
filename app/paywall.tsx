@@ -203,6 +203,7 @@ export default function PaywallScreen() {
                     key={feature.title}
                     title={feature.title}
                     description={feature.description}
+                    icon={feature.icon}
                     index={index}
                   />
                 ))}
@@ -241,10 +242,10 @@ export default function PaywallScreen() {
               testID="paywallPurchase"
             >
               {isWorking ? (
-                <ActivityIndicator color="#5E38F8" />
+                <ActivityIndicator color={AppColors.tint} />
               ) : (
                 <>
-                  <Crown size={20} color="#5E38F8" weight="fill" />
+                  <Crown size={20} color={AppColors.tint} weight="fill" />
                   <Text style={styles.purchaseButtonText}>Unlock Premium • $5</Text>
                 </>
               )}
@@ -413,7 +414,7 @@ const styles = StyleSheet.create({
   comparisonBadgeTextPremium: {
     fontSize: FONT_SIZE.xs,
     fontWeight: '800',
-    color: '#5E38F8',
+    color: AppColors.tint,
     letterSpacing: 0.5,
   },
   comparisonText: {

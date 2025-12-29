@@ -1,5 +1,5 @@
 import { Motion } from '@legendapp/motion';
-import { Check } from 'phosphor-react-native';
+import { IconProps } from 'phosphor-react-native';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -9,14 +9,15 @@ import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 export interface FeatureItemProps {
   title: string;
   description: string;
+  icon: React.ComponentType<IconProps>;
   index?: number;
 }
 
 /**
  * Reusable feature item component for premium feature lists.
- * Displays a check icon with animated entrance, title, and description.
+ * Displays a custom icon with animated entrance, title, and description.
  */
-export function FeatureItem({ title, description, index = 0 }: FeatureItemProps) {
+export function FeatureItem({ title, description, icon: Icon, index = 0 }: FeatureItemProps) {
   const delay = index * 100;
 
   return (
@@ -27,7 +28,7 @@ export function FeatureItem({ title, description, index = 0 }: FeatureItemProps)
       style={styles.container}
     >
       <View style={styles.iconContainer}>
-        <Check size={18} color="#FFFFFF" weight="bold" />
+        <Icon size={18} color="#FFFFFF" weight="bold" />
       </View>
       <View style={styles.textContainer}>
         <Text style={styles.title}>{title}</Text>
