@@ -6,7 +6,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as BackgroundFetch from 'expo-background-fetch';
+import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 import {
   endConnection,
@@ -317,10 +317,8 @@ async function registerBackgroundTask() {
   try {
     const isRegistered = await TaskManager.isTaskRegisteredAsync(IAP_ACK_RETRY_TASK);
     if (!isRegistered) {
-      await BackgroundFetch.registerTaskAsync(IAP_ACK_RETRY_TASK, {
+      await BackgroundTask.registerTaskAsync(IAP_ACK_RETRY_TASK, {
         minimumInterval: 15 * 60, // 15 minutes
-        stopOnTerminate: false, // Continue even if app is closed
-        startOnBoot: true, // Restart on device boot
       });
       console.log('[IAP] Background retry task registered');
     }
@@ -346,10 +344,10 @@ TaskManager.defineTask(IAP_ACK_RETRY_TASK, async () => {
   try {
     console.log('[IAP] Background task running: retrying acknowledgements');
     const failedJson = await AsyncStorage.getItem(FAILED_PURCHASE_ACKS_KEY);
-    if (!failedJson) return BackgroundFetch.BackgroundFetchResult.NoData;
+    if (!failedJson) return BackgroundTask.BackgroundTaskResult.Success;
 
     const failedList: Purchase[] = JSON.parse(failedJson);
-    if (failedList.length === 0) return BackgroundFetch.BackgroundFetchResult.NoData;
+    if (failedList.length === 0) return BackgroundTask.BackgroundTaskResult.Success;
 
     let successCount = 0;
 
@@ -371,11 +369,11 @@ TaskManager.defineTask(IAP_ACK_RETRY_TASK, async () => {
     console.log(`[IAP] Background retry finished. Success: ${successCount}/${failedList.length}`);
 
     return failedList.length === successCount
-      ? BackgroundFetch.BackgroundFetchResult.NewData
-      : BackgroundFetch.BackgroundFetchResult.Failed;
+      ? BackgroundTask.BackgroundTaskResult.Success
+      : BackgroundTask.BackgroundTaskResult.Failed;
   } catch (error) {
     console.error('[IAP] Background task error:', error);
-    return BackgroundFetch.BackgroundFetchResult.Failed;
+    return BackgroundTask.BackgroundTaskResult.Failed;
   }
 });
 

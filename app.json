@@ -36,7 +36,8 @@
       "expo-web-browser",
       "react-native-google-auth",
       "expo-notifications",
-      "expo-localization"
+      "expo-localization",
+      "expo-background-task"
     ],
     "experiments": {
       "typedRoutes": true,
