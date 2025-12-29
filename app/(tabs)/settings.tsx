@@ -97,8 +97,10 @@ export default function SettingsScreen() {
   const handleSignOut = async () => {
     try {
       await signOutUser();
-    } finally {
       router.replace('/auth');
+    } catch (error) {
+      console.error('Sign out failed:', error);
+      // User stays on settings screen if sign-out fails
     }
   };
 
@@ -366,7 +368,7 @@ const styles = StyleSheet.create({
   },
   logoutIconContainer: {
     width: 36,
-    height: 30,
+    height: 36,
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
