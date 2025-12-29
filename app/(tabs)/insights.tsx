@@ -57,6 +57,12 @@ export default function InsightsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']} testID="insightsScreen">
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Insights</Text>
+        <Text style={styles.headerSubtitle}>Track your spending patterns</Text>
+      </View>
+
       <ScrollView contentContainerStyle={styles.content} testID="insightsScroll">
         <View style={styles.hero}>
           <View style={styles.heroTop}>
@@ -265,6 +271,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.background,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: AppColors.text,
+    letterSpacing: -0.4,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: AppColors.secondaryText,
+    marginTop: 2,
   },
   content: {
     padding: 16,
