@@ -196,8 +196,20 @@ export async function validatePurchaseOnServer(
 
     // Check if validation failed
     if (!result.valid) {
-      const errorMessage = result.message || result.error || 'Purchase validation failed.';
-      const errorCode = result.code || result.status;
+      // Validate optional fields before using them to prevent runtime errors
+      const message = typeof result.message === 'string' ? result.message : undefined;
+      const error = typeof result.error === 'string' ? result.error : undefined;
+      const code =
+        typeof result.code === 'string' || typeof result.code === 'number'
+          ? String(result.code)
+          : undefined;
+      const status =
+        typeof result.status === 'string' || typeof result.status === 'number'
+          ? String(result.status)
+          : undefined;
+
+      const errorMessage = message || error || 'Purchase validation failed.';
+      const errorCode = code || status;
       throw new Error(errorCode ? `${errorMessage} (Code: ${errorCode})` : errorMessage);
     }
 
