@@ -4,6 +4,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
+import { getCurrencySymbol } from '@/src/constants/currencies';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   BellIcon,
@@ -15,23 +16,6 @@ import {
   MailboxIcon,
   SignOutIcon,
 } from 'phosphor-react-native';
-
-function getCurrencySymbol(currency: string): string {
-  const symbols: Record<string, string> = {
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-    JPY: '¥',
-    CNY: '¥',
-    KRW: '₩',
-    INR: '₹',
-    RUB: '₽',
-    BRL: 'R$',
-    CAD: '$',
-    AUD: '$',
-  };
-  return symbols[currency] || currency;
-}
 
 interface SettingRowProps {
   icon: React.ReactNode;
