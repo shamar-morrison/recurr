@@ -1,6 +1,17 @@
+import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
@@ -8,16 +19,22 @@ import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { DateFormatModal } from '@/src/components/DateFormatModal';
 import { getCurrencySymbol } from '@/src/constants/currencies';
 import { DateFormatId, getDateFormatLabel } from '@/src/constants/dateFormats';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   BellIcon,
   CalendarIcon,
   CaretRightIcon,
+  ChatCircleDotsIcon,
   CoinsIcon,
   CrownIcon,
   EnvelopeIcon,
+  GridFourIcon,
+  InfoIcon,
   InvoiceIcon,
+  ShareNetworkIcon,
   SignOutIcon,
+  StarIcon,
 } from 'phosphor-react-native';
 
 interface SettingRowProps {
@@ -108,6 +125,62 @@ export default function SettingsScreen() {
   const handleDateFormatSelect = (format: DateFormatId) => {
     setDateFormat(format);
     setDateFormatModalVisible(false);
+  };
+
+  const handleRateUs = async () => {
+    const playStoreUrl = 'market://details?id=com.horizon.recurr';
+    const webUrl = 'https://play.google.com/store/apps/details?id=com.horizon.recurr';
+    try {
+      const supported = await Linking.canOpenURL(playStoreUrl);
+      if (supported) {
+        await Linking.openURL(playStoreUrl);
+      } else {
+        await Linking.openURL(webUrl);
+      }
+    } catch (error) {
+      console.error('Failed to open Play Store:', error);
+      Alert.alert('Error', 'Unable to open the Play Store. Please try again later.');
+    }
+  };
+
+  const handleContactSupport = async () => {
+    const emailUrl = 'mailto:shamar.morrison2000@gmail.com?subject=Recurr%20Support';
+    try {
+      await Linking.openURL(emailUrl);
+    } catch (error) {
+      console.error('Failed to open email:', error);
+      Alert.alert(
+        'Error',
+        'Unable to open email client. Please contact us at shamar.morrison2000@gmail.com'
+      );
+    }
+  };
+
+  const handleOtherApps = async () => {
+    const developerUrl = 'market://dev?id=The+Avg+Coder';
+    const webUrl = 'https://play.google.com/store/apps/developer?id=The+Avg+Coder&hl=en';
+    try {
+      const supported = await Linking.canOpenURL(developerUrl);
+      if (supported) {
+        await Linking.openURL(developerUrl);
+      } else {
+        await Linking.openURL(webUrl);
+      }
+    } catch (error) {
+      console.error('Failed to open developer page:', error);
+      Alert.alert('Error', 'Unable to open the Play Store. Please try again later.');
+    }
+  };
+
+  const handleShareApp = async () => {
+    try {
+      await Share.share({
+        message:
+          'Check out Recurr - the easiest way to track all your subscriptions! Download it here: https://play.google.com/store/apps/details?id=com.horizon.recurr',
+      });
+    } catch (error) {
+      console.error('Failed to share:', error);
+    }
   };
 
   const handleSignOut = () => {
@@ -247,6 +320,60 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Information Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>INFORMATION</Text>
+          <View style={styles.card}>
+            <SettingRow
+              icon={<StarIcon weight="fill" />}
+              iconColor="#F59E0B"
+              iconBg="#FEF3C7"
+              label="Rate us"
+              onPress={handleRateUs}
+            />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<ChatCircleDotsIcon />}
+              iconColor="#06B6D4"
+              iconBg="#CFFAFE"
+              label="Contact Support"
+              onPress={handleContactSupport}
+            />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<GridFourIcon />}
+              iconColor="#8B5CF6"
+              iconBg="#EDE9FE"
+              label="Other apps"
+              onPress={handleOtherApps}
+            />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<ShareNetworkIcon />}
+              iconColor="#EC4899"
+              iconBg="#FCE7F3"
+              label="Share App"
+              onPress={handleShareApp}
+            />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<InfoIcon />}
+              iconColor="#6366F1"
+              iconBg="#E0E7FF"
+              label="About"
+              onPress={() => router.push('/about')}
+            />
+          </View>
+        </View>
+
         {/* Sign Out */}
         <View style={styles.section}>
           <Pressable onPress={handleSignOut} style={styles.logoutCard}>
@@ -281,70 +408,70 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.background,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
+    paddingHorizontal: SPACING.xl,
+    paddingTop: SPACING.sm,
+    paddingBottom: SPACING.md,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xxl,
     fontWeight: '800',
     color: AppColors.text,
     letterSpacing: -0.4,
   },
   headerSubtitle: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     fontWeight: '500',
     color: AppColors.secondaryText,
     marginTop: 2,
   },
   scrollContent: {
-    padding: 20,
+    padding: SPACING.xl,
     paddingBottom: 40,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: SPACING.xxl,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     fontWeight: '600',
     color: AppColors.secondaryText,
-    marginLeft: 4,
-    marginBottom: 8,
+    marginLeft: SPACING.xs,
+    marginBottom: SPACING.sm,
     letterSpacing: 0.5,
   },
   card: {
     backgroundColor: AppColors.card,
-    borderRadius: 16,
+    borderRadius: BORDER_RADIUS.xl,
     overflow: 'hidden',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
     backgroundColor: AppColors.card,
   },
   iconContainer: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: BORDER_RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: SPACING.md,
   },
   rowLabel: {
     flex: 1,
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '500',
     color: AppColors.text,
   },
   rowRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 8,
+    marginLeft: SPACING.sm,
   },
   rowValue: {
-    fontSize: 15,
+    fontSize: FONT_SIZE.lg,
     color: AppColors.secondaryText,
     marginRight: 6,
     maxWidth: 160,
@@ -358,8 +485,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
   },
   profileLeft: {
     flexDirection: 'row',
@@ -368,38 +495,38 @@ const styles = StyleSheet.create({
   avatar: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    marginRight: 12,
+    borderRadius: BORDER_RADIUS.xxxl,
+    marginRight: SPACING.md,
   },
   avatarPlaceholder: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: BORDER_RADIUS.xxxl,
     backgroundColor: AppColors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: SPACING.md,
   },
   avatarInitial: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xxl,
     fontWeight: '700',
     color: AppColors.secondaryText,
   },
   profileName: {
-    fontSize: 17,
+    fontSize: FONT_SIZE.xl,
     fontWeight: '600',
     color: AppColors.text,
   },
   profilePlan: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     color: AppColors.secondaryText,
   },
   logoutCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
     backgroundColor: 'rgba(255,68,56,0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255,68,56,0.15)',
@@ -407,14 +534,14 @@ const styles = StyleSheet.create({
   logoutIconContainer: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: BORDER_RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: SPACING.md,
     backgroundColor: 'rgba(255,68,56,0.12)',
   },
   logoutText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
     color: AppColors.negative,
   },

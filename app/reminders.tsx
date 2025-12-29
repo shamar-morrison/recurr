@@ -1,30 +1,25 @@
 import { router, Stack } from 'expo-router';
-import {
-  BellIcon,
-  BellSlashIcon,
-  CheckIcon,
-  FlaskIcon,
-  FunnelSimpleIcon,
-  XIcon,
-} from 'phosphor-react-native';
+import { BellIcon, BellSlashIcon, FlaskIcon, FunnelSimpleIcon } from 'phosphor-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Modal,
   Pressable,
   RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppColors, CATEGORY_COLORS } from '@/constants/colors';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
+import { BaseModal } from '@/src/components/ui/BaseModal';
+import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
 import { StackHeader } from '@/src/components/ui/StackHeader';
 import { getServiceDomain } from '@/src/constants/services';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { cancelNotification } from '@/src/features/notifications/notificationService';
 import {
   useSubscriptionsQuery,
@@ -335,67 +330,43 @@ export default function RemindersScreen() {
       </View>
 
       {/* Category Filter Modal */}
-      <Modal
+      <BaseModal
         visible={showFilterModal}
-        animationType="slide"
-        presentationStyle="formSheet"
-        onRequestClose={() => setShowFilterModal(false)}
+        title="Filter by Category"
+        onClose={() => setShowFilterModal(false)}
       >
-        <SafeAreaView style={styles.modalContainer} edges={['top', 'bottom']}>
-          <View style={styles.modalHeader}>
-            <View style={styles.modalHeaderSpacer} />
-            <Text style={styles.modalTitle}>Filter by Category</Text>
-            <Pressable onPress={() => setShowFilterModal(false)} style={styles.modalCloseButton}>
-              <XIcon color={AppColors.text} size={22} />
-            </Pressable>
-          </View>
+        <FlatList<FilterCategory>
+          data={['All', ...SUBSCRIPTION_CATEGORIES] as FilterCategory[]}
+          keyExtractor={(item) => item}
+          renderItem={({ item }) => {
+            const isSelected = item === selectedCategory;
+            const categoryColors =
+              item === 'All'
+                ? null
+                : CATEGORY_COLORS[item as SubscriptionCategory] || CATEGORY_COLORS.Other;
+            const hasReminders =
+              item === 'All' || categoriesWithReminders.includes(item as SubscriptionCategory);
 
-          <FlatList<FilterCategory>
-            data={['All', ...SUBSCRIPTION_CATEGORIES] as FilterCategory[]}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => {
-              const isSelected = item === selectedCategory;
-              const categoryColors =
-                item === 'All'
-                  ? null
-                  : CATEGORY_COLORS[item as SubscriptionCategory] || CATEGORY_COLORS.Other;
-              const hasReminders =
-                item === 'All' || categoriesWithReminders.includes(item as SubscriptionCategory);
+            const colorDot = categoryColors ? (
+              <View style={[styles.filterCategoryDot, { backgroundColor: categoryColors.text }]} />
+            ) : null;
 
-              return (
-                <Pressable
-                  onPress={() => {
-                    setSelectedCategory(item);
-                    setShowFilterModal(false);
-                  }}
-                  style={[styles.filterItem, isSelected && styles.filterItemSelected]}
-                  disabled={!hasReminders && (item as string) !== 'All'}
-                >
-                  <View style={styles.filterItemLeft}>
-                    {categoryColors && (
-                      <View
-                        style={[styles.filterCategoryDot, { backgroundColor: categoryColors.text }]}
-                      />
-                    )}
-                    <Text
-                      style={[
-                        styles.filterItemText,
-                        !hasReminders &&
-                          (item as string) !== 'All' &&
-                          styles.filterItemTextDisabled,
-                      ]}
-                    >
-                      {item}
-                    </Text>
-                  </View>
-                  {isSelected && <CheckIcon color={AppColors.tint} size={20} weight="bold" />}
-                </Pressable>
-              );
-            }}
-            contentContainerStyle={styles.filterList}
-          />
-        </SafeAreaView>
-      </Modal>
+            return (
+              <BaseModalListItem
+                label={item}
+                isSelected={isSelected}
+                disabled={!hasReminders && (item as string) !== 'All'}
+                onPress={() => {
+                  setSelectedCategory(item);
+                  setShowFilterModal(false);
+                }}
+                leftElement={colorDot}
+              />
+            );
+          }}
+          showsVerticalScrollIndicator={false}
+        />
+      </BaseModal>
     </>
   );
 }
@@ -419,8 +390,8 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.background,
   },
   listContent: {
-    padding: 16,
-    paddingBottom: 32,
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xxxl,
   },
   listContentEmpty: {
     flex: 1,
@@ -430,33 +401,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: SPACING.lg,
   },
   headerCount: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: '600',
     color: AppColors.secondaryText,
   },
   clearAllButton: {
-    paddingHorizontal: 12,
+    paddingHorizontal: SPACING.md,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: BORDER_RADIUS.sm,
     backgroundColor: 'rgba(255,107,107,0.1)',
   },
   clearAllText: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     fontWeight: '600',
     color: AppColors.negative,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 20,
+    gap: SPACING.lg,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xxl,
     backgroundColor: AppColors.card,
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
   rowMain: {
     flex: 1,
@@ -464,7 +435,7 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     color: AppColors.text,
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '700',
     letterSpacing: -0.2,
   },
@@ -475,22 +446,22 @@ const styles = StyleSheet.create({
   },
   categoryBadge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 8,
+    paddingHorizontal: SPACING.sm,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: BORDER_RADIUS.xs,
   },
   categoryBadgeText: {
-    fontSize: 10,
+    fontSize: FONT_SIZE.xs,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
   billingInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: SPACING.xs,
   },
   billingText: {
-    fontSize: 12,
+    fontSize: FONT_SIZE.sm,
     fontWeight: '500',
     color: AppColors.secondaryText,
   },
@@ -500,61 +471,61 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   reminderText: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     fontWeight: '600',
     color: AppColors.tint,
   },
   rowRight: {
     alignItems: 'flex-end',
-    gap: 8,
+    gap: SPACING.sm,
   },
   rowAmount: {
     color: AppColors.text,
-    fontSize: 17,
+    fontSize: FONT_SIZE.xl,
     fontWeight: '800',
     letterSpacing: -0.3,
   },
   removeButton: {
     padding: 6,
-    borderRadius: 8,
+    borderRadius: BORDER_RADIUS.sm,
     backgroundColor: 'rgba(255,107,107,0.1)',
   },
   empty: {
     alignItems: 'center',
-    paddingHorizontal: 32,
-    gap: 16,
+    paddingHorizontal: SPACING.xxxl,
+    gap: SPACING.lg,
   },
   emptyIcon: {
     width: 100,
     height: 100,
-    borderRadius: 50,
+    borderRadius: BORDER_RADIUS.full,
     backgroundColor: 'rgba(15,23,42,0.06)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: SPACING.sm,
   },
   emptyTitle: {
-    fontSize: 22,
+    fontSize: FONT_SIZE.xxxl,
     fontWeight: '800',
     color: AppColors.text,
     letterSpacing: -0.5,
   },
   emptyText: {
-    fontSize: 15,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '500',
     color: AppColors.secondaryText,
     textAlign: 'center',
     lineHeight: 22,
   },
   emptyButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 14,
+    paddingHorizontal: SPACING.xxl,
+    paddingVertical: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
     backgroundColor: AppColors.tint,
-    marginTop: 8,
+    marginTop: SPACING.sm,
   },
   emptyButtonText: {
-    fontSize: 15,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '700',
     color: '#fff',
   },
@@ -562,7 +533,7 @@ const styles = StyleSheet.create({
   filterButton: {
     width: 40,
     height: 40,
-    borderRadius: 14,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(15,23,42,0.06)',
@@ -570,72 +541,10 @@ const styles = StyleSheet.create({
   filterButtonActive: {
     backgroundColor: AppColors.tint,
   },
-  // Modal styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: AppColors.background,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: AppColors.border,
-  },
-  modalHeaderSpacer: {
-    width: 40,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: AppColors.text,
-    letterSpacing: -0.3,
-  },
-  modalCloseButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(15,23,42,0.06)',
-  },
-  filterList: {
-    padding: 16,
-  },
-  filterItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    marginBottom: 8,
-    backgroundColor: AppColors.card,
-  },
-  filterItemSelected: {
-    backgroundColor: 'rgba(79,140,255,0.1)',
-    borderWidth: 1,
-    borderColor: AppColors.tint,
-  },
-  filterItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
+  // Filter category dot (used in BaseModalListItem leftElement)
   filterCategoryDot: {
     width: 12,
     height: 12,
-    borderRadius: 6,
-  },
-  filterItemText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: AppColors.text,
-  },
-  filterItemTextDisabled: {
-    color: AppColors.secondaryText,
-    opacity: 0.5,
+    borderRadius: BORDER_RADIUS.full,
   },
 });

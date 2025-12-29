@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 import { AppColors } from '@/constants/colors';
+import { BORDER_RADIUS, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -41,9 +42,24 @@ function getVariantColors(colors: typeof AppColors): VariantColors {
 }
 
 const SIZE_STYLES = {
-  sm: { paddingVertical: 8, paddingHorizontal: 16, minHeight: 36, fontSize: 13 },
-  md: { paddingVertical: 14, paddingHorizontal: 24, minHeight: 52, fontSize: 16 },
-  lg: { paddingVertical: 18, paddingHorizontal: 32, minHeight: 60, fontSize: 18 },
+  sm: {
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.lg,
+    minHeight: 36,
+    fontSize: FONT_SIZE.md,
+  },
+  md: {
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.xxl,
+    minHeight: 52,
+    fontSize: FONT_SIZE.lg,
+  },
+  lg: {
+    paddingVertical: SPACING.xl,
+    paddingHorizontal: SPACING.xxxl,
+    minHeight: 60,
+    fontSize: FONT_SIZE.xl,
+  },
 } as const;
 
 export function Button({
@@ -115,13 +131,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    borderRadius: 60,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
+    gap: SPACING.sm,
+    borderRadius: BORDER_RADIUS.full,
+    ...SHADOWS.md,
   },
   text: {
     fontWeight: '600',

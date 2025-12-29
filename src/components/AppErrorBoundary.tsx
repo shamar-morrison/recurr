@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppColors } from '@/constants/colors';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 
 type Props = {
   children: React.ReactNode;
@@ -78,31 +79,31 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    padding: SPACING.lg,
   },
   card: {
     width: '100%',
     maxWidth: 420,
-    borderRadius: 20,
-    padding: 16,
+    borderRadius: BORDER_RADIUS.xxl,
+    padding: SPACING.lg,
     borderWidth: StyleSheet.hairlineWidth,
   },
   title: {
-    fontSize: 20,
+    fontSize: FONT_SIZE.xxl,
     fontWeight: '900',
     letterSpacing: -0.3,
     marginBottom: 6,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     lineHeight: 18,
-    marginBottom: 14,
+    marginBottom: SPACING.lg,
   },
   button: {
     alignSelf: 'flex-start',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 14,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
   },
   buttonText: {
     color: '#fff',

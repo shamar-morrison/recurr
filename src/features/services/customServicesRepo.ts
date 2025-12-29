@@ -79,13 +79,23 @@ function normalizeCustomService(raw: unknown): CustomService | null {
   // Validate category against allowed values, fallback to 'Other' if invalid
   const category: SubscriptionCategory = isValidCategory(r.category) ? r.category : 'Other';
 
-  return {
+  const service: CustomService = {
     id: r.id,
     name: r.name,
     category,
     color: r.color,
     createdAt: typeof r.createdAt === 'number' ? r.createdAt : nowMillis(),
   };
+
+  // Add optional fields if present
+  if (typeof r.websiteUrl === 'string' && r.websiteUrl.trim()) {
+    service.websiteUrl = r.websiteUrl.trim();
+  }
+  if (typeof r.notes === 'string' && r.notes.trim()) {
+    service.notes = r.notes.trim();
+  }
+
+  return service;
 }
 
 function mapDocToCustomService(d: QueryDocumentSnapshot): CustomService {
@@ -267,6 +277,8 @@ export async function addCustomService(
       category: input.category,
       color: normalizedColor,
       createdAt: now,
+      ...(input.websiteUrl?.trim() && { websiteUrl: input.websiteUrl.trim() }),
+      ...(input.notes?.trim() && { notes: input.notes.trim() }),
     };
 
     // Read and write atomically within the lock
@@ -293,6 +305,8 @@ export async function addCustomService(
         category: service.category,
         color: service.color,
         createdAt: serverTimestamp(),
+        ...(service.websiteUrl && { websiteUrl: service.websiteUrl }),
+        ...(service.notes && { notes: service.notes }),
       });
 
       const saved: CustomService = { ...service, id: docRef.id };

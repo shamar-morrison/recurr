@@ -6,12 +6,14 @@ import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { FrequencySelectorModal } from '@/src/components/FrequencySelectorModal';
 import { PAYMENT_METHOD_CONFIG, PaymentMethodModal } from '@/src/components/PaymentMethodModal';
 import { ReminderSelectorModal } from '@/src/components/ReminderSelectorModal';
+import { ReminderTimeSelectorModal } from '@/src/components/ReminderTimeSelectorModal';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { Button } from '@/src/components/ui/Button';
 import { CURRENCIES } from '@/src/constants/currencies';
 import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
 import { getServiceByName, getServiceDomain } from '@/src/constants/services';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   cancelNotification,
@@ -29,6 +31,7 @@ import {
   PaymentMethod,
   REMINDER_OPTIONS,
   ReminderDays,
+  ReminderHour,
   Subscription,
   SUBSCRIPTION_CATEGORIES,
   SubscriptionCategory,
@@ -40,6 +43,7 @@ import {
   CaretDownIcon,
   CaretLeftIcon,
   CheckIcon,
+  ClockIcon,
   DotsThreeCircleIcon,
   ForkKnifeIcon,
   GraduationCapIcon,
@@ -207,16 +211,32 @@ export default function SubscriptionEditorScreen() {
 
   const [reminderDays, setReminderDays] = useState<ReminderDays>(null);
   const [showReminderModal, setShowReminderModal] = useState(false);
+  const [reminderHour, setReminderHour] = useState<ReminderHour>(12); // Default to noon
+  const [showReminderTimeModal, setShowReminderTimeModal] = useState(false);
 
   const handleReminderSelect = useCallback((reminder: ReminderDays) => {
     setReminderDays(reminder);
     setShowReminderModal(false);
   }, []);
 
+  const handleReminderTimeSelect = useCallback((hour: ReminderHour) => {
+    setReminderHour(hour);
+    setShowReminderTimeModal(false);
+  }, []);
+
   const reminderLabel = useMemo(() => {
     const option = REMINDER_OPTIONS.find((o) => o.value === reminderDays);
     return option?.label ?? 'None';
   }, [reminderDays]);
+
+  const reminderTimeLabel = useMemo(() => {
+    const date = new Date();
+    date.setHours(reminderHour ?? 12, 0, 0, 0);
+    return date.toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  }, [reminderHour]);
 
   React.useEffect(() => {
     if (!editingId) return;
@@ -238,6 +258,8 @@ export default function SubscriptionEditorScreen() {
     // Validate reminderDays against allowed options
     const validReminderDays = REMINDER_OPTIONS.find((o) => o.value === existing.reminderDays);
     setReminderDays(validReminderDays ? validReminderDays.value : null);
+    // Load reminderHour, defaulting to noon if not set
+    setReminderHour(existing.reminderHour ?? 12);
     // Reset manual edit flag for clean state when loading existing data
     setHasManuallyEditedAmount(false);
   }, [defaultCurrency, editingId, existing, normalizeToMidnight]);
@@ -293,6 +315,37 @@ export default function SubscriptionEditorScreen() {
       const effectiveBillingDay = isOneTime ? startDate.getDate() : billingDay;
       const effectiveEndDate = isOneTime ? undefined : endDate ? endDate.getTime() : undefined;
 
+      // Cancel existing notification if any (before we do anything else)
+      if (existing?.notificationId) {
+        await cancelNotification(existing.notificationId);
+      }
+
+      // Determine what notificationId to save
+      let notificationIdToSave: string | null = null;
+
+      // If reminder is enabled, try to schedule notification
+      if (reminderDays !== null && reminderDays > 0) {
+        const hasPermission = await requestNotificationPermissions();
+        if (hasPermission) {
+          // For existing subscriptions, we can schedule with the existing data
+          // For new subscriptions, we'll schedule after save to get the ID
+          if (existing) {
+            const tempSubscription = {
+              ...existing,
+              serviceName: serviceName.trim(),
+              billingDay: effectiveBillingDay,
+              billingCycle,
+              startDate: startDate.getTime(),
+            };
+            notificationIdToSave = await scheduleSubscriptionReminder(
+              tempSubscription,
+              reminderDays,
+              reminderHour ?? 12
+            );
+          }
+        }
+      }
+
       const payload = buildSubscriptionPayload(existing, userId, {
         serviceName: serviceName.trim(),
         category,
@@ -305,28 +358,30 @@ export default function SubscriptionEditorScreen() {
         endDate: effectiveEndDate,
         paymentMethod: paymentMethod,
         reminderDays: reminderDays,
+        reminderHour: reminderHour,
       });
 
-      // Step 1: Save the subscription first to get a persisted ID
-      const savedSubscription = await upsertMutation.mutateAsync(payload);
+      // Include notificationId in the payload if we scheduled one (for existing subscriptions)
+      // or explicitly clear it if reminder was removed
+      const payloadWithNotification = {
+        ...payload,
+        notificationId: notificationIdToSave,
+      };
 
-      // Step 2: Handle notification scheduling AFTER successful save
-      if (reminderDays && reminderDays > 0) {
-        // Request permissions if not already granted
+      // Save the subscription
+      const savedSubscription = await upsertMutation.mutateAsync(payloadWithNotification);
+
+      // For NEW subscriptions with reminders, we need to schedule after save to get the ID
+      if (!existing && reminderDays !== null && reminderDays > 0) {
         const hasPermission = await requestNotificationPermissions();
         if (hasPermission) {
-          // Cancel existing notification if any
-          if (existing?.notificationId) {
-            await cancelNotification(existing.notificationId);
-          }
-
-          // Schedule new notification with the persisted subscription
           const notificationId = await scheduleSubscriptionReminder(
             savedSubscription,
-            reminderDays
+            reminderDays,
+            reminderHour ?? 12
           );
 
-          // Step 3: Persist the notificationId back to the subscription if we got one
+          // Only do a second save if we got a notification ID
           if (notificationId) {
             try {
               await upsertMutation.mutateAsync({
@@ -338,21 +393,9 @@ export default function SubscriptionEditorScreen() {
                 '[subscription-editor] failed to persist notification ID, cleaning up',
                 notificationError
               );
-              // Clean up the notification to prevent orphans since persistence failed
               await cancelNotification(notificationId);
             }
           }
-        }
-      } else if (existing?.notificationId) {
-        // Reminder was removed, cancel existing notification and clear notificationId
-        await cancelNotification(existing.notificationId);
-        try {
-          await upsertMutation.mutateAsync({
-            ...savedSubscription,
-            notificationId: null,
-          });
-        } catch (notificationError) {
-          console.log('[subscription-editor] failed to clear notification ID', notificationError);
         }
       }
 
@@ -373,6 +416,7 @@ export default function SubscriptionEditorScreen() {
     notes,
     paymentMethod,
     reminderDays,
+    reminderHour,
     serviceName,
     startDate,
     upsertMutation,
@@ -784,20 +828,37 @@ export default function SubscriptionEditorScreen() {
               {/* Reminder */}
               <View style={styles.section}>
                 <Text style={styles.label}>Reminder</Text>
-                <Pressable
-                  style={[styles.dropdownButton, isSaving && styles.disabledInput]}
-                  onPress={() => setShowReminderModal(true)}
-                  disabled={isSaving}
-                  testID="subscriptionEditorReminder"
-                >
-                  <View style={styles.paymentMethodRow}>
-                    <BellIcon color={AppColors.text} size={20} />
-                    <Text style={[styles.dropdownText, !reminderDays && styles.placeholderText]}>
-                      {reminderLabel}
-                    </Text>
-                  </View>
-                  <CaretDownIcon color={AppColors.secondaryText} size={16} />
-                </Pressable>
+                <View style={styles.reminderRow}>
+                  {/* Reminder Days (left half) */}
+                  <Pressable
+                    style={[styles.reminderButton, isSaving && styles.disabledInput]}
+                    onPress={() => setShowReminderModal(true)}
+                    disabled={isSaving}
+                    testID="subscriptionEditorReminder"
+                  >
+                    <View style={styles.paymentMethodRow}>
+                      <BellIcon color={AppColors.text} size={20} />
+                      <Text style={[styles.dropdownText, !reminderDays && styles.placeholderText]}>
+                        {reminderLabel}
+                      </Text>
+                    </View>
+                    <CaretDownIcon color={AppColors.secondaryText} size={16} />
+                  </Pressable>
+
+                  {/* Reminder Time (right half) */}
+                  <Pressable
+                    style={[styles.reminderButton, isSaving && styles.disabledInput]}
+                    onPress={() => setShowReminderTimeModal(true)}
+                    disabled={isSaving}
+                    testID="subscriptionEditorReminderTime"
+                  >
+                    <View style={styles.paymentMethodRow}>
+                      <ClockIcon color={AppColors.text} size={20} />
+                      <Text style={styles.dropdownText}>{reminderTimeLabel}</Text>
+                    </View>
+                    <CaretDownIcon color={AppColors.secondaryText} size={16} />
+                  </Pressable>
+                </View>
               </View>
 
               <View style={styles.section}>
@@ -873,6 +934,12 @@ export default function SubscriptionEditorScreen() {
         onSelect={handleReminderSelect}
         onClose={() => setShowReminderModal(false)}
       />
+      <ReminderTimeSelectorModal
+        visible={showReminderTimeModal}
+        selectedHour={reminderHour}
+        onSelect={handleReminderTimeSelect}
+        onClose={() => setShowReminderTimeModal(false)}
+      />
     </>
   );
 }
@@ -892,6 +959,7 @@ function buildSubscriptionPayload(
     endDate?: number;
     paymentMethod?: PaymentMethod;
     reminderDays?: number | null;
+    reminderHour?: number | null;
   }
 ) {
   return {
@@ -908,6 +976,7 @@ function buildSubscriptionPayload(
     endDate: base.endDate,
     paymentMethod: base.paymentMethod,
     reminderDays: base.reminderDays ?? null,
+    reminderHour: base.reminderHour ?? 12,
     isArchived: false,
   };
 }
@@ -918,14 +987,14 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.background,
   },
   content: {
-    padding: 20,
+    padding: SPACING.xl,
     paddingBottom: 40,
-    gap: 20,
+    gap: SPACING.xl,
   },
   headerLeft: {
     width: 40,
     height: 40,
-    borderRadius: 14,
+    borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(15,23,42,0.06)',
@@ -935,32 +1004,32 @@ const styles = StyleSheet.create({
     height: 38,
   },
   section: {
-    gap: 10,
+    gap: SPACING.md,
   },
   label: {
     color: AppColors.secondaryText,
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     fontWeight: '700',
     letterSpacing: 0.4,
-    marginLeft: 4,
+    marginLeft: SPACING.xs,
   },
   helper: {
     color: AppColors.secondaryText,
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     lineHeight: 18,
-    marginLeft: 4,
-    marginBottom: 4,
+    marginLeft: SPACING.xs,
+    marginBottom: SPACING.xs,
   },
   input: {
     minHeight: 56,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderRadius: BORDER_RADIUS.xxl,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.lg,
     color: AppColors.text,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: AppColors.border,
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
     shadowColor: '#000',
     shadowOpacity: 0.04,
@@ -970,29 +1039,29 @@ const styles = StyleSheet.create({
   },
   inputText: {
     color: AppColors.text,
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
   },
   serviceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: SPACING.md,
   },
   placeholderText: {
     color: 'rgba(15,23,42,0.35)',
   },
   errorText: {
     color: AppColors.negative,
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     fontWeight: '600',
     marginTop: 6,
-    marginLeft: 4,
+    marginLeft: SPACING.xs,
   },
   dateInput: {
     minHeight: 56,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderRadius: BORDER_RADIUS.xxl,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.lg,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: AppColors.border,
@@ -1004,23 +1073,23 @@ const styles = StyleSheet.create({
   },
   dateText: {
     color: AppColors.text,
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
   },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: SPACING.md,
   },
   paymentMethodRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: SPACING.md,
   },
   clearButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: BORDER_RADIUS.xxl,
     backgroundColor: 'rgba(15,23,42,0.06)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1028,7 +1097,7 @@ const styles = StyleSheet.create({
   notesInput: {
     minHeight: 100,
     textAlignVertical: 'top',
-    paddingTop: 16,
+    paddingTop: SPACING.lg,
   },
   chipsRow: {
     flexDirection: 'row',
@@ -1037,9 +1106,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   chip: {
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+    borderRadius: BORDER_RADIUS.xxl,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.xl,
     backgroundColor: AppColors.card,
     borderWidth: 1.5,
     borderColor: AppColors.border,
@@ -1056,7 +1125,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   chipText: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     fontWeight: '700',
   },
   grid: {
@@ -1066,15 +1135,37 @@ const styles = StyleSheet.create({
   gridItem: {
     flex: 1,
   },
+  reminderRow: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+  },
+  reminderButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    minHeight: 56,
+    borderRadius: BORDER_RADIUS.xxl,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.lg,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
   amountRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: SPACING.md,
   },
   currencyPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    borderRadius: 16,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xl,
     backgroundColor: AppColors.cardAlt,
     borderWidth: 1,
     borderColor: AppColors.border,
@@ -1084,17 +1175,17 @@ const styles = StyleSheet.create({
   currencyText: {
     color: AppColors.text,
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
   },
   dropdownButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: SPACING.sm,
     minHeight: 56,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderRadius: BORDER_RADIUS.xxl,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.lg,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: AppColors.border,
@@ -1106,19 +1197,19 @@ const styles = StyleSheet.create({
   dropdownText: {
     color: AppColors.text,
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
   },
   amountInput: {
     flex: 1,
   },
   cycleRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: SPACING.sm,
   },
   cycle: {
     flex: 1,
-    borderRadius: 16,
-    paddingVertical: 14,
+    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: SPACING.lg,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: AppColors.card,
@@ -1126,13 +1217,13 @@ const styles = StyleSheet.create({
     borderColor: AppColors.border,
   },
   cycleText: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.md,
     fontWeight: '600',
   },
   dangerZone: {
-    marginTop: 10,
-    borderRadius: 9999,
-    padding: 16,
+    marginTop: SPACING.md,
+    borderRadius: BORDER_RADIUS.full,
+    padding: SPACING.lg,
     backgroundColor: 'rgba(255,68,56,0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255,68,56,0.15)',
@@ -1141,52 +1232,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: SPACING.md,
   },
   deleteText: {
-    fontSize: 17,
+    fontSize: FONT_SIZE.xl,
     fontWeight: '600',
   },
   primary: {
-    borderRadius: 20,
-    paddingVertical: 16,
+    borderRadius: BORDER_RADIUS.xxl,
+    paddingVertical: SPACING.lg,
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: SPACING.lg,
   },
   primaryText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
   },
   loading: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 20,
+    gap: SPACING.md,
+    paddingVertical: SPACING.xl,
     justifyContent: 'center',
   },
   loadingText: {
     color: AppColors.secondaryText,
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: '600',
   },
   notFound: {
-    borderRadius: 26,
-    padding: 24,
+    borderRadius: BORDER_RADIUS.xxxl,
+    padding: SPACING.xxl,
     backgroundColor: AppColors.card,
     borderWidth: 1,
     borderColor: AppColors.border,
-    gap: 12,
+    gap: SPACING.md,
     alignItems: 'center',
   },
   notFoundTitle: {
     color: AppColors.text,
-    fontSize: 20,
+    fontSize: FONT_SIZE.xxl,
     fontWeight: '700',
   },
   notFoundText: {
     color: AppColors.secondaryText,
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     lineHeight: 20,
     textAlign: 'center',
   },

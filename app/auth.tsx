@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
+import { FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 
 export default function AuthScreen() {
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
     flex: 1,
     // backgroundColor removed to show gradient
     justifyContent: 'space-between',
-    padding: 24,
+    padding: SPACING.xxl,
   },
   content: {
     flex: 1,
@@ -91,19 +92,19 @@ const styles = StyleSheet.create({
     gap: 40,
   },
   header: {
-    gap: 12,
+    gap: SPACING.md,
     alignItems: 'center',
   },
   title: {
     color: AppColors.text,
-    fontSize: 32,
+    fontSize: FONT_SIZE.hero,
     fontWeight: '900',
     letterSpacing: -1,
     textAlign: 'center',
   },
   subtitle: {
     color: AppColors.secondaryText,
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     lineHeight: 24,
     textAlign: 'center',
     maxWidth: 300,
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     color: '#1E293B',
-    fontSize: 16,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '600',
   },
   googleIcon: {
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     color: AppColors.secondaryText,
-    fontSize: 12,
+    fontSize: FONT_SIZE.sm,
     textAlign: 'center',
     opacity: 0.6,
   },

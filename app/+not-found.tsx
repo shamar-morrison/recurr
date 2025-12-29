@@ -3,6 +3,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AppColors } from '@/constants/colors';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 
 export default function NotFoundScreen() {
   return (
@@ -27,11 +28,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    padding: SPACING.xl,
     backgroundColor: AppColors.background,
   },
   title: {
-    fontSize: 18,
+    fontSize: FONT_SIZE.xl,
     fontWeight: '800',
     letterSpacing: -0.2,
     color: AppColors.text,
@@ -39,22 +40,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     color: AppColors.secondaryText,
     textAlign: 'center',
     maxWidth: 320,
   },
   link: {
-    marginTop: 18,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 14,
+    marginTop: SPACING.xl,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.lg,
     backgroundColor: AppColors.card,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: AppColors.border,
   },
   linkText: {
-    fontSize: 14,
+    fontSize: FONT_SIZE.md,
     fontWeight: '700',
     color: AppColors.tint,
   },
