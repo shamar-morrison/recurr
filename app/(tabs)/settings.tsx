@@ -1,6 +1,17 @@
+import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors } from '@/constants/colors';
@@ -13,11 +24,16 @@ import {
   BellIcon,
   CalendarIcon,
   CaretRightIcon,
+  ChatCircleDots,
   CoinsIcon,
   CrownIcon,
   EnvelopeIcon,
+  GridFour,
+  Info,
   InvoiceIcon,
+  ShareNetwork,
   SignOutIcon,
+  Star,
 } from 'phosphor-react-native';
 
 interface SettingRowProps {
@@ -108,6 +124,62 @@ export default function SettingsScreen() {
   const handleDateFormatSelect = (format: DateFormatId) => {
     setDateFormat(format);
     setDateFormatModalVisible(false);
+  };
+
+  const handleRateUs = async () => {
+    const playStoreUrl = 'market://details?id=com.horizon.recurr';
+    const webUrl = 'https://play.google.com/store/apps/details?id=com.horizon.recurr';
+    try {
+      const supported = await Linking.canOpenURL(playStoreUrl);
+      if (supported) {
+        await Linking.openURL(playStoreUrl);
+      } else {
+        await Linking.openURL(webUrl);
+      }
+    } catch (error) {
+      console.error('Failed to open Play Store:', error);
+      Alert.alert('Error', 'Unable to open the Play Store. Please try again later.');
+    }
+  };
+
+  const handleContactSupport = async () => {
+    const emailUrl = 'mailto:shamar.morrison2000@gmail.com?subject=Recurr%20Support';
+    try {
+      await Linking.openURL(emailUrl);
+    } catch (error) {
+      console.error('Failed to open email:', error);
+      Alert.alert(
+        'Error',
+        'Unable to open email client. Please contact us at shamar.morrison2000@gmail.com'
+      );
+    }
+  };
+
+  const handleOtherApps = async () => {
+    const developerUrl = 'market://dev?id=Horizon+Apps';
+    const webUrl = 'https://play.google.com/store/apps/developer?id=Horizon+Apps';
+    try {
+      const supported = await Linking.canOpenURL(developerUrl);
+      if (supported) {
+        await Linking.openURL(developerUrl);
+      } else {
+        await Linking.openURL(webUrl);
+      }
+    } catch (error) {
+      console.error('Failed to open developer page:', error);
+      Alert.alert('Error', 'Unable to open the Play Store. Please try again later.');
+    }
+  };
+
+  const handleShareApp = async () => {
+    try {
+      await Share.share({
+        message:
+          'Check out Recurr - the easiest way to track all your subscriptions! Download it here: https://play.google.com/store/apps/details?id=com.horizon.recurr',
+      });
+    } catch (error) {
+      console.error('Failed to share:', error);
+    }
   };
 
   const handleSignOut = () => {
@@ -243,6 +315,60 @@ export default function SettingsScreen() {
               label="Date Format"
               value={getDateFormatLabel(settings.dateFormat)}
               onPress={() => setDateFormatModalVisible(true)}
+            />
+          </View>
+        </View>
+
+        {/* Information Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>INFORMATION</Text>
+          <View style={styles.card}>
+            <SettingRow
+              icon={<Star weight="fill" />}
+              iconColor="#F59E0B"
+              iconBg="#FEF3C7"
+              label="Rate us"
+              onPress={handleRateUs}
+            />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<ChatCircleDots />}
+              iconColor="#06B6D4"
+              iconBg="#CFFAFE"
+              label="Contact Support"
+              onPress={handleContactSupport}
+            />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<GridFour />}
+              iconColor="#8B5CF6"
+              iconBg="#EDE9FE"
+              label="Other apps"
+              onPress={handleOtherApps}
+            />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<ShareNetwork />}
+              iconColor="#EC4899"
+              iconBg="#FCE7F3"
+              label="Share App"
+              onPress={handleShareApp}
+            />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<Info />}
+              iconColor="#6366F1"
+              iconBg="#E0E7FF"
+              label="About"
+              onPress={() => router.push('/about')}
             />
           </View>
         </View>
