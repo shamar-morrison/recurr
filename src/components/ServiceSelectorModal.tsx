@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
   Modal,
   Pressable,
   ScrollView,
@@ -151,13 +152,13 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
     ({ item }: { item: UnifiedService }) => {
       const isSelected = item.name === selectedService;
 
-      const leftContent = (
-        <View style={styles.serviceLogoContainer}>
+      const leftElement = (
+        <View>
           <ServiceLogo serviceName={item.name} domain={item.domain} size={32} borderRadius={8} />
         </View>
       );
 
-      const rightContent = isSelected ? undefined : item.isCustom ? (
+      const rightElement = isSelected ? undefined : item.isCustom ? (
         <Text style={styles.customBadge}>Custom</Text>
       ) : null;
 
@@ -167,8 +168,8 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
           sublabel={item.category}
           isSelected={isSelected}
           onPress={() => handleSelect(item)}
-          leftElement={leftContent}
-          rightElement={rightContent}
+          leftElement={leftElement}
+          rightElement={rightElement}
         />
       );
     },
@@ -200,7 +201,7 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <TouchableOpacity activeOpacity={1}>
+            <TouchableOpacity activeOpacity={1} onPress={Keyboard.dismiss}>
               <View style={styles.header}>
                 <View style={styles.headerSpacer} />
                 <Text style={styles.title}>Add Custom Service</Text>
@@ -379,9 +380,6 @@ const styles = StyleSheet.create({
   // List Styles
   list: {
     flex: 1,
-  },
-  serviceLogoContainer: {
-    // Container for the service logo
   },
   customBadge: {
     fontSize: 10,
