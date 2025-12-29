@@ -216,10 +216,7 @@ export default function SettingsScreen() {
               iconColor="#A855F7"
               iconBg="#F3E8FF"
               label="Billing Reminders"
-              isSwitch
-              switchValue={billingRemindersEnabled}
-              onSwitchChange={toggleBillingReminders}
-              showChevron={false}
+              onPress={() => router.push('/reminders')}
             />
           </View>
         </View>
