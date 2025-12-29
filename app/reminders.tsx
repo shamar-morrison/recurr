@@ -1,5 +1,5 @@
 import { router, Stack } from 'expo-router';
-import { BellIcon, BellSlashIcon, CheckIcon, FunnelIcon, XIcon } from 'phosphor-react-native';
+import { BellIcon, BellSlashIcon, CheckIcon, FunnelSimpleIcon, XIcon } from 'phosphor-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -276,7 +276,7 @@ export default function RemindersScreen() {
         onPress={() => setShowFilterModal(true)}
         style={[styles.filterButton, selectedCategory !== 'All' && styles.filterButtonActive]}
       >
-        <FunnelIcon
+        <FunnelSimpleIcon
           color={selectedCategory !== 'All' ? '#fff' : AppColors.text}
           size={20}
           weight={selectedCategory !== 'All' ? 'fill' : 'regular'}
@@ -442,11 +442,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: AppColors.card,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
   },
   rowMain: {
     flex: 1,
