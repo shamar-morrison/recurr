@@ -13,6 +13,7 @@ import {
   InvoiceIcon,
   LockIcon,
   MailboxIcon,
+  SignOutIcon,
 } from 'phosphor-react-native';
 
 function getCurrencySymbol(currency: string): string {
@@ -222,11 +223,13 @@ export default function SettingsScreen() {
         </View>
 
         {/* Sign Out */}
-        <View style={styles.logoutContainer}>
-          <Pressable onPress={handleSignOut} style={styles.logoutButton}>
+        <View style={styles.section}>
+          <Pressable onPress={handleSignOut} style={styles.logoutCard}>
+            <View style={styles.logoutIconContainer}>
+              <SignOutIcon size={20} color={AppColors.negative} />
+            </View>
             <Text style={styles.logoutText}>Log Out</Text>
           </Pressable>
-          <Text style={styles.versionText}>Version 1.0.0</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -352,22 +355,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: AppColors.secondaryText,
   },
-  logoutContainer: {
+  logoutCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255,68,56,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,68,56,0.15)',
   },
-  logoutButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+  logoutIconContainer: {
+    width: 36,
+    height: 30,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    backgroundColor: 'rgba(255,68,56,0.12)',
   },
   logoutText: {
     fontSize: 16,
     fontWeight: '600',
     color: AppColors.negative,
-  },
-  versionText: {
-    fontSize: 13,
-    color: AppColors.secondaryText,
-    marginTop: 12,
   },
 });
