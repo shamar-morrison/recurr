@@ -11,10 +11,9 @@ import {
   BellIcon,
   CaretRightIcon,
   CoinsIcon,
+  CrownIcon,
   EnvelopeIcon,
   InvoiceIcon,
-  LockIcon,
-  MailboxIcon,
   SignOutIcon,
 } from 'phosphor-react-native';
 
@@ -119,7 +118,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>ACCOUNT</Text>
           <View style={styles.card}>
             {/* Profile Row */}
-            <Pressable style={styles.profileRow}>
+            <View style={styles.profileRow}>
               <View style={styles.profileLeft}>
                 {user?.photoURL ? (
                   <Image source={{ uri: user.photoURL }} style={styles.avatar} />
@@ -135,27 +134,23 @@ export default function SettingsScreen() {
                   </Text>
                 </View>
               </View>
-              <CaretRightIcon size={20} color={AppColors.secondaryText} />
-            </Pressable>
+            </View>
 
-            <View style={styles.divider} />
-
-            <SettingRow
-              icon={<MailboxIcon />}
-              iconColor="#7C3AED"
-              iconBg="#F3E8FF"
-              label="Email Address"
-              value={user?.email || 'Not set'}
-            />
-
-            <View style={styles.divider} />
-
-            <SettingRow
-              icon={<LockIcon />}
-              iconColor="#7C3AED"
-              iconBg="#F3E8FF"
-              label="Security & Password"
-            />
+            {!isPremium && (
+              <>
+                <View style={styles.divider} />
+                <SettingRow
+                  icon={<CrownIcon weight="fill" />}
+                  iconColor="#D97706"
+                  iconBg="#FEF3C7"
+                  label="Upgrade to Premium"
+                  onPress={() => {
+                    // TODO: Navigate to premium upgrade screen
+                    console.log('Upgrade to Premium pressed');
+                  }}
+                />
+              </>
+            )}
           </View>
         </View>
 
