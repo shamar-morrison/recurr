@@ -37,8 +37,7 @@
       "react-native-google-auth",
       "expo-notifications",
       "expo-localization",
-      "expo-background-task",
-      "./plugins/withAndroidTaskRetention"
+      "expo-background-task"
     ],
     "experiments": {
       "typedRoutes": true,

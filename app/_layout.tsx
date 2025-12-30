@@ -6,7 +6,7 @@ import {
   useFonts,
 } from '@expo-google-fonts/inter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack, usePathname } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
@@ -37,15 +37,8 @@ function RootLayoutNav() {
   // Set up notification response handler on app mount
   useEffect(() => {
     const cleanup = setupNotificationHandler();
-    console.log('[RootLayout] Mounted');
     return cleanup;
   }, []);
-
-  // Debug routing
-  const pathname = usePathname();
-  useEffect(() => {
-    console.log('[RootLayout] Pathname changed:', pathname);
-  }, [pathname]);
 
   return (
     <>
