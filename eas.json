@@ -24,6 +24,13 @@
         }
       }
     },
+    "iap-testing": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      }
+    },
     "preview": {
       "channel": "preview",
       "android": {
