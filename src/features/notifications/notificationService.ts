@@ -228,10 +228,14 @@ export async function getScheduledNotifications(): Promise<Notifications.Notific
 export function setupNotificationHandler(): () => void {
   // Handle notification taps when app is in foreground or background
   const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-    console.log('[notifications] Notification tapped:', response.notification.request.content.data);
+    const data = response.notification.request.content.data;
+    console.log('[notifications] Notification tapped:', data);
 
-    // Navigate to home screen
-    router.navigate('/(tabs)/(home)/subscriptions');
+    // Only handle our own notifications
+    if (data?.type === 'billing_reminder') {
+      // Navigate to home screen
+      router.navigate('/(tabs)/(home)/subscriptions');
+    }
   });
 
   // Configure Android channel if needed - required for Android 13+ permission prompt

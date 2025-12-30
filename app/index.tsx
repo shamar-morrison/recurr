@@ -1,11 +1,14 @@
 import { Redirect } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 
 export default function Index() {
+  useEffect(() => {
+    console.log('[IndexScreen] Mounted - Redirecting...');
+  }, []);
   const { isReady, user, hasCompletedOnboarding } = useAuth();
   const { colors } = useTheme();
 

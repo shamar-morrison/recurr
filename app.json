@@ -22,18 +22,6 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": ["NOTIFICATIONS", "android.permission.SCHEDULE_EXACT_ALARM"],
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "showseek"
-            }
-          ],
-          "category": ["BROWSABLE", "DEFAULT"]
-        }
-      ],
       "softwareKeyboardLayoutMode": "pan",
       "package": "com.horizon.recurr",
       "googleServicesFile": "./google-services.json"
@@ -49,7 +37,8 @@
       "react-native-google-auth",
       "expo-notifications",
       "expo-localization",
-      "expo-background-task"
+      "expo-background-task",
+      "./plugins/withAndroidTaskRetention"
     ],
     "experiments": {
       "typedRoutes": true,
