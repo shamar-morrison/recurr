@@ -1,4 +1,16 @@
 import { router, Stack } from 'expo-router';
+import {
+  CheckIcon,
+  CirclesThreePlusIcon,
+  CrownIcon,
+  MagnifyingGlassIcon,
+  PlusCircleIcon,
+  PlusIcon,
+  SlidersIcon,
+  SortAscendingIcon,
+  SortDescendingIcon,
+  XCircleIcon,
+} from 'phosphor-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -8,6 +20,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,23 +32,15 @@ import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
 import {
   useSubscriptionListItems,
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
 
-import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
-import {
-  CirclesThreePlusIcon,
-  CrownIcon,
-  PlusCircleIcon,
-  PlusIcon,
-  SlidersIcon,
-  XCircleIcon,
-} from 'phosphor-react-native';
-
 type FilterChip = SubscriptionCategory | 'All';
+type SortOption = 'Date' | 'CostAsc' | 'CostDesc' | 'Name';
 
 export default function SubscriptionsHomeScreen() {
   const insets = useSafeAreaInsets();
@@ -47,11 +52,43 @@ export default function SubscriptionsHomeScreen() {
   const items = useSubscriptionListItems(subscriptionsQuery.data);
 
   const [filter, setFilter] = useState<FilterChip>('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('Date');
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
   const filteredItems = useMemo(() => {
-    if (filter === 'All') return items;
-    return items.filter((i) => i.category === filter);
-  }, [filter, items]);
+    let result = items;
+
+    // 1. Filter by Category
+    if (filter !== 'All') {
+      result = result.filter((i) => i.category === filter);
+    }
+
+    // 2. Filter by Search Query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((i) => i.serviceName.toLowerCase().includes(q));
+    }
+
+    // 3. Sort
+    result = result.sort((a, b) => {
+      switch (sortBy) {
+        case 'Date':
+          // Sort by days until billing (active upcoming first)
+          return a.nextBillingInDays - b.nextBillingInDays;
+        case 'CostAsc':
+          return a.monthlyEquivalent - b.monthlyEquivalent;
+        case 'CostDesc':
+          return b.monthlyEquivalent - a.monthlyEquivalent;
+        case 'Name':
+          return a.serviceName.localeCompare(b.serviceName);
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [filter, items, searchQuery, sortBy]);
 
   const atFreeLimit = useMemo(() => {
     if (isPremium || configLoading) return false;
@@ -203,6 +240,120 @@ export default function SubscriptionsHomeScreen() {
           ) : null}
         </View>
 
+        {/* Search and Sort Row */}
+        <View style={styles.searchRow}>
+          <View
+            style={[
+              styles.searchInputContainer,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            <MagnifyingGlassIcon color={colors.secondaryText} size={18} />
+            <TextInput
+              style={[styles.searchInput, { color: colors.text }]}
+              placeholder="Search subscriptions..."
+              placeholderTextColor={colors.secondaryText}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <Pressable onPress={() => setSearchQuery('')}>
+                <XCircleIcon color={colors.secondaryText} size={18} weight="fill" />
+              </Pressable>
+            )}
+          </View>
+
+          <Pressable
+            onPress={() => setShowSortMenu(!showSortMenu)}
+            style={[
+              styles.sortButton,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            {sortBy === 'CostAsc' || sortBy === 'Name' ? (
+              <SortAscendingIcon color={colors.text} size={20} />
+            ) : (
+              <SortDescendingIcon color={colors.text} size={20} />
+            )}
+          </Pressable>
+        </View>
+
+        {showSortMenu && (
+          <View
+            style={[styles.sortMenu, { backgroundColor: colors.card, borderColor: colors.border }]}
+          >
+            <Pressable
+              onPress={() => {
+                setSortBy('Date');
+                setShowSortMenu(false);
+              }}
+              style={styles.sortMenuItem}
+            >
+              <Text
+                style={[
+                  styles.sortMenuText,
+                  { color: sortBy === 'Date' ? colors.tint : colors.text },
+                ]}
+              >
+                Next Bill Date
+              </Text>
+              {sortBy === 'Date' && <CheckIcon color={colors.tint} size={16} />}
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setSortBy('CostDesc');
+                setShowSortMenu(false);
+              }}
+              style={styles.sortMenuItem}
+            >
+              <Text
+                style={[
+                  styles.sortMenuText,
+                  { color: sortBy === 'CostDesc' ? colors.tint : colors.text },
+                ]}
+              >
+                Highest Cost
+              </Text>
+              {sortBy === 'CostDesc' && <CheckIcon color={colors.tint} size={16} />}
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setSortBy('CostAsc');
+                setShowSortMenu(false);
+              }}
+              style={styles.sortMenuItem}
+            >
+              <Text
+                style={[
+                  styles.sortMenuText,
+                  { color: sortBy === 'CostAsc' ? colors.tint : colors.text },
+                ]}
+              >
+                Lowest Cost
+              </Text>
+              {sortBy === 'CostAsc' && <CheckIcon color={colors.tint} size={16} />}
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setSortBy('Name');
+                setShowSortMenu(false);
+              }}
+              style={styles.sortMenuItem}
+            >
+              <Text
+                style={[
+                  styles.sortMenuText,
+                  { color: sortBy === 'Name' ? colors.tint : colors.text },
+                ]}
+              >
+                Name (A-Z)
+              </Text>
+              {sortBy === 'Name' && <CheckIcon color={colors.tint} size={16} />}
+            </Pressable>
+          </View>
+        )}
+
         <View style={styles.filters}>
           <View style={styles.filtersLeft}>
             <SlidersIcon color={colors.secondaryText} size={16} />
@@ -263,22 +414,22 @@ export default function SubscriptionsHomeScreen() {
             testID="subscriptionsEmpty"
           >
             <View style={styles.emptyIcon}>
-              {filter === 'All' ? (
+              {filter === 'All' && !searchQuery ? (
                 <PlusCircleIcon color={colors.tint} size={22} />
               ) : (
                 <XCircleIcon color={colors.tint} size={22} />
               )}
             </View>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              {filter === 'All' ? 'Add your first subscription' : 'No matches'}
+              {filter === 'All' && !searchQuery ? 'Add your first subscription' : 'No matches'}
             </Text>
             <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-              {filter === 'All'
+              {filter === 'All' && !searchQuery
                 ? `Start with your top 3. We'll estimate your monthly spend automatically.`
-                : 'Try another category filter.'}
+                : 'Try adjusting your search or filters.'}
             </Text>
 
-            {filter === 'All' ? (
+            {filter === 'All' && !searchQuery ? (
               <Button
                 title="Add Subscription"
                 onPress={handleAdd}
@@ -304,6 +455,11 @@ export default function SubscriptionsHomeScreen() {
     filteredItems.length,
     totalMonthlySpend,
     colors,
+    searchQuery,
+    sortBy,
+    showSortMenu,
+    configLoading,
+    freeTierLimit,
   ]);
 
   return (
@@ -511,6 +667,64 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: FONT_SIZE.sm,
     color: AppColors.primary,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+    marginBottom: 4,
+  },
+  searchInputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: AppColors.card,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    borderRadius: BORDER_RADIUS.xl,
+    paddingHorizontal: SPACING.md,
+    height: 50,
+    gap: SPACING.sm,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: FONT_SIZE.md,
+    color: AppColors.text,
+  },
+  sortButton: {
+    width: 50,
+    height: 50,
+    borderRadius: BORDER_RADIUS.xl,
+    backgroundColor: AppColors.card,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sortMenu: {
+    backgroundColor: AppColors.card,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    borderRadius: BORDER_RADIUS.xl,
+    padding: SPACING.sm,
+    gap: 4,
+    marginBottom: SPACING.md,
+    shadowColor: 'rgba(0,0,0,0.1)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  sortMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    borderRadius: BORDER_RADIUS.lg,
+  },
+  sortMenuText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
   },
   filters: {
     gap: SPACING.md,

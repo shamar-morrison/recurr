@@ -10,7 +10,14 @@ export type SubscriptionCategory =
   | 'AI'
   | 'Other';
 
-export type BillingCycle = 'Monthly' | 'Yearly' | 'One-Time';
+export type BillingCycle =
+  | 'Weekly'
+  | 'Bi-weekly'
+  | 'Monthly'
+  | 'Quarterly'
+  | 'Semiannual'
+  | 'Yearly'
+  | 'One-Time';
 
 export type CurrencyCode = string;
 
@@ -98,7 +105,15 @@ export const SUBSCRIPTION_CATEGORIES: SubscriptionCategory[] = [
   'Other',
 ];
 
-export const BILLING_CYCLES: BillingCycle[] = ['Monthly', 'Yearly', 'One-Time'];
+export const BILLING_CYCLES: BillingCycle[] = [
+  'Weekly',
+  'Bi-weekly',
+  'Monthly',
+  'Quarterly',
+  'Semiannual',
+  'Yearly',
+  'One-Time',
+];
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
   'Credit Card',

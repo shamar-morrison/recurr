@@ -68,7 +68,10 @@ function calculateReminderDate(
     billingDate = new Date(subscription.startDate);
   } else {
     // For recurring subscriptions, calculate next billing date
-    billingDate = nextBillingDate(now, subscription.billingDay);
+    const anchor = subscription.startDate
+      ? new Date(subscription.startDate)
+      : new Date(subscription.createdAt);
+    billingDate = nextBillingDate(now, subscription.billingCycle, anchor);
   }
 
   // Calculate reminder date (X days before billing)
@@ -147,7 +150,10 @@ export async function scheduleSubscriptionReminder(
     if (subscription.billingCycle === 'One-Time') {
       billingDate = subscription.startDate ? new Date(subscription.startDate) : now;
     } else {
-      billingDate = nextBillingDate(now, subscription.billingDay);
+      const anchor = subscription.startDate
+        ? new Date(subscription.startDate)
+        : new Date(subscription.createdAt);
+      billingDate = nextBillingDate(now, subscription.billingCycle, anchor);
     }
 
     // Schedule the notification
