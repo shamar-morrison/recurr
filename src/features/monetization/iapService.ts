@@ -26,8 +26,7 @@ export const PREMIUM_PRODUCT_ID = 'com.horizon.recurr.premium';
 
 // Firebase Functions endpoint for purchase validation
 // Update this with your actual Firebase Functions URL after deployment
-const VALIDATE_PURCHASE_URL =
-  'https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/validateAndroidPurchase';
+const VALIDATE_PURCHASE_URL = `https://us-central1-recurr-app.cloudfunctions.net/validateAndroidPurchase`;
 
 // Storage key prefix for failed purchase acknowledgements (per-purchase key approach)
 const FAILED_PURCHASE_KEY_PREFIX = '@iap_failed_ack_';
