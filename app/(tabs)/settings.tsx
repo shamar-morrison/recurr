@@ -17,9 +17,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppColors } from '@/constants/colors';
 import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { DateFormatModal } from '@/src/components/DateFormatModal';
+import { ThemeSelectorModal } from '@/src/components/ThemeSelectorModal';
 import { getCurrencySymbol } from '@/src/constants/currencies';
 import { DateFormatId, getDateFormatLabel } from '@/src/constants/dateFormats';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { ThemeMode, useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { exportData, ExportFormat } from '@/src/features/export/exportService';
 import { useSubscriptionsQuery } from '@/src/features/subscriptions/subscriptionsHooks';
@@ -35,6 +37,7 @@ import {
   GridFourIcon,
   InfoIcon,
   InvoiceIcon,
+  PaletteIcon,
   ShareNetworkIcon,
   SignOutIcon,
   StarIcon,
@@ -51,6 +54,7 @@ interface SettingRowProps {
   onSwitchChange?: (val: boolean) => void;
   onPress?: () => void;
   showChevron?: boolean;
+  colors: ReturnType<typeof useTheme>['colors'];
 }
 
 function SettingRow({
@@ -64,9 +68,14 @@ function SettingRow({
   onSwitchChange,
   onPress,
   showChevron = true,
+  colors,
 }: SettingRowProps) {
   return (
-    <Pressable onPress={onPress} disabled={isSwitch} style={styles.row}>
+    <Pressable
+      onPress={onPress}
+      disabled={isSwitch}
+      style={[styles.row, { backgroundColor: colors.card }]}
+    >
       <View style={[styles.iconContainer, { backgroundColor: iconBg }]}>
         {React.cloneElement(icon as React.ReactElement<{ size?: number; color?: string }>, {
           size: 20,
@@ -74,7 +83,7 @@ function SettingRow({
         })}
       </View>
 
-      <Text style={styles.rowLabel} numberOfLines={1}>
+      <Text style={[styles.rowLabel, { color: colors.text }]} numberOfLines={1}>
         {label}
       </Text>
 
@@ -82,17 +91,17 @@ function SettingRow({
         <Switch
           value={switchValue}
           onValueChange={onSwitchChange}
-          trackColor={{ false: AppColors.border, true: AppColors.primary }}
-          thumbColor={AppColors.card}
+          trackColor={{ false: colors.border, true: colors.primary }}
+          thumbColor={colors.card}
         />
       ) : (
         <View style={styles.rowRight}>
           {value && (
-            <Text style={styles.rowValue} numberOfLines={1}>
+            <Text style={[styles.rowValue, { color: colors.secondaryText }]} numberOfLines={1}>
               {value}
             </Text>
           )}
-          {showChevron && <CaretRightIcon size={20} color={AppColors.secondaryText} />}
+          {showChevron && <CaretRightIcon size={20} color={colors.secondaryText} />}
         </View>
       )}
     </Pressable>
@@ -111,11 +120,25 @@ export default function SettingsScreen() {
     setPushNotificationsEnabled,
   } = useAuth();
 
+  const { themeMode, setThemeMode, colors } = useTheme();
+
   const [emailEnabled, setEmailEnabled] = useState(false);
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [dateFormatModalVisible, setDateFormatModalVisible] = useState(false);
+  const [themeModalVisible, setThemeModalVisible] = useState(false);
 
   const { data: subscriptions, isLoading: isLoadingSubscriptions } = useSubscriptionsQuery();
+
+  const getThemeLabel = (mode: ThemeMode): string => {
+    switch (mode) {
+      case 'light':
+        return 'Light';
+      case 'dark':
+        return 'Dark';
+      case 'system':
+        return 'System';
+    }
+  };
 
   const billingRemindersEnabled = settings.remindDaysBeforeBilling > 0;
   const toggleBillingReminders = (val: boolean) => {
@@ -278,18 +301,23 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['top']}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Preferences</Text>
-        <Text style={styles.headerSubtitle}>Manage your account and settings</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>My Preferences</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.secondaryText }]}>
+          Manage your account and settings
+        </Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Account Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ACCOUNT</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>ACCOUNT</Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             {/* Profile Row */}
             <View style={styles.profileRow}>
               <View style={styles.profileLeft}>
@@ -301,8 +329,10 @@ export default function SettingsScreen() {
                   </View>
                 )}
                 <View>
-                  <Text style={styles.profileName}>{user?.displayName || 'User'}</Text>
-                  <Text style={styles.profilePlan}>
+                  <Text style={[styles.profileName, { color: colors.text }]}>
+                    {user?.displayName || 'User'}
+                  </Text>
+                  <Text style={[styles.profilePlan, { color: colors.secondaryText }]}>
                     {isPremium ? 'Premium Account' : 'Personal Account'}
                   </Text>
                 </View>
@@ -311,8 +341,9 @@ export default function SettingsScreen() {
 
             {!isPremium && (
               <>
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
                 <SettingRow
+                  colors={colors}
                   icon={<CrownIcon weight="fill" />}
                   iconColor="#D97706"
                   iconBg="#FEF3C7"
@@ -326,9 +357,10 @@ export default function SettingsScreen() {
 
         {/* Notifications Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>NOTIFICATIONS</Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
+              colors={colors}
               icon={<BellIcon />}
               iconColor="#F97316"
               iconBg="#FFEDD5"
@@ -339,9 +371,10 @@ export default function SettingsScreen() {
               showChevron={false}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
+              colors={colors}
               icon={<EnvelopeIcon />}
               iconColor="#3B82F6"
               iconBg="#DBEAFE"
@@ -352,9 +385,10 @@ export default function SettingsScreen() {
               showChevron={false}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
+              colors={colors}
               icon={<InvoiceIcon />}
               iconColor="#A855F7"
               iconBg="#F3E8FF"
@@ -366,9 +400,10 @@ export default function SettingsScreen() {
 
         {/* Preferences Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>PREFERENCES</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>PREFERENCES</Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
+              colors={colors}
               icon={<CoinsIcon />}
               iconColor="#10B981"
               iconBg="#D1FAE5"
@@ -377,9 +412,10 @@ export default function SettingsScreen() {
               onPress={() => setCurrencyModalVisible(true)}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
+              colors={colors}
               icon={<CalendarIcon />}
               iconColor="#6366F1"
               iconBg="#E0E7FF"
@@ -387,14 +423,27 @@ export default function SettingsScreen() {
               value={getDateFormatLabel(settings.dateFormat)}
               onPress={() => setDateFormatModalVisible(true)}
             />
+
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+            <SettingRow
+              colors={colors}
+              icon={<PaletteIcon />}
+              iconColor="#8B5CF6"
+              iconBg="#EDE9FE"
+              label="Theme"
+              value={getThemeLabel(themeMode)}
+              onPress={() => setThemeModalVisible(true)}
+            />
           </View>
         </View>
 
         {/* Data Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>DATA</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>DATA</Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
+              colors={colors}
               icon={<DownloadSimpleIcon />}
               iconColor="#059669"
               iconBg="#D1FAE5"
@@ -406,9 +455,10 @@ export default function SettingsScreen() {
 
         {/* Information Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>INFORMATION</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>INFORMATION</Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
+              colors={colors}
               icon={<StarIcon weight="fill" />}
               iconColor="#F59E0B"
               iconBg="#FEF3C7"
@@ -416,9 +466,10 @@ export default function SettingsScreen() {
               onPress={handleRateUs}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
+              colors={colors}
               icon={<ChatCircleDotsIcon />}
               iconColor="#06B6D4"
               iconBg="#CFFAFE"
@@ -426,9 +477,10 @@ export default function SettingsScreen() {
               onPress={handleContactSupport}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
+              colors={colors}
               icon={<GridFourIcon />}
               iconColor="#8B5CF6"
               iconBg="#EDE9FE"
@@ -436,9 +488,10 @@ export default function SettingsScreen() {
               onPress={handleOtherApps}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
+              colors={colors}
               icon={<ShareNetworkIcon />}
               iconColor="#EC4899"
               iconBg="#FCE7F3"
@@ -446,9 +499,10 @@ export default function SettingsScreen() {
               onPress={handleShareApp}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
+              colors={colors}
               icon={<InfoIcon />}
               iconColor="#6366F1"
               iconBg="#E0E7FF"
@@ -481,6 +535,13 @@ export default function SettingsScreen() {
         selectedFormat={settings.dateFormat}
         onSelect={handleDateFormatSelect}
         onClose={() => setDateFormatModalVisible(false)}
+      />
+
+      <ThemeSelectorModal
+        visible={themeModalVisible}
+        selectedTheme={themeMode}
+        onSelect={setThemeMode}
+        onClose={() => setThemeModalVisible(false)}
       />
     </SafeAreaView>
   );

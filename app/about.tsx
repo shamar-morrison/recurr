@@ -3,26 +3,34 @@ import React from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppColors } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 import { CaretLeftIcon } from 'phosphor-react-native';
 
 export default function AboutScreen() {
+  const { colors } = useTheme();
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['top']}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <CaretLeftIcon size={24} color={AppColors.text} />
+        <Pressable
+          onPress={() => router.back()}
+          style={[styles.backButton, { backgroundColor: colors.card }]}
+        >
+          <CaretLeftIcon size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>About</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>About</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       {/* Content */}
       <View style={styles.content}>
         {/* App Icon */}
-        <View style={styles.iconContainer}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.card }]}>
           <Image
             source={require('@/assets/images/icon.png')}
             style={styles.appIcon}
@@ -31,12 +39,12 @@ export default function AboutScreen() {
         </View>
 
         {/* App Name & Version */}
-        <Text style={styles.appName}>Recurr</Text>
-        <Text style={styles.version}>Version 1.0.0</Text>
+        <Text style={[styles.appName, { color: colors.text }]}>Recurr</Text>
+        <Text style={[styles.version, { color: colors.secondaryText }]}>Version 1.0.0</Text>
 
         {/* Description */}
-        <View style={styles.descriptionCard}>
-          <Text style={styles.description}>
+        <View style={[styles.descriptionCard, { backgroundColor: colors.card }]}>
+          <Text style={[styles.description, { color: colors.secondaryText }]}>
             Recurr helps you track and manage all your recurring subscriptions in one place. Never
             miss a payment or forget about a subscription again.
           </Text>
@@ -44,8 +52,10 @@ export default function AboutScreen() {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.copyright}>© 2024 Horizon Apps</Text>
-          <Text style={styles.madeWith}>Made with ❤️</Text>
+          <Text style={[styles.copyright, { color: colors.secondaryText }]}>
+            © 2024 Horizon Apps
+          </Text>
+          <Text style={[styles.madeWith, { color: colors.secondaryText }]}>Made with ❤️</Text>
         </View>
       </View>
     </SafeAreaView>
@@ -55,7 +65,6 @@ export default function AboutScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -70,12 +79,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: BORDER_RADIUS.xxl,
-    backgroundColor: AppColors.card,
   },
   headerTitle: {
     fontSize: FONT_SIZE.xl,
     fontWeight: '700',
-    color: AppColors.text,
   },
   headerSpacer: {
     width: 40,
@@ -90,7 +97,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: BORDER_RADIUS.xxxl,
-    backgroundColor: AppColors.card,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.xl,
@@ -108,17 +114,14 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: FONT_SIZE.display,
     fontWeight: '800',
-    color: AppColors.text,
     letterSpacing: -0.5,
   },
   version: {
     fontSize: FONT_SIZE.lg,
     fontWeight: '500',
-    color: AppColors.secondaryText,
     marginTop: SPACING.xs,
   },
   descriptionCard: {
-    backgroundColor: AppColors.card,
     borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.xl,
     marginTop: SPACING.xxxl,
@@ -127,7 +130,6 @@ const styles = StyleSheet.create({
   description: {
     fontSize: FONT_SIZE.lg,
     lineHeight: 24,
-    color: AppColors.secondaryText,
     textAlign: 'center',
   },
   footer: {
@@ -137,12 +139,10 @@ const styles = StyleSheet.create({
   },
   copyright: {
     fontSize: FONT_SIZE.md,
-    color: AppColors.secondaryText,
     fontWeight: '500',
   },
   madeWith: {
     fontSize: FONT_SIZE.md,
-    color: AppColors.secondaryText,
     marginTop: SPACING.xs,
   },
 });

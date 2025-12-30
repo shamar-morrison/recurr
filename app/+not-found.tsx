@@ -2,21 +2,28 @@ import { Link, Stack } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { AppColors } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 
 export default function NotFoundScreen() {
+  const { colors } = useTheme();
+
   return (
     <>
       <Stack.Screen options={{ title: 'Not Found' }} />
-      <View style={styles.container}>
-        <Text style={styles.title} testID="notFoundTitle">
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.title, { color: colors.text }]} testID="notFoundTitle">
           We couldn't find that screen.
         </Text>
-        <Text style={styles.subtitle}>If you got here from a deep link, it may be outdated.</Text>
+        <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
+          If you got here from a deep link, it may be outdated.
+        </Text>
 
-        <Link href="/subscriptions" style={styles.link}>
-          <Text style={styles.linkText}>Back to subscriptions</Text>
+        <Link
+          href="/subscriptions"
+          style={[styles.link, { backgroundColor: colors.card, borderColor: colors.border }]}
+        >
+          <Text style={[styles.linkText, { color: colors.tint }]}>Back to subscriptions</Text>
         </Link>
       </View>
     </>
@@ -29,19 +36,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: SPACING.xl,
-    backgroundColor: AppColors.background,
   },
   title: {
     fontSize: FONT_SIZE.xl,
     fontWeight: '800',
     letterSpacing: -0.2,
-    color: AppColors.text,
     marginBottom: 6,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: FONT_SIZE.md,
-    color: AppColors.secondaryText,
     textAlign: 'center',
     maxWidth: 320,
   },
@@ -50,13 +54,10 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.lg,
     borderRadius: BORDER_RADIUS.lg,
-    backgroundColor: AppColors.card,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: AppColors.border,
   },
   linkText: {
     fontSize: FONT_SIZE.md,
     fontWeight: '700',
-    color: AppColors.tint,
   },
 });

@@ -2,16 +2,17 @@ import { Redirect } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { AppColors } from '@/constants/colors';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 
 export default function Index() {
   const { isReady, user, hasCompletedOnboarding } = useAuth();
+  const { colors } = useTheme();
 
   if (!isReady) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={AppColors.tint} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.tint} />
       </View>
     );
   }
@@ -32,6 +33,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: AppColors.background,
   },
 });

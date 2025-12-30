@@ -2,10 +2,10 @@ import { BellIcon } from 'phosphor-react-native';
 import React, { useCallback } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { AppColors } from '@/constants/colors';
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 import { REMINDER_OPTIONS, ReminderDays } from '@/src/features/subscriptions/types';
 
 type Props = {
@@ -21,6 +21,8 @@ export function ReminderSelectorModal({
   onSelect,
   onClose,
 }: Props) {
+  const { colors } = useTheme();
+
   const handleSelect = useCallback(
     (reminder: ReminderDays) => {
       onSelect(reminder);
@@ -30,9 +32,9 @@ export function ReminderSelectorModal({
 
   return (
     <BaseModal visible={visible} title="Set Reminder" onClose={onClose}>
-      <View style={styles.infoBox}>
-        <BellIcon color={AppColors.tint} size={20} />
-        <Text style={styles.infoText}>
+      <View style={[styles.infoBox, { backgroundColor: colors.selectedBackground }]}>
+        <BellIcon color={colors.tint} size={20} />
+        <Text style={[styles.infoText, { color: colors.secondaryText }]}>
           Get notified before your subscription renews so you never miss a payment.
         </Text>
       </View>
@@ -58,7 +60,6 @@ const styles = StyleSheet.create({
   infoBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: AppColors.selectedBackground,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
@@ -67,7 +68,6 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: FONT_SIZE.md,
-    color: AppColors.secondaryText,
     lineHeight: 20,
   },
   list: {

@@ -1,32 +1,40 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
-import { DATE_FORMAT_OPTIONS, DateFormatId, formatDate } from '@/src/constants/dateFormats';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
-import { useTheme } from '@/src/context/ThemeContext';
+import { ThemeMode, useTheme } from '@/src/context/ThemeContext';
+
+type ThemeOption = {
+  id: ThemeMode;
+  label: string;
+  description: string;
+};
+
+const THEME_OPTIONS: ThemeOption[] = [
+  { id: 'light', label: 'Light', description: 'Always use light theme' },
+  { id: 'dark', label: 'Dark', description: 'Always use dark theme' },
+  { id: 'system', label: 'System', description: 'Match device settings' },
+];
 
 type Props = {
   visible: boolean;
-  selectedFormat: DateFormatId;
-  onSelect: (format: DateFormatId) => void;
+  selectedTheme: ThemeMode;
+  onSelect: (theme: ThemeMode) => void;
   onClose: () => void;
 };
 
-export function DateFormatModal({ visible, selectedFormat, onSelect, onClose }: Props) {
+export function ThemeSelectorModal({ visible, selectedTheme, onSelect, onClose }: Props) {
   const { colors } = useTheme();
 
   const handleSelect = useCallback(
-    (format: DateFormatId) => {
-      onSelect(format);
+    (theme: ThemeMode) => {
+      onSelect(theme);
       onClose();
     },
     [onSelect, onClose]
   );
-
-  // Generate fresh example dates for display
-  const referenceDate = useMemo(() => new Date(2024, 11, 31), []); // Dec 31, 2024
 
   const footerContent = (
     <Pressable onPress={onClose} style={styles.cancelButton}>
@@ -35,15 +43,19 @@ export function DateFormatModal({ visible, selectedFormat, onSelect, onClose }: 
   );
 
   return (
-    <BaseModal visible={visible} title="Date format" onClose={onClose} footer={footerContent}>
+    <BaseModal visible={visible} title="Theme" onClose={onClose} footer={footerContent}>
       <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-        {DATE_FORMAT_OPTIONS.map((option) => {
-          const isSelected = option.id === selectedFormat;
-          const exampleText =
-            option.id === 'system' ? formatDate(referenceDate, 'system') : option.example;
+        {THEME_OPTIONS.map((option) => {
+          const isSelected = option.id === selectedTheme;
 
           const radioButton = (
-            <View style={[styles.radio, { borderColor: isSelected ? colors.tint : colors.border }]}>
+            <View
+              style={[
+                styles.radio,
+                { borderColor: colors.border },
+                isSelected && { borderColor: colors.tint },
+              ]}
+            >
               {isSelected && <View style={[styles.radioInner, { backgroundColor: colors.tint }]} />}
             </View>
           );
@@ -52,7 +64,7 @@ export function DateFormatModal({ visible, selectedFormat, onSelect, onClose }: 
             <BaseModalListItem
               key={option.id}
               label={option.label}
-              sublabel={exampleText}
+              sublabel={option.description}
               isSelected={isSelected}
               onPress={() => handleSelect(option.id)}
               leftElement={radioButton}

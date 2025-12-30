@@ -1,5 +1,5 @@
-import { AppColors } from '@/constants/colors';
 import { BORDER_RADIUS } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useServiceLogo } from '@/src/features/services/useServiceLogo';
 import { Image, ImageErrorEventData } from 'expo-image';
 import React, { useCallback, useState } from 'react';
@@ -14,7 +14,7 @@ type ServiceLogoProps = {
   size?: number;
   /** Border radius (default: BORDER_RADIUS.xl) */
   borderRadius?: number;
-  /** Background color for fallback (default: #F2F4F7) */
+  /** Background color for fallback (uses theme if not specified) */
   fallbackBackgroundColor?: string;
   /** Additional container style */
   style?: ViewStyle;
@@ -31,9 +31,10 @@ export function ServiceLogo({
   domain,
   size = 52,
   borderRadius = BORDER_RADIUS.xl,
-  fallbackBackgroundColor = '#F2F4F7',
+  fallbackBackgroundColor,
   style,
 }: ServiceLogoProps) {
+  const { colors } = useTheme();
   const { logoUrl } = useServiceLogo(domain);
   const [hasError, setHasError] = useState(false);
 
@@ -41,6 +42,8 @@ export function ServiceLogo({
     // Logo failed to load - show fallback
     setHasError(true);
   }, []);
+
+  const bgColor = fallbackBackgroundColor ?? colors.cardAlt;
 
   const containerStyle: ViewStyle = {
     width: size,
@@ -67,10 +70,8 @@ export function ServiceLogo({
           recyclingKey={logoUrl}
         />
         {/* Fallback layer behind the image in case of transparent PNGs or slow loads */}
-        <View
-          style={[styles.fallbackLayer, { backgroundColor: fallbackBackgroundColor, borderRadius }]}
-        >
-          <Text style={[styles.initialText, { fontSize }]}>{initial}</Text>
+        <View style={[styles.fallbackLayer, { backgroundColor: bgColor, borderRadius }]}>
+          <Text style={[styles.initialText, { fontSize, color: colors.text }]}>{initial}</Text>
         </View>
       </View>
     );
@@ -78,15 +79,8 @@ export function ServiceLogo({
 
   // Fallback: show first letter
   return (
-    <View
-      style={[
-        styles.container,
-        styles.fallback,
-        containerStyle,
-        { backgroundColor: fallbackBackgroundColor },
-      ]}
-    >
-      <Text style={[styles.initialText, { fontSize }]}>{initial}</Text>
+    <View style={[styles.container, styles.fallback, containerStyle, { backgroundColor: bgColor }]}>
+      <Text style={[styles.initialText, { fontSize, color: colors.text }]}>{initial}</Text>
     </View>
   );
 }
@@ -112,11 +106,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 0,
   },
-  fallback: {
-    backgroundColor: '#F2F4F7',
-  },
+  fallback: {},
   initialText: {
-    color: AppColors.text,
     fontWeight: '800',
   },
 });

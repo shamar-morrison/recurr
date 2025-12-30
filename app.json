@@ -22,18 +22,6 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": ["NOTIFICATIONS", "android.permission.SCHEDULE_EXACT_ALARM"],
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "showseek"
-            }
-          ],
-          "category": ["BROWSABLE", "DEFAULT"]
-        }
-      ],
       "softwareKeyboardLayoutMode": "pan",
       "package": "com.horizon.recurr",
       "googleServicesFile": "./google-services.json"

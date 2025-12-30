@@ -2,8 +2,8 @@ import { CheckIcon } from 'phosphor-react-native';
 import React, { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AppColors } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 
 type BaseModalListItemProps = {
   /** Primary text */
@@ -31,12 +31,20 @@ export function BaseModalListItem({
   leftElement,
   rightElement,
 }: BaseModalListItemProps) {
+  const { colors } = useTheme();
   const showCheckIcon = isSelected && rightElement === undefined;
 
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.item, isSelected && styles.itemSelected, disabled && styles.itemDisabled]}
+      style={[
+        styles.item,
+        {
+          backgroundColor: isSelected ? colors.selectedBackground : colors.card,
+          borderColor: isSelected ? colors.tint : colors.border,
+        },
+        disabled && styles.itemDisabled,
+      ]}
       disabled={disabled}
     >
       <View style={styles.leftContainer}>
@@ -45,20 +53,22 @@ export function BaseModalListItem({
           <Text
             style={[
               styles.label,
-              isSelected && styles.labelSelected,
-              disabled && styles.labelDisabled,
+              { color: isSelected ? colors.tint : colors.text },
+              disabled && { color: colors.secondaryText },
             ]}
           >
             {label}
           </Text>
-          {sublabel && <Text style={styles.sublabel}>{sublabel}</Text>}
+          {sublabel && (
+            <Text style={[styles.sublabel, { color: colors.secondaryText }]}>{sublabel}</Text>
+          )}
         </View>
       </View>
 
       {rightElement !== undefined ? (
         rightElement
       ) : showCheckIcon ? (
-        <CheckIcon color={AppColors.tint} size={20} weight="bold" />
+        <CheckIcon color={colors.tint} size={20} weight="bold" />
       ) : null}
     </Pressable>
   );
@@ -73,17 +83,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     borderRadius: BORDER_RADIUS.lg,
     marginBottom: SPACING.sm,
-    backgroundColor: AppColors.card,
     borderWidth: 1,
-    borderColor: AppColors.border,
     shadowColor: '#000',
     shadowOpacity: 0.04,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-  },
-  itemSelected: {
-    backgroundColor: AppColors.selectedBackground,
-    borderColor: AppColors.tint,
   },
   itemDisabled: {
     opacity: 0.5,
@@ -103,17 +107,9 @@ const styles = StyleSheet.create({
   label: {
     fontSize: FONT_SIZE.lg,
     fontWeight: '600',
-    color: AppColors.text,
-  },
-  labelSelected: {
-    color: AppColors.tint,
-  },
-  labelDisabled: {
-    color: AppColors.secondaryText,
   },
   sublabel: {
     fontSize: FONT_SIZE.md,
-    color: AppColors.secondaryText,
     marginTop: 2,
   },
 });

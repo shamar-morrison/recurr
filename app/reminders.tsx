@@ -13,13 +13,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppColors, CATEGORY_COLORS } from '@/constants/colors';
+import { CATEGORY_COLORS } from '@/constants/colors';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
 import { StackHeader } from '@/src/components/ui/StackHeader';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 import { cancelNotification } from '@/src/features/notifications/notificationService';
 import {
   useSubscriptionsQuery,
@@ -39,6 +40,7 @@ export default function RemindersScreen() {
   const insets = useSafeAreaInsets();
   const subscriptionsQuery = useSubscriptionsQuery();
   const upsertMutation = useUpsertSubscriptionMutation();
+  const { colors } = useTheme();
 
   const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('All');
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -181,7 +183,7 @@ export default function RemindersScreen() {
       return (
         <Pressable
           onPress={() => handleEditSubscription(item.id)}
-          style={styles.row}
+          style={[styles.row, { backgroundColor: colors.card }]}
           testID={`reminderRow_${item.id}`}
         >
           <ServiceLogo
@@ -192,7 +194,7 @@ export default function RemindersScreen() {
           />
 
           <View style={styles.rowMain}>
-            <Text style={styles.rowTitle} numberOfLines={1}>
+            <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1}>
               {item.serviceName}
             </Text>
             <View style={[styles.categoryBadge, { backgroundColor: categoryColors.bg }]}>
@@ -203,16 +205,20 @@ export default function RemindersScreen() {
           </View>
 
           <View style={styles.rowRight}>
-            <Text style={styles.rowAmount}>{formatMoney(item.amount, item.currency)}</Text>
+            <Text style={[styles.rowAmount, { color: colors.text }]}>
+              {formatMoney(item.amount, item.currency)}
+            </Text>
             <View style={styles.reminderRow}>
-              <BellIcon color={AppColors.tint} size={14} />
-              <Text style={styles.reminderText}>{getReminderLabel(item.reminderDays)}</Text>
+              <BellIcon color={colors.tint} size={14} />
+              <Text style={[styles.reminderText, { color: colors.tint }]}>
+                {getReminderLabel(item.reminderDays)}
+              </Text>
             </View>
           </View>
         </Pressable>
       );
     },
-    [getReminderLabel, handleEditSubscription]
+    [getReminderLabel, handleEditSubscription, colors]
   );
 
   const keyExtractor = useCallback((item: Subscription) => item.id, []);
@@ -220,13 +226,13 @@ export default function RemindersScreen() {
   const ListEmptyComponent = useMemo(
     () => (
       <View style={styles.empty}>
-        <View style={styles.emptyIcon}>
-          <BellSlashIcon color={AppColors.secondaryText} size={48} />
+        <View style={[styles.emptyIcon, { backgroundColor: colors.cardAlt }]}>
+          <BellSlashIcon color={colors.secondaryText} size={48} />
         </View>
-        <Text style={styles.emptyTitle}>
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>
           {selectedCategory === 'All' ? 'No Reminders Set' : 'No Reminders Found'}
         </Text>
-        <Text style={styles.emptyText}>
+        <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
           {selectedCategory === 'All'
             ? 'Add reminders to your subscriptions to get notified before they renew. You can set reminders when creating or editing a subscription.'
             : `No reminders found for ${selectedCategory} subscriptions. Try selecting a different category.`}
@@ -234,18 +240,21 @@ export default function RemindersScreen() {
         {selectedCategory === 'All' ? (
           <Pressable
             onPress={() => router.push('/(tabs)/(home)/subscriptions')}
-            style={styles.emptyButton}
+            style={[styles.emptyButton, { backgroundColor: colors.tint }]}
           >
             <Text style={styles.emptyButtonText}>View Subscriptions</Text>
           </Pressable>
         ) : (
-          <Pressable onPress={() => setSelectedCategory('All')} style={styles.emptyButton}>
+          <Pressable
+            onPress={() => setSelectedCategory('All')}
+            style={[styles.emptyButton, { backgroundColor: colors.tint }]}
+          >
             <Text style={styles.emptyButtonText}>Clear Filter</Text>
           </Pressable>
         )}
       </View>
     ),
-    [selectedCategory]
+    [selectedCategory, colors]
   );
 
   const ListHeaderComponent = useMemo(() => {
@@ -253,7 +262,7 @@ export default function RemindersScreen() {
 
     return (
       <View style={styles.header}>
-        <Text style={styles.headerCount}>
+        <Text style={[styles.headerCount, { color: colors.secondaryText }]}>
           {subscriptionsWithReminders.length} reminder
           {subscriptionsWithReminders.length !== 1 ? 's' : ''} set
           {selectedCategory !== 'All' ? ` (${selectedCategory})` : ''}
@@ -264,36 +273,43 @@ export default function RemindersScreen() {
           disabled={isClearingAll}
         >
           {isClearingAll ? (
-            <ActivityIndicator size="small" color={AppColors.negative} />
+            <ActivityIndicator size="small" color={colors.negative} />
           ) : (
-            <Text style={styles.clearAllText}>Clear All</Text>
+            <Text style={[styles.clearAllText, { color: colors.negative }]}>Clear All</Text>
           )}
         </Pressable>
       </View>
     );
-  }, [subscriptionsWithReminders.length, selectedCategory, handleClearAll, isClearingAll]);
+  }, [subscriptionsWithReminders.length, selectedCategory, handleClearAll, isClearingAll, colors]);
 
   const headerRight = useMemo(
     () => (
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {__DEV__ && (
-          <Pressable onPress={scheduleTestNotification} style={styles.filterButton}>
-            <FlaskIcon color={AppColors.text} size={20} weight="regular" />
+          <Pressable
+            onPress={scheduleTestNotification}
+            style={[styles.filterButton, { backgroundColor: colors.tertiaryBackground }]}
+          >
+            <FlaskIcon color={colors.text} size={20} weight="regular" />
           </Pressable>
         )}
         <Pressable
           onPress={() => setShowFilterModal(true)}
-          style={[styles.filterButton, selectedCategory !== 'All' && styles.filterButtonActive]}
+          style={[
+            styles.filterButton,
+            { backgroundColor: colors.tertiaryBackground },
+            selectedCategory !== 'All' && { backgroundColor: colors.tint },
+          ]}
         >
           <FunnelSimpleIcon
-            color={selectedCategory !== 'All' ? '#fff' : AppColors.text}
+            color={selectedCategory !== 'All' ? '#fff' : colors.text}
             size={20}
             weight={selectedCategory !== 'All' ? 'fill' : 'regular'}
           />
         </Pressable>
       </View>
     ),
-    [selectedCategory]
+    [selectedCategory, colors]
   );
 
   return (
@@ -307,7 +323,12 @@ export default function RemindersScreen() {
         }}
       />
 
-      <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: colors.background, paddingBottom: insets.bottom },
+        ]}
+      >
         <FlatList
           data={subscriptionsWithReminders}
           keyExtractor={keyExtractor}
@@ -322,7 +343,7 @@ export default function RemindersScreen() {
             <RefreshControl
               refreshing={Boolean(subscriptionsQuery.isFetching)}
               onRefresh={() => subscriptionsQuery.refetch()}
-              tintColor={AppColors.tint}
+              tintColor={colors.tint}
             />
           }
           testID="remindersList"
@@ -387,7 +408,6 @@ function formatMoney(amount: number, currency: string): string {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
   },
   listContent: {
     padding: SPACING.lg,
@@ -406,7 +426,6 @@ const styles = StyleSheet.create({
   headerCount: {
     fontSize: FONT_SIZE.md,
     fontWeight: '600',
-    color: AppColors.secondaryText,
   },
   clearAllButton: {
     paddingHorizontal: SPACING.md,
@@ -417,7 +436,6 @@ const styles = StyleSheet.create({
   clearAllText: {
     fontSize: FONT_SIZE.md,
     fontWeight: '600',
-    color: AppColors.negative,
   },
   row: {
     flexDirection: 'row',
@@ -426,7 +444,6 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.lg,
     paddingHorizontal: SPACING.lg,
     borderRadius: BORDER_RADIUS.xxl,
-    backgroundColor: AppColors.card,
     marginBottom: SPACING.md,
   },
   rowMain: {
@@ -434,7 +451,6 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   rowTitle: {
-    color: AppColors.text,
     fontSize: FONT_SIZE.lg,
     fontWeight: '700',
     letterSpacing: -0.2,
@@ -463,7 +479,6 @@ const styles = StyleSheet.create({
   billingText: {
     fontSize: FONT_SIZE.sm,
     fontWeight: '500',
-    color: AppColors.secondaryText,
   },
   reminderRow: {
     flexDirection: 'row',
@@ -473,14 +488,12 @@ const styles = StyleSheet.create({
   reminderText: {
     fontSize: FONT_SIZE.md,
     fontWeight: '600',
-    color: AppColors.tint,
   },
   rowRight: {
     alignItems: 'flex-end',
     gap: SPACING.sm,
   },
   rowAmount: {
-    color: AppColors.text,
     fontSize: FONT_SIZE.xl,
     fontWeight: '800',
     letterSpacing: -0.3,
@@ -499,7 +512,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: BORDER_RADIUS.full,
-    backgroundColor: 'rgba(15,23,42,0.06)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.sm,
@@ -507,13 +519,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: FONT_SIZE.xxxl,
     fontWeight: '800',
-    color: AppColors.text,
     letterSpacing: -0.5,
   },
   emptyText: {
     fontSize: FONT_SIZE.lg,
     fontWeight: '500',
-    color: AppColors.secondaryText,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -521,7 +531,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xxl,
     paddingVertical: SPACING.lg,
     borderRadius: BORDER_RADIUS.lg,
-    backgroundColor: AppColors.tint,
     marginTop: SPACING.sm,
   },
   emptyButtonText: {
@@ -538,9 +547,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(15,23,42,0.06)',
   },
-  filterButtonActive: {
-    backgroundColor: AppColors.tint,
-  },
+  filterButtonActive: {},
   // Filter category dot (used in BaseModalListItem leftElement)
   filterCategoryDot: {
     width: 12,
