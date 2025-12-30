@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppColors, CATEGORY_COLORS } from '@/constants/colors';
+import { CATEGORY_COLORS } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
@@ -73,7 +73,9 @@ export default function InsightsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} testID="insightsScroll">
-        <View style={styles.hero}>
+        <View
+          style={[styles.hero, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
+        >
           <View style={styles.heroTop}>
             <View style={styles.heroTitleRow}>
               <Text style={styles.heroTitle}>Spending</Text>
@@ -89,7 +91,7 @@ export default function InsightsScreen() {
 
           {subscriptionsQuery.isLoading ? (
             <View style={styles.loadingRow} testID="insightsLoading">
-              <ActivityIndicator color={AppColors.tint} />
+              <ActivityIndicator color={colors.tint} />
               <Text style={styles.loadingText}>Calculating…</Text>
             </View>
           ) : (
@@ -119,7 +121,7 @@ export default function InsightsScreen() {
           </View>
 
           {items.length === 0 ? (
-            <Text style={styles.subtitle} testID="insightsEmpty">
+            <Text style={[styles.subtitle, { color: colors.secondaryText }]} testID="insightsEmpty">
               Add a few subscriptions to see totals, breakdowns, and upcoming charges.
             </Text>
           ) : (
@@ -241,8 +243,10 @@ export default function InsightsScreen() {
 
         {!isPremium ? (
           <View style={styles.locked} testID="insightsLocked">
-            <Text style={styles.lockedTitle}>Premium unlocks deeper insights</Text>
-            <Text style={styles.lockedText}>
+            <Text style={[styles.lockedTitle, { color: colors.text }]}>
+              Premium unlocks deeper insights
+            </Text>
+            <Text style={[styles.lockedText, { color: colors.secondaryText }]}>
               Next: trends over time, spend alerts, and smarter reminders.
             </Text>
           </View>
@@ -312,7 +316,6 @@ const shadowColor = 'rgba(15,23,42,0.12)';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
   },
   header: {
     paddingHorizontal: SPACING.lg,
@@ -322,13 +325,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: FONT_SIZE.xxl,
     fontWeight: '800',
-    color: AppColors.text,
     letterSpacing: -0.4,
   },
   headerSubtitle: {
     fontSize: FONT_SIZE.md,
     fontWeight: '500',
-    color: AppColors.secondaryText,
     marginTop: 2,
   },
   content: {
@@ -339,8 +340,6 @@ const styles = StyleSheet.create({
   hero: {
     borderRadius: BORDER_RADIUS.xxxl,
     padding: SPACING.xxl,
-    backgroundColor: AppColors.primary,
-    shadowColor: AppColors.primary,
     shadowOpacity: 0.3,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 10 },
@@ -422,7 +421,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: BORDER_RADIUS.xxxl,
     padding: SPACING.xl,
-    backgroundColor: AppColors.card,
     borderWidth: 1,
     borderColor: 'transparent',
     shadowColor,
@@ -443,13 +441,11 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
   },
   cardTitle: {
-    color: AppColors.text,
     fontSize: FONT_SIZE.xl,
     fontWeight: '800',
     letterSpacing: -0.3,
   },
   subtitle: {
-    color: AppColors.secondaryText,
     fontSize: FONT_SIZE.md,
     lineHeight: 20,
   },
@@ -460,7 +456,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: SPACING.lg,
-    backgroundColor: AppColors.cardAlt,
     borderRadius: BORDER_RADIUS.xl,
     gap: SPACING.md,
   },
@@ -476,14 +471,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   highlightLabel: {
-    color: AppColors.secondaryText,
     fontSize: FONT_SIZE.sm,
     fontWeight: '600',
     letterSpacing: 0.3,
     textTransform: 'uppercase',
   },
   highlightValue: {
-    color: AppColors.text,
     fontSize: FONT_SIZE.lg,
     fontWeight: '700',
     letterSpacing: -0.2,
@@ -512,7 +505,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   barValue: {
-    color: AppColors.text,
     fontSize: FONT_SIZE.md,
     fontWeight: '700',
     letterSpacing: -0.1,
@@ -520,7 +512,6 @@ const styles = StyleSheet.create({
   track: {
     height: 12,
     borderRadius: BORDER_RADIUS.full,
-    backgroundColor: '#F2F4F7',
     overflow: 'hidden',
   },
   fill: {
@@ -536,13 +527,11 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   lockedTitle: {
-    color: AppColors.text,
     fontSize: FONT_SIZE.lg,
     fontWeight: '800',
     letterSpacing: -0.2,
   },
   lockedText: {
-    color: AppColors.secondaryText,
     fontSize: FONT_SIZE.md,
     lineHeight: 20,
   },
