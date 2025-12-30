@@ -553,7 +553,7 @@ export default function SubscriptionEditorScreen() {
       billingCycle !== existing.billingCycle ||
       (billingCycle !== 'One-Time' && billingDay !== existing.billingDay) ||
       (notes || '') !== (existing.notes || '') ||
-      startDate.getTime() !== existing.startDate ||
+      startDate.getTime() !== (existing.startDate ?? normalizeToMidnight(new Date()).getTime()) ||
       (endDate ? endDate.getTime() : undefined) !== existing.endDate ||
       paymentMethod !== existing.paymentMethod ||
       reminderDays !== existing.reminderDays ||

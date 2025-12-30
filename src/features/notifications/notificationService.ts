@@ -62,13 +62,15 @@ function calculateReminderDate(
   const now = new Date();
 
   let billingDate: Date;
+  let anchor: Date | undefined;
+
   if (subscription.billingCycle === 'One-Time') {
     // For one-time payments, use the startDate (payment date)
     if (!subscription.startDate) return null;
     billingDate = new Date(subscription.startDate);
   } else {
     // For recurring subscriptions, calculate next billing date
-    const anchor = subscription.startDate
+    anchor = subscription.startDate
       ? new Date(subscription.startDate)
       : new Date(subscription.createdAt);
     billingDate = nextBillingDate(now, subscription.billingCycle, anchor);
@@ -83,11 +85,7 @@ function calculateReminderDate(
   // Don't schedule if the reminder date is in the past
   if (reminderDate <= now) {
     // For recurring subscriptions, try next cycle
-    if (subscription.billingCycle !== 'One-Time') {
-      const anchor = subscription.startDate
-        ? new Date(subscription.startDate)
-        : new Date(subscription.createdAt);
-
+    if (subscription.billingCycle !== 'One-Time' && anchor) {
       // Look for the next billing date after the currently calculated one
       const nextCycleSearchDate = new Date(billingDate);
       nextCycleSearchDate.setDate(nextCycleSearchDate.getDate() + 1);
