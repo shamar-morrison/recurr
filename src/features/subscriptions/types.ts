@@ -44,6 +44,8 @@ export type Subscription = {
   endDate?: number;
   paymentMethod?: PaymentMethod;
   notes?: string;
+  status: 'Active' | 'Paused' | 'Archived';
+  /** @deprecated use status === 'Archived' */
   isArchived?: boolean;
   reminderDays?: number | null; // Days before billing to remind (null = no reminder)
   reminderHour?: number | null; // Hour of day for reminder (0-23, null = default noon)
@@ -90,6 +92,7 @@ export type SubscriptionListItem = {
   monthlyEquivalent: number;
   nextBillingDateISO: string;
   nextBillingInDays: number;
+  status: Subscription['status'];
 };
 
 export const SUBSCRIPTION_CATEGORIES: SubscriptionCategory[] = [

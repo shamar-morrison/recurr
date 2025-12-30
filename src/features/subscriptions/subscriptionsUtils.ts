@@ -145,6 +145,8 @@ export function toListItem(sub: Subscription, now: Date = new Date()): Subscript
 
   next = nextBillingDate(now, sub.billingCycle, anchor);
 
+  const status = sub.status ?? (sub.isArchived ? 'Archived' : 'Active');
+
   return {
     id: sub.id,
     serviceName: sub.serviceName,
@@ -154,8 +156,12 @@ export function toListItem(sub: Subscription, now: Date = new Date()): Subscript
     billingCycle: sub.billingCycle,
     billingDay: sub.billingDay,
     notes: sub.notes,
-    monthlyEquivalent: monthlyEquivalent(sub.amount, sub.billingCycle),
+    monthlyEquivalent:
+      status === 'Paused' || status === 'Archived'
+        ? 0
+        : monthlyEquivalent(sub.amount, sub.billingCycle),
     nextBillingDateISO: next.toISOString(),
     nextBillingInDays: diffDays(now, next),
+    status,
   };
 }

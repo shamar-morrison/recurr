@@ -102,6 +102,9 @@ export default function SubscriptionsHomeScreen() {
     const currentYear = now.getFullYear();
 
     const dueThisMonth = items.filter((item) => {
+      // Exclude paused subscriptions from totals
+      if (item.status === 'Paused') return false;
+
       const billingDate = new Date(item.nextBillingDateISO);
       return billingDate.getMonth() === currentMonth && billingDate.getFullYear() === currentYear;
     });
@@ -134,8 +137,12 @@ export default function SubscriptionsHomeScreen() {
     ({ item }: { item: (typeof filteredItems)[number] }) => {
       const categoryColors = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Other;
       const daysUntilBilling = Math.max(0, item.nextBillingInDays);
-      const billingText =
-        daysUntilBilling === 0
+
+      const isPaused = item.status === 'Paused';
+
+      const billingText = isPaused
+        ? 'Paused'
+        : daysUntilBilling === 0
           ? 'Today'
           : daysUntilBilling === 1
             ? 'Tomorrow'
@@ -149,7 +156,7 @@ export default function SubscriptionsHomeScreen() {
               params: { id: item.id },
             })
           }
-          style={[styles.row, { backgroundColor: colors.card }]}
+          style={[styles.row, { backgroundColor: colors.card, opacity: isPaused ? 0.6 : 1 }]}
           testID={`subscriptionRow_${item.id}`}
         >
           <ServiceLogo
@@ -174,7 +181,12 @@ export default function SubscriptionsHomeScreen() {
             <Text style={[styles.rowAmount, { color: colors.text }]}>
               {formatMoney(item.amount, item.currency)}
             </Text>
-            <Text style={[styles.rowBillingDate, { color: colors.secondaryText }]}>
+            <Text
+              style={[
+                styles.rowBillingDate,
+                { color: isPaused ? colors.warning : colors.secondaryText },
+              ]}
+            >
               {billingText}
             </Text>
           </View>
@@ -258,7 +270,7 @@ export default function SubscriptionsHomeScreen() {
               returnKeyType="search"
             />
             {searchQuery.length > 0 && (
-              <Pressable onPress={() => setSearchQuery('')}>
+              <Pressable onPress={() => setSearchQuery('')} hitSlop={24}>
                 <XCircleIcon color={colors.secondaryText} size={18} weight="fill" />
               </Pressable>
             )}
