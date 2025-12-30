@@ -110,11 +110,11 @@ export default function InsightsScreen() {
           )}
         </View>
 
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderLeft}>
-              <ChartLineUpIcon color={AppColors.text} size={18} />
-              <Text style={styles.cardTitle}>Highlights</Text>
+              <ChartLineUpIcon color={colors.text} size={18} />
+              <Text style={[styles.cardTitle, { color: colors.text }]}>Highlights</Text>
             </View>
           </View>
 
@@ -125,13 +125,18 @@ export default function InsightsScreen() {
           ) : (
             <View style={styles.highlights}>
               {/* Most Expensive */}
-              <View style={styles.highlightCard} testID="insightsMostExpensive">
+              <View
+                style={[styles.highlightCard, { backgroundColor: colors.cardAlt }]}
+                testID="insightsMostExpensive"
+              >
                 <View style={[styles.highlightIconContainer, { backgroundColor: '#FEF3C7' }]}>
                   <CrownIcon size={18} color="#D97706" weight="fill" />
                 </View>
                 <View style={styles.highlightContent}>
-                  <Text style={styles.highlightLabel}>Most expensive</Text>
-                  <Text style={styles.highlightValue} numberOfLines={1}>
+                  <Text style={[styles.highlightLabel, { color: colors.secondaryText }]}>
+                    Most expensive
+                  </Text>
+                  <Text style={[styles.highlightValue, { color: colors.text }]} numberOfLines={1}>
                     {insights.mostExpensive?.serviceName ?? '—'} ·{' '}
                     {formatMoney(
                       insights.mostExpensive?.monthlyEquivalent ?? 0,
@@ -143,13 +148,18 @@ export default function InsightsScreen() {
               </View>
 
               {/* Upcoming Charge */}
-              <View style={styles.highlightCard} testID="insightsUpcoming">
+              <View
+                style={[styles.highlightCard, { backgroundColor: colors.cardAlt }]}
+                testID="insightsUpcoming"
+              >
                 <View style={[styles.highlightIconContainer, { backgroundColor: '#DBEAFE' }]}>
                   <CalendarIcon size={18} color="#3B82F6" />
                 </View>
                 <View style={styles.highlightContent}>
-                  <Text style={styles.highlightLabel}>Upcoming charge</Text>
-                  <Text style={styles.highlightValue} numberOfLines={1}>
+                  <Text style={[styles.highlightLabel, { color: colors.secondaryText }]}>
+                    Upcoming charge
+                  </Text>
+                  <Text style={[styles.highlightValue, { color: colors.text }]} numberOfLines={1}>
                     {insights.upcoming?.serviceName ?? '—'}
                     {insights.upcoming
                       ? ` · ${formatShortDate(insights.upcoming.nextBillingDateISO)} (${Math.max(
@@ -163,13 +173,18 @@ export default function InsightsScreen() {
 
               {/* Next 7 Days */}
               {insights.next7Days.length ? (
-                <View style={styles.highlightCard} testID="insightsNext7Days">
+                <View
+                  style={[styles.highlightCard, { backgroundColor: colors.cardAlt }]}
+                  testID="insightsNext7Days"
+                >
                   <View style={[styles.highlightIconContainer, { backgroundColor: '#EDE9FE' }]}>
                     <CalendarCheckIcon size={18} color="#8B5CF6" />
                   </View>
                   <View style={styles.highlightContent}>
-                    <Text style={styles.highlightLabel}>Next 7 days</Text>
-                    <Text style={styles.highlightValue}>
+                    <Text style={[styles.highlightLabel, { color: colors.secondaryText }]}>
+                      Next 7 days
+                    </Text>
+                    <Text style={[styles.highlightValue, { color: colors.text }]}>
                       {insights.next7Days.length} charge
                       {insights.next7Days.length === 1 ? '' : 's'}
                     </Text>
@@ -180,10 +195,10 @@ export default function InsightsScreen() {
           )}
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>By category</Text>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>By category</Text>
           {items.length === 0 ? (
-            <Text style={styles.subtitle}>—</Text>
+            <Text style={[styles.subtitle, { color: colors.secondaryText }]}>—</Text>
           ) : (
             <View style={styles.bars} testID="insightsCategoryBreakdown">
               {insights.categoryRows.map((row) => {
@@ -202,7 +217,7 @@ export default function InsightsScreen() {
                           {row.category.toUpperCase()}
                         </Text>
                       </View>
-                      <Text style={styles.barValue}>
+                      <Text style={[styles.barValue, { color: colors.text }]}>
                         {formatMoney(row.monthlyTotal, items[0]?.currency ?? 'USD')}
                       </Text>
                     </View>

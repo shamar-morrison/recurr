@@ -112,7 +112,7 @@ export default function SubscriptionsHomeScreen() {
               params: { id: item.id },
             })
           }
-          style={styles.row}
+          style={[styles.row, { backgroundColor: colors.card }]}
           testID={`subscriptionRow_${item.id}`}
         >
           <ServiceLogo
@@ -123,7 +123,7 @@ export default function SubscriptionsHomeScreen() {
           />
 
           <View style={styles.rowMain}>
-            <Text style={styles.rowTitle} numberOfLines={1}>
+            <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1}>
               {item.serviceName}
             </Text>
             <View style={[styles.categoryBadge, { backgroundColor: categoryColors.bg }]}>
@@ -134,8 +134,12 @@ export default function SubscriptionsHomeScreen() {
           </View>
 
           <View style={styles.rowRight}>
-            <Text style={styles.rowAmount}>{formatMoney(item.amount, item.currency)}</Text>
-            <Text style={styles.rowBillingDate}>{billingText}</Text>
+            <Text style={[styles.rowAmount, { color: colors.text }]}>
+              {formatMoney(item.amount, item.currency)}
+            </Text>
+            <Text style={[styles.rowBillingDate, { color: colors.secondaryText }]}>
+              {billingText}
+            </Text>
           </View>
         </Pressable>
       );

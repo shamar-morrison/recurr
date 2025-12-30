@@ -316,8 +316,8 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Account Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ACCOUNT</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>ACCOUNT</Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             {/* Profile Row */}
             <View style={styles.profileRow}>
               <View style={styles.profileLeft}>
@@ -329,8 +329,10 @@ export default function SettingsScreen() {
                   </View>
                 )}
                 <View>
-                  <Text style={styles.profileName}>{user?.displayName || 'User'}</Text>
-                  <Text style={styles.profilePlan}>
+                  <Text style={[styles.profileName, { color: colors.text }]}>
+                    {user?.displayName || 'User'}
+                  </Text>
+                  <Text style={[styles.profilePlan, { color: colors.secondaryText }]}>
                     {isPremium ? 'Premium Account' : 'Personal Account'}
                   </Text>
                 </View>
@@ -339,7 +341,7 @@ export default function SettingsScreen() {
 
             {!isPremium && (
               <>
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
                 <SettingRow
                   colors={colors}
                   icon={<CrownIcon weight="fill" />}
@@ -355,8 +357,8 @@ export default function SettingsScreen() {
 
         {/* Notifications Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>NOTIFICATIONS</Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
               colors={colors}
               icon={<BellIcon />}
@@ -369,7 +371,7 @@ export default function SettingsScreen() {
               showChevron={false}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
               colors={colors}
@@ -383,7 +385,7 @@ export default function SettingsScreen() {
               showChevron={false}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
               colors={colors}
@@ -398,8 +400,8 @@ export default function SettingsScreen() {
 
         {/* Preferences Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>PREFERENCES</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>PREFERENCES</Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
               colors={colors}
               icon={<CoinsIcon />}
@@ -410,7 +412,7 @@ export default function SettingsScreen() {
               onPress={() => setCurrencyModalVisible(true)}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
               colors={colors}
@@ -422,7 +424,7 @@ export default function SettingsScreen() {
               onPress={() => setDateFormatModalVisible(true)}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
               colors={colors}
@@ -438,8 +440,8 @@ export default function SettingsScreen() {
 
         {/* Data Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>DATA</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>DATA</Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
               colors={colors}
               icon={<DownloadSimpleIcon />}
@@ -453,8 +455,8 @@ export default function SettingsScreen() {
 
         {/* Information Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>INFORMATION</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>INFORMATION</Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
               colors={colors}
               icon={<StarIcon weight="fill" />}
@@ -464,7 +466,7 @@ export default function SettingsScreen() {
               onPress={handleRateUs}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
               colors={colors}
@@ -475,7 +477,7 @@ export default function SettingsScreen() {
               onPress={handleContactSupport}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
               colors={colors}
@@ -486,7 +488,7 @@ export default function SettingsScreen() {
               onPress={handleOtherApps}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
               colors={colors}
@@ -497,7 +499,7 @@ export default function SettingsScreen() {
               onPress={handleShareApp}
             />
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <SettingRow
               colors={colors}
