@@ -20,6 +20,7 @@ import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
 import { StackHeader } from '@/src/components/ui/StackHeader';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 import { cancelNotification } from '@/src/features/notifications/notificationService';
 import {
   useSubscriptionsQuery,
@@ -39,6 +40,7 @@ export default function RemindersScreen() {
   const insets = useSafeAreaInsets();
   const subscriptionsQuery = useSubscriptionsQuery();
   const upsertMutation = useUpsertSubscriptionMutation();
+  const { colors } = useTheme();
 
   const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('All');
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -307,7 +309,12 @@ export default function RemindersScreen() {
         }}
       />
 
-      <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: colors.background, paddingBottom: insets.bottom },
+        ]}
+      >
         <FlatList
           data={subscriptionsWithReminders}
           keyExtractor={keyExtractor}

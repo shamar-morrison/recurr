@@ -4,14 +4,15 @@ import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppColors } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
 import { FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 
 export default function AuthScreen() {
   const router = useRouter();
   const { signInWithGoogle, user, isReady } = useAuth();
+  const { colors, isDark } = useTheme();
 
   // Redirect to home when user successfully logs in
   useEffect(() => {
@@ -34,12 +35,17 @@ export default function AuthScreen() {
     }
   };
 
+  // Use different gradients for light/dark mode
+  const gradientColors = isDark
+    ? (['#0B1220', '#1a1a2e'] as const)
+    : (['#FFFFFF', '#E0E7FF'] as const);
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={{ flex: 1 }}>
         <LinearGradient
-          colors={['#FFFFFF', '#E0E7FF']}
+          colors={gradientColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
@@ -47,8 +53,8 @@ export default function AuthScreen() {
         <SafeAreaView style={styles.container}>
           <View style={styles.content}>
             <View style={styles.header}>
-              <Text style={styles.title}>Welcome to Recurr</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: colors.text }]}>Welcome to Recurr</Text>
+              <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
                 Sign in to keep your subscriptions synced across all your devices.
               </Text>
             </View>
@@ -65,12 +71,15 @@ export default function AuthScreen() {
                   style={styles.googleIcon}
                 />
               }
-              style={styles.googleButton}
-              textStyle={styles.googleButtonText}
+              style={[
+                styles.googleButton,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+              textStyle={[styles.googleButtonText, { color: colors.text }]}
             />
           </View>
 
-          <Text style={styles.footer}>
+          <Text style={[styles.footer, { color: colors.secondaryText }]}>
             By continuing, you agree to our Terms of Service and Privacy Policy.
           </Text>
         </SafeAreaView>
@@ -82,7 +91,6 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor removed to show gradient
     justifyContent: 'space-between',
     padding: SPACING.xxl,
   },
@@ -96,23 +104,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    color: AppColors.text,
     fontSize: FONT_SIZE.hero,
     fontWeight: '900',
     letterSpacing: -1,
     textAlign: 'center',
   },
   subtitle: {
-    color: AppColors.secondaryText,
     fontSize: FONT_SIZE.lg,
     lineHeight: 24,
     textAlign: 'center',
     maxWidth: 300,
   },
   googleButton: {
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -120,7 +124,6 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   googleButtonText: {
-    color: '#1E293B',
     fontSize: FONT_SIZE.lg,
     fontWeight: '600',
   },
@@ -129,7 +132,6 @@ const styles = StyleSheet.create({
     height: 24,
   },
   footer: {
-    color: AppColors.secondaryText,
     fontSize: FONT_SIZE.sm,
     textAlign: 'center',
     opacity: 0.6,

@@ -17,6 +17,7 @@ import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { Button } from '@/src/components/ui/Button';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   useSubscriptionListItems,
@@ -40,6 +41,7 @@ export default function SubscriptionsHomeScreen() {
   const insets = useSafeAreaInsets();
   const { isPremium, settings } = useAuth();
   const { freeTierLimit, loading: configLoading } = useRemoteConfig();
+  const { colors } = useTheme();
 
   const subscriptionsQuery = useSubscriptionsQuery();
   const items = useSubscriptionListItems(subscriptionsQuery.data);
@@ -296,7 +298,10 @@ export default function SubscriptionsHomeScreen() {
     <>
       <Stack.Screen options={{ title: 'Subscriptions', headerRight }} />
 
-      <View style={styles.container} testID="subscriptionsHomeScreen">
+      <View
+        style={[styles.container, { backgroundColor: colors.background }]}
+        testID="subscriptionsHomeScreen"
+      >
         <FlatList
           data={filteredItems}
           keyExtractor={keyExtractor}

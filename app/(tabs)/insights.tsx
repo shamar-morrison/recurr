@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors, CATEGORY_COLORS } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   useSubscriptionListItems,
@@ -14,6 +15,7 @@ import { CalendarCheckIcon, CalendarIcon, ChartLineUpIcon, CrownIcon } from 'pho
 
 export default function InsightsScreen() {
   const { isPremium } = useAuth();
+  const { colors } = useTheme();
 
   const subscriptionsQuery = useSubscriptionsQuery();
   const items = useSubscriptionListItems(subscriptionsQuery.data);
@@ -57,11 +59,17 @@ export default function InsightsScreen() {
   }, [items]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']} testID="insightsScreen">
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['top']}
+      testID="insightsScreen"
+    >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Insights</Text>
-        <Text style={styles.headerSubtitle}>Track your spending patterns</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>My Insights</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.secondaryText }]}>
+          Track your spending patterns
+        </Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} testID="insightsScroll">
