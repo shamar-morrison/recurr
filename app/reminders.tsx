@@ -279,23 +279,30 @@ export default function RemindersScreen() {
     () => (
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {__DEV__ && (
-          <Pressable onPress={scheduleTestNotification} style={styles.filterButton}>
-            <FlaskIcon color={AppColors.text} size={20} weight="regular" />
+          <Pressable
+            onPress={scheduleTestNotification}
+            style={[styles.filterButton, { backgroundColor: colors.tertiaryBackground }]}
+          >
+            <FlaskIcon color={colors.text} size={20} weight="regular" />
           </Pressable>
         )}
         <Pressable
           onPress={() => setShowFilterModal(true)}
-          style={[styles.filterButton, selectedCategory !== 'All' && styles.filterButtonActive]}
+          style={[
+            styles.filterButton,
+            { backgroundColor: colors.tertiaryBackground },
+            selectedCategory !== 'All' && { backgroundColor: colors.tint },
+          ]}
         >
           <FunnelSimpleIcon
-            color={selectedCategory !== 'All' ? '#fff' : AppColors.text}
+            color={selectedCategory !== 'All' ? '#fff' : colors.text}
             size={20}
             weight={selectedCategory !== 'All' ? 'fill' : 'regular'}
           />
         </Pressable>
       </View>
     ),
-    [selectedCategory]
+    [selectedCategory, colors]
   );
 
   return (
