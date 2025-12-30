@@ -1,27 +1,100 @@
-export const AppColors = {
-  background: '#F2F4F7', // Lighter, clean background
-  card: '#FFFFFF',
-  cardAlt: '#F9FAFB', // Slight contrast for nested items
-  text: '#101828', // Very dark blue/gray for primary text
-  secondaryText: '#667085',
-  border: '#E4E7EC', // Subtle border
-  tint: '#5E38F8', // Vibrant Purple/Violet (Primary Brand)
-  positive: '#17B26A', // Modern vibrant green
-  negative: '#F04438', // Modern vibrant red
-  warning: '#F79009',
-  // New sematic tokens
-  primary: '#5E38F8', // Alias for tint, used in semantic contexts
+export type ColorScheme = 'light' | 'dark';
+
+export interface AppColorPalette {
+  // Primary Colors
+  tint: string;
+  primary: string;
+  onPrimary: string;
+  disabledTint: string;
+
+  // Backgrounds
+  background: string;
+  card: string;
+  cardAlt: string;
+  surface: string;
+  inputBackground: string;
+  selectedBackground: string;
+  badgeBackground: string;
+  tertiaryBackground: string;
+  negativeBackground: string;
+
+  // Text
+  text: string;
+  secondaryText: string;
+
+  // Borders
+  border: string;
+
+  // Status Colors
+  positive: string;
+  negative: string;
+  warning: string;
+
+  // Badge
+  badge: string;
+  badgeText: string;
+}
+
+export const LightColors: AppColorPalette = {
+  tint: '#5E38F8',
+  primary: '#5E38F8',
   onPrimary: '#FFFFFF',
-  surface: '#FFFFFF', // Alias for card, used in semantic contexts
   disabledTint: 'rgba(94, 56, 248, 0.35)',
-  badge: 'rgba(15, 23, 42, 0.08)',
-  badgeText: '#0B1220',
+
+  background: '#F2F4F7',
+  card: '#FFFFFF',
+  cardAlt: '#F9FAFB',
+  surface: '#FFFFFF',
   inputBackground: 'rgba(15, 23, 42, 0.04)',
   selectedBackground: 'rgba(79, 140, 255, 0.08)',
   badgeBackground: 'rgba(79, 140, 255, 0.1)',
   tertiaryBackground: 'rgba(15, 23, 42, 0.06)',
   negativeBackground: 'rgba(255, 90, 90, 0.1)',
-} as const;
+
+  text: '#101828',
+  secondaryText: '#667085',
+
+  border: '#E4E7EC',
+
+  positive: '#17B26A',
+  negative: '#F04438',
+  warning: '#F79009',
+
+  badge: 'rgba(15, 23, 42, 0.08)',
+  badgeText: '#0B1220',
+};
+
+export const DarkColors: AppColorPalette = {
+  tint: '#7C5CFF',
+  primary: '#7C5CFF',
+  onPrimary: '#FFFFFF',
+  disabledTint: 'rgba(124, 92, 255, 0.4)',
+
+  background: '#0B1220',
+  card: '#151F2E',
+  cardAlt: '#1A2433',
+  surface: '#151F2E',
+  inputBackground: 'rgba(255, 255, 255, 0.06)',
+  selectedBackground: 'rgba(124, 92, 255, 0.15)',
+  badgeBackground: 'rgba(124, 92, 255, 0.15)',
+  tertiaryBackground: 'rgba(255, 255, 255, 0.06)',
+  negativeBackground: 'rgba(240, 68, 56, 0.15)',
+
+  text: '#FFFFFF',
+  secondaryText: '#A0AEC0',
+
+  border: '#2E3A4D',
+
+  positive: '#14C87B',
+  negative: '#F97066',
+  warning: '#FDB022',
+
+  badge: 'rgba(255, 255, 255, 0.1)',
+  badgeText: '#E2E8F0',
+};
+
+// Export for backward compatibility (defaults to light)
+export const AppColors = LightColors;
 
 // Gradient color palettes
 export const GRADIENTS = {

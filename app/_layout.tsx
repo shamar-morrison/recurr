@@ -13,6 +13,7 @@ import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AppErrorBoundary } from '@/src/components/AppErrorBoundary';
+import { ThemeProvider, useTheme } from '@/src/context/ThemeContext';
 import { AuthProvider } from '@/src/features/auth/AuthProvider';
 import { RemoteConfigProvider } from '@/src/features/config/RemoteConfigContext';
 import { IAPProvider } from '@/src/features/monetization/IAPProvider';
@@ -31,6 +32,8 @@ const queryClient = new QueryClient({
 });
 
 function RootLayoutNav() {
+  const { isDark } = useTheme();
+
   // Set up notification response handler on app mount
   useEffect(() => {
     const cleanup = setupNotificationHandler();
@@ -39,7 +42,7 @@ function RootLayoutNav() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerBackTitle: 'Back' }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
@@ -101,15 +104,17 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <AppErrorBoundary>
-          <RemoteConfigProvider>
-            <AuthProvider>
-              <IAPProvider>
-                <RootLayoutNav />
-              </IAPProvider>
-            </AuthProvider>
-          </RemoteConfigProvider>
-        </AppErrorBoundary>
+        <ThemeProvider>
+          <AppErrorBoundary>
+            <RemoteConfigProvider>
+              <AuthProvider>
+                <IAPProvider>
+                  <RootLayoutNav />
+                </IAPProvider>
+              </AuthProvider>
+            </RemoteConfigProvider>
+          </AppErrorBoundary>
+        </ThemeProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>
   );

@@ -17,9 +17,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppColors } from '@/constants/colors';
 import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { DateFormatModal } from '@/src/components/DateFormatModal';
+import { ThemeSelectorModal } from '@/src/components/ThemeSelectorModal';
 import { getCurrencySymbol } from '@/src/constants/currencies';
 import { DateFormatId, getDateFormatLabel } from '@/src/constants/dateFormats';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { ThemeMode, useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { exportData, ExportFormat } from '@/src/features/export/exportService';
 import { useSubscriptionsQuery } from '@/src/features/subscriptions/subscriptionsHooks';
@@ -35,6 +37,7 @@ import {
   GridFourIcon,
   InfoIcon,
   InvoiceIcon,
+  PaletteIcon,
   ShareNetworkIcon,
   SignOutIcon,
   StarIcon,
@@ -111,11 +114,25 @@ export default function SettingsScreen() {
     setPushNotificationsEnabled,
   } = useAuth();
 
+  const { themeMode, setThemeMode, colors } = useTheme();
+
   const [emailEnabled, setEmailEnabled] = useState(false);
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [dateFormatModalVisible, setDateFormatModalVisible] = useState(false);
+  const [themeModalVisible, setThemeModalVisible] = useState(false);
 
   const { data: subscriptions, isLoading: isLoadingSubscriptions } = useSubscriptionsQuery();
+
+  const getThemeLabel = (mode: ThemeMode): string => {
+    switch (mode) {
+      case 'light':
+        return 'Light';
+      case 'dark':
+        return 'Dark';
+      case 'system':
+        return 'System';
+    }
+  };
 
   const billingRemindersEnabled = settings.remindDaysBeforeBilling > 0;
   const toggleBillingReminders = (val: boolean) => {
@@ -387,6 +404,17 @@ export default function SettingsScreen() {
               value={getDateFormatLabel(settings.dateFormat)}
               onPress={() => setDateFormatModalVisible(true)}
             />
+
+            <View style={styles.divider} />
+
+            <SettingRow
+              icon={<PaletteIcon />}
+              iconColor="#8B5CF6"
+              iconBg="#EDE9FE"
+              label="Theme"
+              value={getThemeLabel(themeMode)}
+              onPress={() => setThemeModalVisible(true)}
+            />
           </View>
         </View>
 
@@ -481,6 +509,13 @@ export default function SettingsScreen() {
         selectedFormat={settings.dateFormat}
         onSelect={handleDateFormatSelect}
         onClose={() => setDateFormatModalVisible(false)}
+      />
+
+      <ThemeSelectorModal
+        visible={themeModalVisible}
+        selectedTheme={themeMode}
+        onSelect={setThemeMode}
+        onClose={() => setThemeModalVisible(false)}
       />
     </SafeAreaView>
   );
