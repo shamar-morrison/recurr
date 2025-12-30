@@ -201,8 +201,8 @@ export default function SubscriptionsHomeScreen() {
 
         <View style={styles.filters}>
           <View style={styles.filtersLeft}>
-            <SlidersIcon color={AppColors.secondaryText} size={16} />
-            <Text style={styles.filtersLabel}>Filter</Text>
+            <SlidersIcon color={colors.secondaryText} size={16} />
+            <Text style={[styles.filtersLabel, { color: colors.secondaryText }]}>Filter</Text>
           </View>
           <ScrollView
             horizontal
@@ -217,17 +217,13 @@ export default function SubscriptionsHomeScreen() {
                   onPress={() => setFilter(chip)}
                   style={[
                     styles.chip,
-                    active
-                      ? { backgroundColor: AppColors.tint, borderColor: AppColors.tint }
-                      : null,
+                    { backgroundColor: colors.card, borderColor: colors.border },
+                    active ? { backgroundColor: colors.tint, borderColor: colors.tint } : null,
                   ]}
                   testID={`filterChip_${chip}`}
                 >
                   <Text
-                    style={[
-                      styles.chipText,
-                      active ? { color: '#fff' } : { color: AppColors.text },
-                    ]}
+                    style={[styles.chipText, active ? { color: '#fff' } : { color: colors.text }]}
                   >
                     {chip}
                   </Text>
@@ -239,8 +235,10 @@ export default function SubscriptionsHomeScreen() {
 
         {subscriptionsQuery.isLoading ? (
           <View style={styles.loadingBox} testID="subscriptionsLoading">
-            <ActivityIndicator color={AppColors.tint} />
-            <Text style={styles.loadingText}>Loading subscriptions…</Text>
+            <ActivityIndicator color={colors.tint} />
+            <Text style={[styles.loadingText, { color: colors.secondaryText }]}>
+              Loading subscriptions…
+            </Text>
           </View>
         ) : null}
 

@@ -221,7 +221,7 @@ export default function InsightsScreen() {
                         {formatMoney(row.monthlyTotal, items[0]?.currency ?? 'USD')}
                       </Text>
                     </View>
-                    <View style={styles.track}>
+                    <View style={[styles.track, { backgroundColor: colors.cardAlt }]}>
                       <View
                         style={[
                           styles.fill,
