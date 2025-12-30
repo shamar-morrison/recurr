@@ -1,8 +1,8 @@
 import {
   AppleLogoIcon,
   BankIcon,
+  CoinsIcon,
   CreditCardIcon,
-  DotsThreeCircleIcon,
   GoogleLogoIcon,
   MoneyIcon,
   PaypalLogoIcon,
@@ -29,7 +29,7 @@ export const PAYMENT_METHOD_CONFIG: PaymentMethodConfig[] = [
   { label: 'Google Pay', icon: GoogleLogoIcon },
   { label: 'Bank Transfer', icon: BankIcon },
   { label: 'Cash', icon: MoneyIcon },
-  { label: 'Other', icon: DotsThreeCircleIcon },
+  { label: 'Other', icon: CoinsIcon },
 ];
 
 type Props = {
