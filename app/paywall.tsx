@@ -2,7 +2,7 @@ import { Motion } from '@legendapp/motion';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, Stack } from 'expo-router';
 import { Bell, Crown, Export, Lightning, Sparkle } from 'phosphor-react-native';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +18,7 @@ import { AppColors, GRADIENTS } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { FeatureItem } from '@/src/features/monetization/FeatureItem';
+import { useIAP } from '@/src/features/monetization/IAPProvider';
 
 // Premium features configuration - easily extensible for future features
 const PREMIUM_FEATURES = [
@@ -39,37 +40,19 @@ const PREMIUM_FEATURES = [
 ] as const;
 
 export default function PaywallScreen() {
-  const { isPremium, setPremiumMock, user } = useAuth();
-  const [isWorking, setIsWorking] = useState(false);
+  const { isPremium, user } = useAuth();
+  const { isLoading, purchase, restore } = useIAP();
 
   const canPurchase = Boolean(user);
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (!canPurchase) {
       Alert.alert('Sign In Required', 'Please sign in to unlock Premium features.');
       return;
     }
 
-    Alert.alert(
-      'Unlock Premium',
-      'Payment integration coming soon. For now, this is a preview of the premium experience.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Simulate Purchase',
-          onPress: async () => {
-            setIsWorking(true);
-            try {
-              await new Promise<void>((r) => setTimeout(r, 800));
-              await setPremiumMock(true);
-              router.back();
-            } finally {
-              setIsWorking(false);
-            }
-          },
-        },
-      ]
-    );
+    await purchase();
+    // Navigation to success screen is handled by IAPProvider after validation
   };
 
   const handleRestore = async () => {
@@ -78,13 +61,10 @@ export default function PaywallScreen() {
       return;
     }
 
-    setIsWorking(true);
-    try {
-      await new Promise<void>((r) => setTimeout(r, 700));
-      await setPremiumMock(true);
-      router.back();
-    } finally {
-      setIsWorking(false);
+    const restored = await restore();
+    if (restored) {
+      // Navigate to success screen after restore
+      router.replace('/payment-success');
     }
   };
 
@@ -236,12 +216,12 @@ export default function PaywallScreen() {
           {/* Bottom Actions */}
           <View style={styles.actionsContainer}>
             <Pressable
-              disabled={isWorking}
+              disabled={isLoading}
               onPress={handlePurchase}
               style={styles.purchaseButton}
               testID="paywallPurchase"
             >
-              {isWorking ? (
+              {isLoading ? (
                 <ActivityIndicator color={AppColors.tint} />
               ) : (
                 <>
@@ -252,7 +232,7 @@ export default function PaywallScreen() {
             </Pressable>
 
             <Pressable
-              disabled={isWorking}
+              disabled={isLoading}
               onPress={handleRestore}
               style={styles.restoreButton}
               testID="paywallRestore"

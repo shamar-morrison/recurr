@@ -15,6 +15,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppErrorBoundary } from '@/src/components/AppErrorBoundary';
 import { AuthProvider } from '@/src/features/auth/AuthProvider';
 import { RemoteConfigProvider } from '@/src/features/config/RemoteConfigContext';
+import { IAPProvider } from '@/src/features/monetization/IAPProvider';
 import { setupNotificationHandler } from '@/src/features/notifications/notificationService';
 import { initCurrencyRates } from '@/src/lib/currencyConversion';
 
@@ -40,6 +41,7 @@ function RootLayoutNav() {
     <>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerBackTitle: 'Back' }}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="auth" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -51,6 +53,10 @@ function RootLayoutNav() {
         <Stack.Screen
           name="select-frequency"
           options={{ presentation: 'modal', headerShown: false }}
+        />
+        <Stack.Screen
+          name="payment-success"
+          options={{ presentation: 'fullScreenModal', headerShown: false, gestureEnabled: false }}
         />
       </Stack>
     </>
@@ -98,7 +104,9 @@ export default function RootLayout() {
         <AppErrorBoundary>
           <RemoteConfigProvider>
             <AuthProvider>
-              <RootLayoutNav />
+              <IAPProvider>
+                <RootLayoutNav />
+              </IAPProvider>
             </AuthProvider>
           </RemoteConfigProvider>
         </AppErrorBoundary>

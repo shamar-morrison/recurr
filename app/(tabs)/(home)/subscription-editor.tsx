@@ -1007,8 +1007,9 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
   },
   label: {
+    textTransform: 'uppercase',
     color: AppColors.secondaryText,
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.sm,
     fontWeight: '700',
     letterSpacing: 0.4,
     marginLeft: SPACING.xs,
@@ -1019,6 +1020,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginLeft: SPACING.xs,
     marginBottom: SPACING.xs,
+    marginTop: -SPACING.xs,
   },
   input: {
     minHeight: 56,

@@ -10,9 +10,11 @@ web-build/
 *.apk
 *.aab
 expo-env.d.ts
+credentials.json
 .env
 prompt.md
 google-services.json
+firebase-debug.log
 
 # Native
 ios/
@@ -44,3 +46,7 @@ yarn-error.*
 .vercel
 
 .rork
+
+# Keystore (sensitive)
+*.jks
+@shamar2000__recurr.jks
