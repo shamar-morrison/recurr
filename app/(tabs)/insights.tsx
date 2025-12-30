@@ -10,7 +10,7 @@ import {
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
-import { ChartLineUpIcon, CrownIcon } from 'phosphor-react-native';
+import { CalendarCheckIcon, CalendarIcon, ChartLineUpIcon, CrownIcon } from 'phosphor-react-native';
 
 export default function InsightsScreen() {
   const { isPremium } = useAuth();
@@ -116,44 +116,57 @@ export default function InsightsScreen() {
             </Text>
           ) : (
             <View style={styles.highlights}>
-              <View style={styles.highlightRow} testID="insightsMostExpensive">
-                <Text style={styles.highlightLabel}>Most expensive</Text>
-                <Text style={styles.highlightValue} numberOfLines={1}>
-                  {insights.mostExpensive?.serviceName ?? '—'} ·{' '}
-                  {formatMoney(
-                    insights.mostExpensive?.monthlyEquivalent ?? 0,
-                    insights.mostExpensive?.currency ?? 'USD'
-                  )}
-                  /mo
-                </Text>
+              {/* Most Expensive */}
+              <View style={styles.highlightCard} testID="insightsMostExpensive">
+                <View style={[styles.highlightIconContainer, { backgroundColor: '#FEF3C7' }]}>
+                  <CrownIcon size={18} color="#D97706" weight="fill" />
+                </View>
+                <View style={styles.highlightContent}>
+                  <Text style={styles.highlightLabel}>Most expensive</Text>
+                  <Text style={styles.highlightValue} numberOfLines={1}>
+                    {insights.mostExpensive?.serviceName ?? '—'} ·{' '}
+                    {formatMoney(
+                      insights.mostExpensive?.monthlyEquivalent ?? 0,
+                      insights.mostExpensive?.currency ?? 'USD'
+                    )}
+                    /mo
+                  </Text>
+                </View>
               </View>
 
-              <View style={styles.divider} />
-
-              <View style={styles.highlightRow} testID="insightsUpcoming">
-                <Text style={styles.highlightLabel}>Upcoming charge</Text>
-                <Text style={styles.highlightValue} numberOfLines={1}>
-                  {insights.upcoming?.serviceName ?? '—'}
-                  {insights.upcoming
-                    ? ` · ${formatShortDate(insights.upcoming.nextBillingDateISO)} (${Math.max(
-                        0,
-                        insights.upcoming.nextBillingInDays
-                      )}d)`
-                    : ''}
-                </Text>
+              {/* Upcoming Charge */}
+              <View style={styles.highlightCard} testID="insightsUpcoming">
+                <View style={[styles.highlightIconContainer, { backgroundColor: '#DBEAFE' }]}>
+                  <CalendarIcon size={18} color="#3B82F6" />
+                </View>
+                <View style={styles.highlightContent}>
+                  <Text style={styles.highlightLabel}>Upcoming charge</Text>
+                  <Text style={styles.highlightValue} numberOfLines={1}>
+                    {insights.upcoming?.serviceName ?? '—'}
+                    {insights.upcoming
+                      ? ` · ${formatShortDate(insights.upcoming.nextBillingDateISO)} (${Math.max(
+                          0,
+                          insights.upcoming.nextBillingInDays
+                        )}d)`
+                      : ''}
+                  </Text>
+                </View>
               </View>
 
+              {/* Next 7 Days */}
               {insights.next7Days.length ? (
-                <>
-                  <View style={styles.divider} />
-                  <View style={styles.highlightRow} testID="insightsNext7Days">
+                <View style={styles.highlightCard} testID="insightsNext7Days">
+                  <View style={[styles.highlightIconContainer, { backgroundColor: '#EDE9FE' }]}>
+                    <CalendarCheckIcon size={18} color="#8B5CF6" />
+                  </View>
+                  <View style={styles.highlightContent}>
                     <Text style={styles.highlightLabel}>Next 7 days</Text>
                     <Text style={styles.highlightValue}>
                       {insights.next7Days.length} charge
                       {insights.next7Days.length === 1 ? '' : 's'}
                     </Text>
                   </View>
-                </>
+                </View>
               ) : null}
             </View>
           )}
@@ -361,29 +374,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   totals: {
-    flexDirection: 'row',
     gap: SPACING.md,
   },
   totalCard: {
-    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderRadius: BORDER_RADIUS.xxl,
     padding: SPACING.lg,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    gap: SPACING.xs,
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   totalLabel: {
     color: '#fff',
-    fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    opacity: 0.8,
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    opacity: 0.9,
   },
   totalValue: {
     color: '#fff',
-    fontSize: FONT_SIZE.xxl,
+    fontSize: FONT_SIZE.xl,
     fontWeight: '800',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   card: {
     borderRadius: BORDER_RADIUS.xxxl,
@@ -422,14 +433,30 @@ const styles = StyleSheet.create({
   highlights: {
     gap: SPACING.md,
   },
-  highlightRow: {
-    gap: SPACING.xs,
+  highlightCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.lg,
+    backgroundColor: AppColors.cardAlt,
+    borderRadius: BORDER_RADIUS.xl,
+    gap: SPACING.md,
+  },
+  highlightIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: BORDER_RADIUS.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  highlightContent: {
+    flex: 1,
+    gap: 2,
   },
   highlightLabel: {
     color: AppColors.secondaryText,
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
-    letterSpacing: 0.6,
+    fontWeight: '600',
+    letterSpacing: 0.3,
     textTransform: 'uppercase',
   },
   highlightValue: {
@@ -437,11 +464,6 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.lg,
     fontWeight: '700',
     letterSpacing: -0.2,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: AppColors.border,
-    opacity: 0.5,
   },
   bars: {
     gap: SPACING.lg,
