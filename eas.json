@@ -8,9 +8,7 @@
       "channel": "production",
       "android": {
         "buildType": "app-bundle",
-        "env": {
-          "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON"
-        }
+        "credentialsSource": "local"
       },
       "autoIncrement": true
     },
@@ -19,22 +17,14 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk",
-        "env": {
-          "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON"
-        }
-      }
-    },
-    "iap-testing": {
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease"
+        "credentialsSource": "local"
       }
     },
     "preview": {
       "channel": "preview",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "credentialsSource": "local"
       }
     }
   }
