@@ -14,6 +14,7 @@ import { CURRENCIES } from '@/src/constants/currencies';
 import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
 import { getServiceByName, getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   cancelNotification,
@@ -79,6 +80,7 @@ export default function SubscriptionEditorScreen() {
   const editingId = typeof params.id === 'string' ? params.id : undefined;
 
   const { settings, user } = useAuth();
+  const { colors } = useTheme();
   const userId = user?.uid ?? '';
   const subscriptionsQuery = useSubscriptionsQuery();
   const upsertMutation = useUpsertSubscriptionMutation();
@@ -206,8 +208,8 @@ export default function SubscriptionEditorScreen() {
     const config = PAYMENT_METHOD_CONFIG.find((c) => c.label === paymentMethod);
     if (!config) return null;
     const IconComponent = config.icon;
-    return <IconComponent color={AppColors.text} size={20} />;
-  }, [paymentMethod]);
+    return <IconComponent color={colors.text} size={20} />;
+  }, [paymentMethod, colors]);
 
   const [reminderDays, setReminderDays] = useState<ReminderDays>(null);
   const [showReminderModal, setShowReminderModal] = useState(false);
@@ -454,13 +456,13 @@ export default function SubscriptionEditorScreen() {
     return (
       <Pressable
         onPress={() => router.back()}
-        style={styles.headerLeft}
+        style={[styles.headerLeft, { backgroundColor: colors.tertiaryBackground }]}
         testID="subscriptionEditorBack"
       >
-        <CaretLeftIcon color={AppColors.text} size={22} />
+        <CaretLeftIcon color={colors.text} size={22} />
       </Pressable>
     );
-  }, []);
+  }, [colors]);
 
   const showLoading = Boolean(editingId) && subscriptionsQuery.isLoading;
   const showNotFound = Boolean(editingId) && !subscriptionsQuery.isLoading && !existing;
@@ -478,25 +480,35 @@ export default function SubscriptionEditorScreen() {
       />
 
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         testID="subscriptionEditorScreen"
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {showLoading ? (
             <View style={styles.loading} testID="subscriptionEditorLoading">
-              <ActivityIndicator color={AppColors.tint} />
-              <Text style={styles.loadingText}>Loading…</Text>
+              <ActivityIndicator color={colors.tint} />
+              <Text style={[styles.loadingText, { color: colors.secondaryText }]}>Loading…</Text>
             </View>
           ) : null}
 
           {showNotFound ? (
-            <View style={styles.notFound} testID="subscriptionEditorNotFound">
-              <Text style={styles.notFoundTitle}>Subscription not found</Text>
-              <Text style={styles.notFoundText}>It may have been deleted on another device.</Text>
+            <View
+              style={[
+                styles.notFound,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+              testID="subscriptionEditorNotFound"
+            >
+              <Text style={[styles.notFoundTitle, { color: colors.text }]}>
+                Subscription not found
+              </Text>
+              <Text style={[styles.notFoundText, { color: colors.secondaryText }]}>
+                It may have been deleted on another device.
+              </Text>
               <Pressable
                 onPress={() => router.back()}
-                style={[styles.primary, { backgroundColor: AppColors.tint }]}
+                style={[styles.primary, { backgroundColor: colors.tint }]}
                 testID="subscriptionEditorNotFoundBack"
               >
                 <Text style={styles.primaryText}>Go back</Text>
@@ -505,10 +517,17 @@ export default function SubscriptionEditorScreen() {
           ) : (
             <>
               <View style={styles.section}>
-                <Text style={styles.label}>Service</Text>
+                <Text style={[styles.label, { color: colors.secondaryText }]}>Service</Text>
                 <Pressable
                   onPress={() => setShowServiceModal(true)}
-                  style={[styles.input, isSaving && styles.disabledInput]}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                    },
+                    isSaving && styles.disabledInput,
+                  ]}
                   disabled={isSaving}
                   testID="subscriptionEditorServiceName"
                 >
@@ -521,7 +540,12 @@ export default function SubscriptionEditorScreen() {
                         borderRadius={8}
                       />
                     ) : null}
-                    <Text style={[styles.inputText, !serviceName && styles.placeholderText]}>
+                    <Text
+                      style={[
+                        styles.inputText,
+                        !serviceName ? { color: colors.secondaryText } : { color: colors.text },
+                      ]}
+                    >
                       {serviceName || 'Netflix, Spotify, iCloud…'}
                     </Text>
                   </View>
@@ -529,12 +553,12 @@ export default function SubscriptionEditorScreen() {
               </View>
 
               <View style={styles.section}>
-                <Text style={styles.label}>Category</Text>
+                <Text style={[styles.label, { color: colors.secondaryText }]}>Category</Text>
                 <View style={styles.chipsRow} testID="subscriptionEditorCategories">
                   {SUBSCRIPTION_CATEGORIES.map((cat) => {
                     const active = cat === category;
                     const categoryColor = CATEGORY_COLORS[cat];
-                    const iconColor = active ? '#fff' : AppColors.text;
+                    const iconColor = active ? '#fff' : colors.text;
                     const iconSize = 26;
                     return (
                       <Pressable
@@ -543,6 +567,10 @@ export default function SubscriptionEditorScreen() {
                         disabled={isSaving}
                         style={[
                           styles.chip,
+                          {
+                            backgroundColor: colors.card,
+                            borderColor: colors.border,
+                          },
                           active
                             ? {
                                 backgroundColor: categoryColor.text,
@@ -610,7 +638,7 @@ export default function SubscriptionEditorScreen() {
                         <Text
                           style={[
                             styles.chipText,
-                            active ? { color: '#fff' } : { color: AppColors.text },
+                            active ? { color: '#fff' } : { color: colors.text },
                           ]}
                         >
                           {cat}
@@ -624,7 +652,7 @@ export default function SubscriptionEditorScreen() {
               <View style={styles.grid}>
                 {/* Cost Column */}
                 <View style={[styles.section, styles.gridItem]}>
-                  <Text style={styles.label}>Cost</Text>
+                  <Text style={[styles.label, { color: colors.secondaryText }]}>Cost</Text>
                   <TextInput
                     value={amountText}
                     onChangeText={(text) => {
@@ -633,8 +661,16 @@ export default function SubscriptionEditorScreen() {
                     }}
                     keyboardType={Platform.OS === 'web' ? 'default' : 'decimal-pad'}
                     placeholder="9.99"
-                    placeholderTextColor="rgba(15,23,42,0.35)"
-                    style={[styles.input, isSaving && styles.disabledInput]}
+                    placeholderTextColor={colors.secondaryText}
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: colors.border,
+                        color: colors.text,
+                      },
+                      isSaving && styles.disabledInput,
+                    ]}
                     editable={!isSaving}
                     testID="subscriptionEditorAmount"
                   />
@@ -642,31 +678,41 @@ export default function SubscriptionEditorScreen() {
 
                 {/* Currency Column */}
                 <View style={[styles.section, styles.gridItem]}>
-                  <Text style={styles.label}>Currency</Text>
+                  <Text style={[styles.label, { color: colors.secondaryText }]}>Currency</Text>
                   <Pressable
-                    style={[styles.dropdownButton, isSaving && styles.disabledInput]}
+                    style={[
+                      styles.dropdownButton,
+                      { backgroundColor: colors.card, borderColor: colors.border },
+                      isSaving && styles.disabledInput,
+                    ]}
                     onPress={() => setShowCurrencyModal(true)}
                     disabled={isSaving}
                     testID="subscriptionEditorCurrency"
                   >
-                    <Text style={styles.dropdownText}>
+                    <Text style={[styles.dropdownText, { color: colors.text }]}>
                       {currency} ({currencySymbol})
                     </Text>
-                    <CaretDownIcon color={AppColors.secondaryText} size={16} />
+                    <CaretDownIcon color={colors.secondaryText} size={16} />
                   </Pressable>
                 </View>
 
                 {/* Frequency Column */}
                 <View style={[styles.section, styles.gridItem]}>
-                  <Text style={styles.label}>Frequency</Text>
+                  <Text style={[styles.label, { color: colors.secondaryText }]}>Frequency</Text>
                   <Pressable
-                    style={[styles.dropdownButton, isSaving && styles.disabledInput]}
+                    style={[
+                      styles.dropdownButton,
+                      { backgroundColor: colors.card, borderColor: colors.border },
+                      isSaving && styles.disabledInput,
+                    ]}
                     onPress={() => setShowFrequencyModal(true)}
                     disabled={isSaving}
                     testID="subscriptionEditorFrequency"
                   >
-                    <Text style={styles.dropdownText}>{billingCycle}</Text>
-                    <CaretDownIcon color={AppColors.secondaryText} size={16} />
+                    <Text style={[styles.dropdownText, { color: colors.text }]}>
+                      {billingCycle}
+                    </Text>
+                    <CaretDownIcon color={colors.secondaryText} size={16} />
                   </Pressable>
                 </View>
               </View>
@@ -674,14 +720,20 @@ export default function SubscriptionEditorScreen() {
               {billingCycle === 'One-Time' ? (
                 /* Payment Date for One-Time payments */
                 <View style={styles.section}>
-                  <Text style={styles.label}>Payment date</Text>
+                  <Text style={[styles.label, { color: colors.secondaryText }]}>Payment date</Text>
                   <Pressable
-                    style={[styles.dateInput, isSaving && styles.disabledInput]}
+                    style={[
+                      styles.dateInput,
+                      { backgroundColor: colors.card, borderColor: colors.border },
+                      isSaving && styles.disabledInput,
+                    ]}
                     onPress={() => setShowStartDatePicker(true)}
                     disabled={isSaving}
                     testID="subscriptionEditorPaymentDate"
                   >
-                    <Text style={styles.dateText}>{formatDate(startDate)}</Text>
+                    <Text style={[styles.dateText, { color: colors.text }]}>
+                      {formatDate(startDate)}
+                    </Text>
                   </Pressable>
                   {showStartDatePicker && (
                     <DateTimePicker
@@ -704,8 +756,8 @@ export default function SubscriptionEditorScreen() {
                 /* Billing day, Start date, End date for recurring payments */
                 <>
                   <View style={styles.section}>
-                    <Text style={styles.label}>Billing day</Text>
-                    <Text style={styles.helper}>
+                    <Text style={[styles.label, { color: colors.secondaryText }]}>Billing day</Text>
+                    <Text style={[styles.helper, { color: colors.secondaryText }]}>
                       Day of month (1–31). We'll calculate the next renewal date.
                     </Text>
                     <TextInput
@@ -713,8 +765,16 @@ export default function SubscriptionEditorScreen() {
                       onChangeText={setBillingDayText}
                       keyboardType={Platform.OS === 'web' ? 'default' : 'number-pad'}
                       placeholder="1"
-                      placeholderTextColor="rgba(15,23,42,0.35)"
-                      style={[styles.input, isSaving && styles.disabledInput]}
+                      placeholderTextColor={colors.secondaryText}
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: colors.card,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        },
+                        isSaving && styles.disabledInput,
+                      ]}
                       editable={!isSaving}
                       testID="subscriptionEditorBillingDay"
                     />
@@ -722,14 +782,20 @@ export default function SubscriptionEditorScreen() {
 
                   {/* Start Date */}
                   <View style={styles.section}>
-                    <Text style={styles.label}>Start date</Text>
+                    <Text style={[styles.label, { color: colors.secondaryText }]}>Start date</Text>
                     <Pressable
-                      style={[styles.dateInput, isSaving && styles.disabledInput]}
+                      style={[
+                        styles.dateInput,
+                        { backgroundColor: colors.card, borderColor: colors.border },
+                        isSaving && styles.disabledInput,
+                      ]}
                       onPress={() => setShowStartDatePicker(true)}
                       disabled={isSaving}
                       testID="subscriptionEditorStartDate"
                     >
-                      <Text style={styles.dateText}>{formatDate(startDate)}</Text>
+                      <Text style={[styles.dateText, { color: colors.text }]}>
+                        {formatDate(startDate)}
+                      </Text>
                     </Pressable>
                     {showStartDatePicker && (
                       <DateTimePicker
@@ -751,34 +817,50 @@ export default function SubscriptionEditorScreen() {
 
                   {/* End Date (optional) */}
                   <View style={styles.section}>
-                    <Text style={styles.label}>End date</Text>
+                    <Text style={[styles.label, { color: colors.secondaryText }]}>End date</Text>
                     {endDate ? (
                       <View style={styles.dateRow}>
                         <Pressable
-                          style={[styles.dateInput, { flex: 1 }, isSaving && styles.disabledInput]}
+                          style={[
+                            styles.dateInput,
+                            { flex: 1, backgroundColor: colors.card, borderColor: colors.border },
+                            isSaving && styles.disabledInput,
+                          ]}
                           onPress={() => setShowEndDatePicker(true)}
                           disabled={isSaving}
                           testID="subscriptionEditorEndDate"
                         >
-                          <Text style={styles.dateText}>{formatDate(endDate)}</Text>
+                          <Text style={[styles.dateText, { color: colors.text }]}>
+                            {formatDate(endDate)}
+                          </Text>
                         </Pressable>
                         <Pressable
-                          style={[styles.clearButton, isSaving && styles.disabledInput]}
+                          style={[
+                            styles.clearButton,
+                            { backgroundColor: colors.tertiaryBackground },
+                            isSaving && styles.disabledInput,
+                          ]}
                           onPress={() => setEndDate(null)}
                           disabled={isSaving}
                           testID="subscriptionEditorClearEndDate"
                         >
-                          <XIcon color={AppColors.secondaryText} size={18} />
+                          <XIcon color={colors.secondaryText} size={18} />
                         </Pressable>
                       </View>
                     ) : (
                       <Pressable
-                        style={[styles.dateInput, isSaving && styles.disabledInput]}
+                        style={[
+                          styles.dateInput,
+                          { backgroundColor: colors.card, borderColor: colors.border },
+                          isSaving && styles.disabledInput,
+                        ]}
                         onPress={() => setShowEndDatePicker(true)}
                         disabled={isSaving}
                         testID="subscriptionEditorAddEndDate"
                       >
-                        <Text style={styles.placeholderText}>Add end date (optional)</Text>
+                        <Text style={[styles.placeholderText, { color: colors.secondaryText }]}>
+                          Add end date (optional)
+                        </Text>
                       </Pressable>
                     )}
                     {showEndDatePicker && (
@@ -804,9 +886,13 @@ export default function SubscriptionEditorScreen() {
 
               {/* Payment Method */}
               <View style={styles.section}>
-                <Text style={styles.label}>Payment method</Text>
+                <Text style={[styles.label, { color: colors.secondaryText }]}>Payment method</Text>
                 <Pressable
-                  style={[styles.dropdownButton, isSaving && styles.disabledInput]}
+                  style={[
+                    styles.dropdownButton,
+                    { backgroundColor: colors.card, borderColor: colors.border },
+                    isSaving && styles.disabledInput,
+                  ]}
                   onPress={() => setShowPaymentMethodModal(true)}
                   disabled={isSaving}
                   testID="subscriptionEditorPaymentMethod"
@@ -814,77 +900,116 @@ export default function SubscriptionEditorScreen() {
                   {paymentMethod ? (
                     <View style={styles.paymentMethodRow}>
                       {PaymentMethodIcon}
-                      <Text style={styles.dropdownText}>{paymentMethod}</Text>
+                      <Text style={[styles.dropdownText, { color: colors.text }]}>
+                        {paymentMethod}
+                      </Text>
                     </View>
                   ) : (
-                    <Text style={[styles.dropdownText, styles.placeholderText]}>
+                    <Text
+                      style={[
+                        styles.dropdownText,
+                        styles.placeholderText,
+                        { color: colors.secondaryText },
+                      ]}
+                    >
                       Select payment method
                     </Text>
                   )}
-                  <CaretDownIcon color={AppColors.secondaryText} size={16} />
+                  <CaretDownIcon color={colors.secondaryText} size={16} />
                 </Pressable>
               </View>
 
               {/* Reminder */}
               <View style={styles.section}>
-                <Text style={styles.label}>Reminder</Text>
+                <Text style={[styles.label, { color: colors.secondaryText }]}>Reminder</Text>
                 <View style={styles.reminderRow}>
                   {/* Reminder Days (left half) */}
                   <Pressable
-                    style={[styles.reminderButton, isSaving && styles.disabledInput]}
+                    style={[
+                      styles.reminderButton,
+                      { backgroundColor: colors.card, borderColor: colors.border },
+                      isSaving && styles.disabledInput,
+                    ]}
                     onPress={() => setShowReminderModal(true)}
                     disabled={isSaving}
                     testID="subscriptionEditorReminder"
                   >
                     <View style={styles.paymentMethodRow}>
-                      <BellIcon color={AppColors.text} size={20} />
-                      <Text style={[styles.dropdownText, !reminderDays && styles.placeholderText]}>
+                      <BellIcon color={colors.text} size={20} />
+                      <Text
+                        style={[
+                          styles.dropdownText,
+                          { color: colors.text },
+                          !reminderDays &&
+                            styles.placeholderText && { color: colors.secondaryText },
+                        ]}
+                      >
                         {reminderLabel}
                       </Text>
                     </View>
-                    <CaretDownIcon color={AppColors.secondaryText} size={16} />
+                    <CaretDownIcon color={colors.secondaryText} size={16} />
                   </Pressable>
 
                   {/* Reminder Time (right half) */}
                   <Pressable
-                    style={[styles.reminderButton, isSaving && styles.disabledInput]}
+                    style={[
+                      styles.reminderButton,
+                      { backgroundColor: colors.card, borderColor: colors.border },
+                      isSaving && styles.disabledInput,
+                    ]}
                     onPress={() => setShowReminderTimeModal(true)}
                     disabled={isSaving}
                     testID="subscriptionEditorReminderTime"
                   >
                     <View style={styles.paymentMethodRow}>
-                      <ClockIcon color={AppColors.text} size={20} />
-                      <Text style={styles.dropdownText}>{reminderTimeLabel}</Text>
+                      <ClockIcon color={colors.text} size={20} />
+                      <Text style={[styles.dropdownText, { color: colors.text }]}>
+                        {reminderTimeLabel}
+                      </Text>
                     </View>
-                    <CaretDownIcon color={AppColors.secondaryText} size={16} />
+                    <CaretDownIcon color={colors.secondaryText} size={16} />
                   </Pressable>
                 </View>
               </View>
 
               <View style={styles.section}>
-                <Text style={styles.label}>Notes (optional)</Text>
+                <Text style={[styles.label, { color: colors.secondaryText }]}>
+                  Notes (optional)
+                </Text>
                 <TextInput
                   value={notes}
                   onChangeText={setNotes}
                   placeholder="e.g. Family plan, billed through Google Play"
-                  placeholderTextColor="rgba(15,23,42,0.35)"
+                  placeholderTextColor={colors.secondaryText}
                   multiline
-                  style={[styles.input, styles.notesInput, isSaving && styles.disabledInput]}
+                  style={[
+                    styles.input,
+                    styles.notesInput,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                      color: colors.text,
+                    },
+                    isSaving && styles.disabledInput,
+                  ]}
                   editable={!isSaving}
                   testID="subscriptionEditorNotes"
                 />
               </View>
 
               {canDelete ? (
-                <View style={styles.dangerZone} testID="subscriptionEditorDanger">
+                <View
+                  style={[styles.dangerZone, { backgroundColor: colors.negativeBackground }]}
+                  testID="subscriptionEditorDanger"
+                >
                   <Pressable
                     onPress={handleDelete}
                     style={styles.deleteButton}
                     disabled={deleteMutation.isPending || isSaving}
                     testID="subscriptionEditorDelete"
                   >
-                    <TrashIcon color={AppColors.negative} size={18} />
-                    <Text style={[styles.deleteText, { color: AppColors.negative }]}>
+                    <TrashIcon color={colors.negative} size={18} />
+                    <Text style={[styles.deleteText, { color: colors.negative }]}>
                       Delete Subscription
                     </Text>
                   </Pressable>
