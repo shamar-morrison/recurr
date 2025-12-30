@@ -68,8 +68,13 @@ export function nextBillingDate(from: Date, cycle: BillingCycle, anchor: Date): 
         if (cycle === 'Semiannual')
           candidate.setMonth(candidate.getMonth() + Math.floor((monthDiff - 1) / 6) * 6);
       }
+    } else if (cycle === 'Bi-weekly') {
+      const weeks = Math.floor(diffTime / (14 * DAY_MS));
+      if (weeks > 1) {
+        candidate.setDate(candidate.getDate() + (weeks - 1) * 14);
+      }
     } else {
-      // Weekly / Bi-weekly
+      // Weekly
       const weeks = Math.floor(diffTime / (7 * DAY_MS));
       if (weeks > 1) {
         candidate.setDate(candidate.getDate() + (weeks - 1) * 7);
