@@ -15,6 +15,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -291,80 +292,91 @@ export default function SubscriptionsHomeScreen() {
           </Pressable>
         </View>
 
-        {showSortMenu && (
-          <View
-            style={[styles.sortMenu, { backgroundColor: colors.card, borderColor: colors.border }]}
-          >
+        <Modal
+          visible={showSortMenu}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowSortMenu(false)}
+        >
+          <Pressable style={styles.modalOverlay} onPress={() => setShowSortMenu(false)}>
             <Pressable
-              onPress={() => {
-                setSortBy('Date');
-                setShowSortMenu(false);
-              }}
-              style={styles.sortMenuItem}
+              style={[
+                styles.sortMenu,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+              onPress={(e) => e.stopPropagation()}
             >
-              <Text
-                style={[
-                  styles.sortMenuText,
-                  { color: sortBy === 'Date' ? colors.tint : colors.text },
-                ]}
+              <Pressable
+                onPress={() => {
+                  setSortBy('Date');
+                  setShowSortMenu(false);
+                }}
+                style={styles.sortMenuItem}
               >
-                Next Bill Date
-              </Text>
-              {sortBy === 'Date' && <CheckIcon color={colors.tint} size={16} />}
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                setSortBy('CostDesc');
-                setShowSortMenu(false);
-              }}
-              style={styles.sortMenuItem}
-            >
-              <Text
-                style={[
-                  styles.sortMenuText,
-                  { color: sortBy === 'CostDesc' ? colors.tint : colors.text },
-                ]}
+                <Text
+                  style={[
+                    styles.sortMenuText,
+                    { color: sortBy === 'Date' ? colors.tint : colors.text },
+                  ]}
+                >
+                  Next Bill Date
+                </Text>
+                {sortBy === 'Date' && <CheckIcon color={colors.tint} size={16} />}
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setSortBy('CostDesc');
+                  setShowSortMenu(false);
+                }}
+                style={styles.sortMenuItem}
               >
-                Highest Cost
-              </Text>
-              {sortBy === 'CostDesc' && <CheckIcon color={colors.tint} size={16} />}
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                setSortBy('CostAsc');
-                setShowSortMenu(false);
-              }}
-              style={styles.sortMenuItem}
-            >
-              <Text
-                style={[
-                  styles.sortMenuText,
-                  { color: sortBy === 'CostAsc' ? colors.tint : colors.text },
-                ]}
+                <Text
+                  style={[
+                    styles.sortMenuText,
+                    { color: sortBy === 'CostDesc' ? colors.tint : colors.text },
+                  ]}
+                >
+                  Highest Cost
+                </Text>
+                {sortBy === 'CostDesc' && <CheckIcon color={colors.tint} size={16} />}
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setSortBy('CostAsc');
+                  setShowSortMenu(false);
+                }}
+                style={styles.sortMenuItem}
               >
-                Lowest Cost
-              </Text>
-              {sortBy === 'CostAsc' && <CheckIcon color={colors.tint} size={16} />}
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                setSortBy('Name');
-                setShowSortMenu(false);
-              }}
-              style={styles.sortMenuItem}
-            >
-              <Text
-                style={[
-                  styles.sortMenuText,
-                  { color: sortBy === 'Name' ? colors.tint : colors.text },
-                ]}
+                <Text
+                  style={[
+                    styles.sortMenuText,
+                    { color: sortBy === 'CostAsc' ? colors.tint : colors.text },
+                  ]}
+                >
+                  Lowest Cost
+                </Text>
+                {sortBy === 'CostAsc' && <CheckIcon color={colors.tint} size={16} />}
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setSortBy('Name');
+                  setShowSortMenu(false);
+                }}
+                style={styles.sortMenuItem}
               >
-                Name (A-Z)
-              </Text>
-              {sortBy === 'Name' && <CheckIcon color={colors.tint} size={16} />}
+                <Text
+                  style={[
+                    styles.sortMenuText,
+                    { color: sortBy === 'Name' ? colors.tint : colors.text },
+                  ]}
+                >
+                  Name (A-Z)
+                </Text>
+                {sortBy === 'Name' && <CheckIcon color={colors.tint} size={16} />}
+              </Pressable>
             </Pressable>
-          </View>
-        )}
+          </Pressable>
+        </Modal>
 
         <View style={styles.filters}>
           <View style={styles.filtersLeft}>
@@ -712,6 +724,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: SPACING.xl,
+  },
   sortMenu: {
     backgroundColor: AppColors.card,
     borderWidth: 1,
@@ -719,12 +737,14 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.sm,
     gap: 4,
-    marginBottom: SPACING.md,
     shadowColor: 'rgba(0,0,0,0.1)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 3,
+    maxWidth: 320,
+    width: '100%',
+    alignSelf: 'center',
   },
   sortMenuItem: {
     flexDirection: 'row',
