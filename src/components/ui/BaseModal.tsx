@@ -3,8 +3,8 @@ import React, { ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AppColors } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 
 type BaseModalProps = {
   /** Controls modal visibility */
@@ -38,6 +38,8 @@ export function BaseModal({
   onSearchChange,
   footer,
 }: BaseModalProps) {
+  const { colors } = useTheme();
+
   return (
     <Modal
       visible={visible}
@@ -45,26 +47,32 @@ export function BaseModal({
       presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+        edges={['top', 'bottom']}
+      >
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerSpacer} />
-          <Text style={styles.title}>{title}</Text>
-          <Pressable onPress={onClose} style={styles.closeButton}>
-            <XIcon color={AppColors.text} size={22} />
+          <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+          <Pressable
+            onPress={onClose}
+            style={[styles.closeButton, { backgroundColor: colors.tertiaryBackground }]}
+          >
+            <XIcon color={colors.text} size={22} />
           </Pressable>
         </View>
 
         {/* Optional Search Bar */}
         {showSearch && (
-          <View style={styles.searchContainer}>
-            <MagnifyingGlassIcon color={AppColors.secondaryText} size={18} />
+          <View style={[styles.searchContainer, { backgroundColor: colors.inputBackground }]}>
+            <MagnifyingGlassIcon color={colors.secondaryText} size={18} />
             <TextInput
               value={searchValue}
               onChangeText={onSearchChange}
               placeholder={searchPlaceholder}
-              placeholderTextColor={AppColors.secondaryText}
-              style={styles.searchInput}
+              placeholderTextColor={colors.secondaryText}
+              style={[styles.searchInput, { color: colors.text }]}
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="search"
@@ -85,7 +93,6 @@ export function BaseModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
     paddingHorizontal: SPACING.lg,
   },
   header: {
@@ -101,7 +108,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FONT_SIZE.xl,
     fontWeight: '700',
-    color: AppColors.text,
     textAlign: 'center',
     flex: 1,
     letterSpacing: -0.3,
@@ -112,7 +118,6 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: AppColors.tertiaryBackground,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -121,13 +126,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
     borderRadius: BORDER_RADIUS.lg,
-    backgroundColor: AppColors.inputBackground,
     marginBottom: SPACING.md,
   },
   searchInput: {
     flex: 1,
     fontSize: FONT_SIZE.lg,
-    color: AppColors.text,
     padding: 0,
   },
   content: {

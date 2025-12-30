@@ -54,6 +54,7 @@ interface SettingRowProps {
   onSwitchChange?: (val: boolean) => void;
   onPress?: () => void;
   showChevron?: boolean;
+  colors: ReturnType<typeof useTheme>['colors'];
 }
 
 function SettingRow({
@@ -67,9 +68,14 @@ function SettingRow({
   onSwitchChange,
   onPress,
   showChevron = true,
+  colors,
 }: SettingRowProps) {
   return (
-    <Pressable onPress={onPress} disabled={isSwitch} style={styles.row}>
+    <Pressable
+      onPress={onPress}
+      disabled={isSwitch}
+      style={[styles.row, { backgroundColor: colors.card }]}
+    >
       <View style={[styles.iconContainer, { backgroundColor: iconBg }]}>
         {React.cloneElement(icon as React.ReactElement<{ size?: number; color?: string }>, {
           size: 20,
@@ -77,7 +83,7 @@ function SettingRow({
         })}
       </View>
 
-      <Text style={styles.rowLabel} numberOfLines={1}>
+      <Text style={[styles.rowLabel, { color: colors.text }]} numberOfLines={1}>
         {label}
       </Text>
 
@@ -85,17 +91,17 @@ function SettingRow({
         <Switch
           value={switchValue}
           onValueChange={onSwitchChange}
-          trackColor={{ false: AppColors.border, true: AppColors.primary }}
-          thumbColor={AppColors.card}
+          trackColor={{ false: colors.border, true: colors.primary }}
+          thumbColor={colors.card}
         />
       ) : (
         <View style={styles.rowRight}>
           {value && (
-            <Text style={styles.rowValue} numberOfLines={1}>
+            <Text style={[styles.rowValue, { color: colors.secondaryText }]} numberOfLines={1}>
               {value}
             </Text>
           )}
-          {showChevron && <CaretRightIcon size={20} color={AppColors.secondaryText} />}
+          {showChevron && <CaretRightIcon size={20} color={colors.secondaryText} />}
         </View>
       )}
     </Pressable>
@@ -295,11 +301,16 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['top']}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Preferences</Text>
-        <Text style={styles.headerSubtitle}>Manage your account and settings</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>My Preferences</Text>
+        <Text style={[styles.headerSubtitle, { color: colors.secondaryText }]}>
+          Manage your account and settings
+        </Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -330,6 +341,7 @@ export default function SettingsScreen() {
               <>
                 <View style={styles.divider} />
                 <SettingRow
+                  colors={colors}
                   icon={<CrownIcon weight="fill" />}
                   iconColor="#D97706"
                   iconBg="#FEF3C7"
@@ -346,6 +358,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
           <View style={styles.card}>
             <SettingRow
+              colors={colors}
               icon={<BellIcon />}
               iconColor="#F97316"
               iconBg="#FFEDD5"
@@ -359,6 +372,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
+              colors={colors}
               icon={<EnvelopeIcon />}
               iconColor="#3B82F6"
               iconBg="#DBEAFE"
@@ -372,6 +386,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
+              colors={colors}
               icon={<InvoiceIcon />}
               iconColor="#A855F7"
               iconBg="#F3E8FF"
@@ -386,6 +401,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>PREFERENCES</Text>
           <View style={styles.card}>
             <SettingRow
+              colors={colors}
               icon={<CoinsIcon />}
               iconColor="#10B981"
               iconBg="#D1FAE5"
@@ -397,6 +413,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
+              colors={colors}
               icon={<CalendarIcon />}
               iconColor="#6366F1"
               iconBg="#E0E7FF"
@@ -408,6 +425,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
+              colors={colors}
               icon={<PaletteIcon />}
               iconColor="#8B5CF6"
               iconBg="#EDE9FE"
@@ -423,6 +441,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>DATA</Text>
           <View style={styles.card}>
             <SettingRow
+              colors={colors}
               icon={<DownloadSimpleIcon />}
               iconColor="#059669"
               iconBg="#D1FAE5"
@@ -437,6 +456,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>INFORMATION</Text>
           <View style={styles.card}>
             <SettingRow
+              colors={colors}
               icon={<StarIcon weight="fill" />}
               iconColor="#F59E0B"
               iconBg="#FEF3C7"
@@ -447,6 +467,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
+              colors={colors}
               icon={<ChatCircleDotsIcon />}
               iconColor="#06B6D4"
               iconBg="#CFFAFE"
@@ -457,6 +478,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
+              colors={colors}
               icon={<GridFourIcon />}
               iconColor="#8B5CF6"
               iconBg="#EDE9FE"
@@ -467,6 +489,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
+              colors={colors}
               icon={<ShareNetworkIcon />}
               iconColor="#EC4899"
               iconBg="#FCE7F3"
@@ -477,6 +500,7 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <SettingRow
+              colors={colors}
               icon={<InfoIcon />}
               iconColor="#6366F1"
               iconBg="#E0E7FF"

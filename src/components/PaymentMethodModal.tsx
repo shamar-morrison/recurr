@@ -11,9 +11,9 @@ import {
 import React, { useCallback } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
-import { AppColors } from '@/constants/colors';
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
+import { useTheme } from '@/src/context/ThemeContext';
 import { PaymentMethod } from '@/src/features/subscriptions/types';
 
 type PaymentMethodConfig = {
@@ -40,6 +40,8 @@ type Props = {
 };
 
 export function PaymentMethodModal({ visible, selectedMethod, onSelect, onClose }: Props) {
+  const { colors } = useTheme();
+
   const handleSelect = useCallback(
     (method: PaymentMethod) => {
       onSelect(method);
@@ -62,7 +64,7 @@ export function PaymentMethodModal({ visible, selectedMethod, onSelect, onClose 
               onPress={() => handleSelect(config.label)}
               leftElement={
                 <IconComponent
-                  color={isSelected ? AppColors.tint : AppColors.text}
+                  color={isSelected ? colors.tint : colors.text}
                   size={24}
                   weight={isSelected ? 'fill' : 'regular'}
                 />

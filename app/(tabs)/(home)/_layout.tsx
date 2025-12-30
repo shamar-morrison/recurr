@@ -2,8 +2,8 @@ import { NativeStackHeaderProps } from '@react-navigation/native-stack';
 import { Stack } from 'expo-router';
 import React from 'react';
 
-import { AppColors } from '@/constants/colors';
 import { StackHeader } from '@/src/components/ui/StackHeader';
+import { useTheme } from '@/src/context/ThemeContext';
 
 function HomeHeader({ options }: NativeStackHeaderProps) {
   return (
@@ -23,7 +23,7 @@ function EditorHeader({ options, navigation }: NativeStackHeaderProps) {
 }
 
 export default function HomeStackLayout() {
-  const theme = { colors: AppColors };
+  const { colors } = useTheme();
 
   return (
     <Stack
@@ -31,7 +31,7 @@ export default function HomeStackLayout() {
       screenOptions={{
         headerShadowVisible: false,
         contentStyle: {
-          backgroundColor: theme.colors.background,
+          backgroundColor: colors.background,
         },
       }}
     >

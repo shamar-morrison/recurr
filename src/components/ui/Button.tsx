@@ -12,8 +12,9 @@ import {
   ViewStyle,
 } from 'react-native';
 
-import { AppColors } from '@/constants/colors';
+import { AppColorPalette } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -31,7 +32,7 @@ interface ButtonProps extends Omit<PressableProps, 'style'> {
 
 type VariantColors = Record<ButtonVariant, { bg: string; text: string }>;
 
-function getVariantColors(colors: typeof AppColors): VariantColors {
+function getVariantColors(colors: AppColorPalette): VariantColors {
   return {
     primary: { bg: colors.tint, text: '#FFFFFF' },
     secondary: { bg: colors.cardAlt, text: colors.text },
@@ -75,9 +76,9 @@ export function Button({
   haptic = true,
   ...props
 }: ButtonProps) {
-  const themeColors = AppColors;
-  const variantColors = getVariantColors(themeColors);
-  const colors = variantColors[variant];
+  const { colors, isDark } = useTheme();
+  const variantColors = getVariantColors(colors);
+  const buttonColors = variantColors[variant];
   const sizeStyle = SIZE_STYLES[size];
 
   const handlePress = (e: any) => {
@@ -87,8 +88,12 @@ export function Button({
     onPress?.(e);
   };
 
-  const bgColor = disabled ? '#E4E7EC' : colors.bg;
-  const txtColor = disabled ? '#667085' : colors.text;
+  // Use theme-aware disabled colors
+  const disabledBgColor = isDark ? '#344054' : '#E4E7EC';
+  const disabledTextColor = isDark ? '#667085' : '#667085';
+
+  const bgColor = disabled ? disabledBgColor : buttonColors.bg;
+  const txtColor = disabled ? disabledTextColor : buttonColors.text;
 
   return (
     <Pressable
@@ -102,7 +107,7 @@ export function Button({
           paddingHorizontal: sizeStyle.paddingHorizontal,
           minHeight: sizeStyle.minHeight,
           borderWidth: variant === 'outline' ? 1.5 : 0,
-          borderColor: variant === 'outline' ? themeColors.border : 'transparent',
+          borderColor: variant === 'outline' ? colors.border : 'transparent',
         },
         style,
       ]}

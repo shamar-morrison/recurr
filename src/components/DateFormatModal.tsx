@@ -1,11 +1,11 @@
 import React, { useCallback, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { AppColors } from '@/constants/colors';
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
 import { DATE_FORMAT_OPTIONS, DateFormatId, formatDate } from '@/src/constants/dateFormats';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 
 type Props = {
   visible: boolean;
@@ -15,6 +15,8 @@ type Props = {
 };
 
 export function DateFormatModal({ visible, selectedFormat, onSelect, onClose }: Props) {
+  const { colors } = useTheme();
+
   const handleSelect = useCallback(
     (format: DateFormatId) => {
       onSelect(format);
@@ -28,7 +30,7 @@ export function DateFormatModal({ visible, selectedFormat, onSelect, onClose }: 
 
   const footerContent = (
     <Pressable onPress={onClose} style={styles.cancelButton}>
-      <Text style={styles.cancelText}>Cancel</Text>
+      <Text style={[styles.cancelText, { color: colors.tint }]}>Cancel</Text>
     </Pressable>
   );
 
@@ -41,8 +43,8 @@ export function DateFormatModal({ visible, selectedFormat, onSelect, onClose }: 
             option.id === 'system' ? formatDate(referenceDate, 'system') : option.example;
 
           const radioButton = (
-            <View style={[styles.radio, isSelected && styles.radioSelected]}>
-              {isSelected && <View style={styles.radioInner} />}
+            <View style={[styles.radio, { borderColor: isSelected ? colors.tint : colors.border }]}>
+              {isSelected && <View style={[styles.radioInner, { backgroundColor: colors.tint }]} />}
             </View>
           );
 
@@ -71,18 +73,13 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: BORDER_RADIUS.full,
     borderWidth: 2,
-    borderColor: AppColors.border,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  radioSelected: {
-    borderColor: AppColors.tint,
   },
   radioInner: {
     width: 12,
     height: 12,
     borderRadius: BORDER_RADIUS.full,
-    backgroundColor: AppColors.tint,
   },
   cancelButton: {
     alignItems: 'center',
@@ -91,6 +88,5 @@ const styles = StyleSheet.create({
   cancelText: {
     fontSize: FONT_SIZE.lg,
     fontWeight: '600',
-    color: AppColors.tint,
   },
 });

@@ -3,8 +3,8 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppColors } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { useTheme } from '@/src/context/ThemeContext';
 import { CaretLeftIcon } from 'phosphor-react-native';
 
 interface StackHeaderProps {
@@ -23,6 +23,7 @@ export function StackHeader({
   headerLeft,
 }: StackHeaderProps) {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   const handleBack = () => {
     router.back();
@@ -34,7 +35,7 @@ export function StackHeader({
         styles.container,
         {
           paddingTop: insets.top + 8,
-          backgroundColor: AppColors.background,
+          backgroundColor: colors.background,
         },
       ]}
     >
@@ -50,12 +51,12 @@ export function StackHeader({
                 style={[
                   styles.backButton,
                   {
-                    backgroundColor: 'rgba(15,23,42,0.06)',
+                    backgroundColor: colors.tertiaryBackground,
                   },
                 ]}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <CaretLeftIcon color={AppColors.text} size={22} />
+                <CaretLeftIcon color={colors.text} size={22} />
               </Pressable>
             ) : null}
           </View>
@@ -66,12 +67,12 @@ export function StackHeader({
           style={[styles.titleContainer, !(showBack || headerLeft) && styles.titleContainerNoLeft]}
         >
           {title && (
-            <Text style={[styles.title, { color: AppColors.text }]} numberOfLines={1}>
+            <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
               {title}
             </Text>
           )}
           {subtitle && (
-            <Text style={[styles.subtitle, { color: AppColors.secondaryText }]} numberOfLines={1}>
+            <Text style={[styles.subtitle, { color: colors.secondaryText }]} numberOfLines={1}>
               {subtitle}
             </Text>
           )}
