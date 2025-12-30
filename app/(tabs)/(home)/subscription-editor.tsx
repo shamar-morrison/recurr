@@ -475,19 +475,6 @@ export default function SubscriptionEditorScreen() {
     const performPauseResume = async (shouldMerge: boolean) => {
       setProcessingAction('pause');
       try {
-        // If we want to merge, we use the current form state for all fields
-        // BUT we fallback to existing if any required field is empty/invalid in the form
-        // (though we can rely on form state if we assume user wants what they typed).
-        // A safer "merge" uses the form state values if they are valid/present,
-        // otherwise falls back to existing.
-
-        // Actually, the user requirement says:
-        // "use form state fields for serviceName... and only fall back to existing if a form field is empty"
-        // Let's interpret "empty" as falsey for strings/numbers where 0 might not be valid?
-        // For amount, we parsed it into `amount` (number). If `amountText` is empty, maybe we shouldn't use `amount`.
-        // However, `amount` is derived from `amountText` or existing.
-        // Let's use the local state variables directly as they represent the form state.
-
         const newStatus: Subscription['status'] =
           existing.status === 'Paused' ? 'Active' : 'Paused';
 
@@ -523,17 +510,6 @@ export default function SubscriptionEditorScreen() {
               reminderHour: existing.reminderHour,
               status: newStatus,
             };
-
-        // If 'shouldMerge' is true, we might also need to handle notifications updates if reminders changed,
-        // similar to handleSave. The user request didn't explicitly ask for full save logic reuse (like notification rescheduling),
-        // but "unsaved form edits are lost" implies we should save them.
-        // For simplicity and safety inline, we'll do the basic update.
-        // If the user changed reminders, ideally we should update the notification too.
-        // To do that properly, we might want to just call `handleSave` but with a forced status toggle?
-        // But `handleSave` logic is complex. Let's stick to the requested merging for now.
-        // If critical notification logic is needed, we should probably refactor handleSave to accept a status override.
-        // For now, let's assume we just update the DB record.
-
         await upsertMutation.mutateAsync(buildSubscriptionPayload(existing, userId, payloadBase));
         router.back();
       } catch (e) {
@@ -570,7 +546,14 @@ export default function SubscriptionEditorScreen() {
           },
           {
             text: `Save & ${existing.status === 'Paused' ? 'Resume' : 'Pause'}`,
-            onPress: () => performPauseResume(true),
+            onPress: () => {
+              const error = validate();
+              if (error) {
+                Alert.alert('Check your details', error);
+                return;
+              }
+              performPauseResume(true);
+            },
           },
         ]
       );

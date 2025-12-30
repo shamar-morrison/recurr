@@ -296,7 +296,7 @@ export async function rescheduleAllReminders(
   for (const sub of subscriptions) {
     // Skip archived subscriptions and those with past end dates
     const hasEnded = sub.endDate && sub.endDate < now;
-    if (sub.reminderDays && sub.reminderDays > 0 && !sub.isArchived && !hasEnded) {
+    if (sub.reminderDays && sub.reminderDays > 0 && sub.status === 'Active' && !hasEnded) {
       const notificationId = await scheduleSubscriptionReminder(
         sub,
         sub.reminderDays,
