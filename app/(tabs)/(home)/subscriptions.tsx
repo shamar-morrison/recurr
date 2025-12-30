@@ -88,10 +88,10 @@ export default function SubscriptionsHomeScreen() {
   const headerRight = useCallback(() => {
     return (
       <Pressable onPress={handleAdd} style={styles.headerButton} testID="subscriptionsHeaderAdd">
-        <CirclesThreePlusIcon color={AppColors.tint} size={20} />
+        <CirclesThreePlusIcon color={colors.tint} size={20} />
       </Pressable>
     );
-  }, [handleAdd]);
+  }, [handleAdd, colors]);
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof filteredItems)[number] }) => {
@@ -144,7 +144,7 @@ export default function SubscriptionsHomeScreen() {
         </Pressable>
       );
     },
-    [styles]
+    [styles, colors]
   );
 
   const keyExtractor = useCallback((i: (typeof filteredItems)[number]) => i.id, []);
@@ -152,7 +152,9 @@ export default function SubscriptionsHomeScreen() {
   const listHeader = useMemo(() => {
     return (
       <View style={styles.top} testID="subscriptionsHeader">
-        <View style={styles.hero}>
+        <View
+          style={[styles.hero, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
+        >
           <View style={styles.heroTop}>
             {/* Top row: Label + Currency Badge */}
             <View style={styles.heroLabelRow}>
@@ -173,7 +175,9 @@ export default function SubscriptionsHomeScreen() {
           {/* Active subscriptions pill */}
           <View style={styles.activeSubsPill}>
             <View style={styles.countCircle}>
-              <Text style={styles.countCircleText}>{subscriptionsDueThisMonth.length}</Text>
+              <Text style={[styles.countCircleText, { color: colors.primary }]}>
+                {subscriptionsDueThisMonth.length}
+              </Text>
             </View>
             <Text style={styles.activeSubsLabel}>Active subscriptions this month</Text>
           </View>
@@ -188,11 +192,11 @@ export default function SubscriptionsHomeScreen() {
               {atFreeLimit ? (
                 <Pressable
                   onPress={() => router.push('/paywall')}
-                  style={[styles.limitCta, { borderColor: AppColors.tint }]}
+                  style={[styles.limitCta, { borderColor: colors.tint }]}
                   testID="unlockPremiumCta"
                 >
-                  <Text style={[styles.limitCtaText, { color: AppColors.tint }]}>Unlock</Text>
-                  <CrownIcon color={AppColors.tint} size={16} />
+                  <Text style={[styles.limitCtaText, { color: colors.tint }]}>Unlock</Text>
+                  <CrownIcon color={colors.tint} size={16} />
                 </Pressable>
               ) : null}
             </View>
@@ -244,26 +248,31 @@ export default function SubscriptionsHomeScreen() {
 
         {subscriptionsQuery.isError ? (
           <View style={styles.errorBox} testID="subscriptionsError">
-            <Text style={styles.errorTitle}>{`Couldn't`} load subscriptions</Text>
-            <Text style={styles.errorText}>
+            <Text style={[styles.errorTitle, { color: colors.text }]}>
+              {`Couldn't`} load subscriptions
+            </Text>
+            <Text style={[styles.errorText, { color: colors.secondaryText }]}>
               Pull to refresh. If it keeps happening, try signing out and back in.
             </Text>
           </View>
         ) : null}
 
         {!subscriptionsQuery.isLoading && filteredItems.length === 0 ? (
-          <View style={styles.empty} testID="subscriptionsEmpty">
+          <View
+            style={[styles.empty, { backgroundColor: colors.card, borderColor: colors.border }]}
+            testID="subscriptionsEmpty"
+          >
             <View style={styles.emptyIcon}>
               {filter === 'All' ? (
-                <PlusCircleIcon color={AppColors.tint} size={22} />
+                <PlusCircleIcon color={colors.tint} size={22} />
               ) : (
-                <XCircleIcon color={AppColors.tint} size={22} />
+                <XCircleIcon color={colors.tint} size={22} />
               )}
             </View>
-            <Text style={styles.emptyTitle}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>
               {filter === 'All' ? 'Add your first subscription' : 'No matches'}
             </Text>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
               {filter === 'All'
                 ? `Start with your top 3. We'll estimate your monthly spend automatically.`
                 : 'Try another category filter.'}
@@ -294,6 +303,7 @@ export default function SubscriptionsHomeScreen() {
     subscriptionsQuery.isLoading,
     filteredItems.length,
     totalMonthlySpend,
+    colors,
   ]);
 
   return (
@@ -314,7 +324,7 @@ export default function SubscriptionsHomeScreen() {
             <RefreshControl
               refreshing={Boolean(subscriptionsQuery.isFetching)}
               onRefresh={() => subscriptionsQuery.refetch()}
-              tintColor={AppColors.tint}
+              tintColor={colors.tint}
             />
           }
           testID="subscriptionsList"
@@ -324,7 +334,7 @@ export default function SubscriptionsHomeScreen() {
           onPress={handleAdd}
           style={[
             styles.fab,
-            { backgroundColor: AppColors.tint, bottom: Math.max(24, insets.bottom + 8) },
+            { backgroundColor: colors.tint, bottom: Math.max(24, insets.bottom + 8) },
           ]}
           testID="subscriptionsFab"
         >
