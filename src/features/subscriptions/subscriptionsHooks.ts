@@ -53,7 +53,7 @@ export function useSubscriptionListItems(subs: Subscription[] | undefined): Subs
     const list = subs ?? [];
     const now = new Date();
     return list
-      .filter((s) => !s.isArchived)
+      .filter((s) => s.status !== 'Archived')
       .map((s) => toListItem(s, now))
       .sort((a, b) => a.nextBillingInDays - b.nextBillingInDays);
   }, [subs]);
