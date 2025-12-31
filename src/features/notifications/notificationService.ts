@@ -62,13 +62,18 @@ function calculateReminderDate(
   const now = new Date();
 
   let billingDate: Date;
+  let anchor: Date | undefined;
+
   if (subscription.billingCycle === 'One-Time') {
     // For one-time payments, use the startDate (payment date)
     if (!subscription.startDate) return null;
     billingDate = new Date(subscription.startDate);
   } else {
     // For recurring subscriptions, calculate next billing date
-    billingDate = nextBillingDate(now, subscription.billingDay);
+    anchor = subscription.startDate
+      ? new Date(subscription.startDate)
+      : new Date(subscription.createdAt);
+    billingDate = nextBillingDate(now, subscription.billingCycle, anchor);
   }
 
   // Calculate reminder date (X days before billing)
@@ -79,11 +84,19 @@ function calculateReminderDate(
 
   // Don't schedule if the reminder date is in the past
   if (reminderDate <= now) {
-    // For recurring subscriptions, try next month
-    if (subscription.billingCycle !== 'One-Time') {
-      const nextMonth = new Date(billingDate);
-      nextMonth.setMonth(nextMonth.getMonth() + (subscription.billingCycle === 'Yearly' ? 12 : 1));
-      const nextReminderDate = new Date(nextMonth);
+    // For recurring subscriptions, try next cycle
+    if (subscription.billingCycle !== 'One-Time' && anchor) {
+      // Look for the next billing date after the currently calculated one
+      const nextCycleSearchDate = new Date(billingDate);
+      nextCycleSearchDate.setDate(nextCycleSearchDate.getDate() + 1);
+
+      const nextCycleBillingDate = nextBillingDate(
+        nextCycleSearchDate,
+        subscription.billingCycle,
+        anchor
+      );
+
+      const nextReminderDate = new Date(nextCycleBillingDate);
       nextReminderDate.setDate(nextReminderDate.getDate() - reminderDays);
       nextReminderDate.setHours(reminderHour, 0, 0, 0);
 
@@ -147,7 +160,10 @@ export async function scheduleSubscriptionReminder(
     if (subscription.billingCycle === 'One-Time') {
       billingDate = subscription.startDate ? new Date(subscription.startDate) : now;
     } else {
-      billingDate = nextBillingDate(now, subscription.billingDay);
+      const anchor = subscription.startDate
+        ? new Date(subscription.startDate)
+        : new Date(subscription.createdAt);
+      billingDate = nextBillingDate(now, subscription.billingCycle, anchor);
     }
 
     // Schedule the notification
@@ -280,7 +296,7 @@ export async function rescheduleAllReminders(
   for (const sub of subscriptions) {
     // Skip archived subscriptions and those with past end dates
     const hasEnded = sub.endDate && sub.endDate < now;
-    if (sub.reminderDays && sub.reminderDays > 0 && !sub.isArchived && !hasEnded) {
+    if (sub.reminderDays && sub.reminderDays > 0 && sub.status === 'Active' && !hasEnded) {
       const notificationId = await scheduleSubscriptionReminder(
         sub,
         sub.reminderDays,

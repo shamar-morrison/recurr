@@ -55,6 +55,7 @@ function normalizeSubscription(raw: unknown): Subscription | null {
         ? (r.paymentMethod as Subscription['paymentMethod'])
         : undefined,
     isArchived: Boolean(r.isArchived),
+    status: (r.status as Subscription['status']) ?? (r.isArchived ? 'Archived' : 'Active'),
     reminderDays: typeof r.reminderDays === 'number' ? r.reminderDays : null,
     reminderHour: typeof r.reminderHour === 'number' ? r.reminderHour : null,
     notificationId: typeof r.notificationId === 'string' ? r.notificationId : null,
@@ -132,6 +133,8 @@ export async function listSubscriptions(userId: string): Promise<Subscription[]>
             ? (data.paymentMethod as Subscription['paymentMethod'])
             : undefined,
         isArchived: Boolean(data.isArchived),
+        status:
+          (data.status as Subscription['status']) ?? (data.isArchived ? 'Archived' : 'Active'),
         reminderDays: typeof data.reminderDays === 'number' ? data.reminderDays : null,
         reminderHour: typeof data.reminderHour === 'number' ? data.reminderHour : null,
         notificationId: typeof data.notificationId === 'string' ? data.notificationId : null,
@@ -172,6 +175,7 @@ export async function upsertSubscription(
     endDate: input.endDate,
     paymentMethod: input.paymentMethod,
     isArchived: Boolean(input.isArchived),
+    status: input.status ?? (input.isArchived ? 'Archived' : 'Active'),
     reminderDays: input.reminderDays ?? null,
     reminderHour: input.reminderHour ?? null,
     notificationId: input.notificationId ?? null,
@@ -206,6 +210,7 @@ export async function upsertSubscription(
         endDate: sub.endDate ?? null,
         paymentMethod: sub.paymentMethod ?? null,
         isArchived: sub.isArchived ?? false,
+        status: sub.status,
         reminderDays: sub.reminderDays ?? null,
         reminderHour: sub.reminderHour ?? null,
         notificationId: sub.notificationId ?? null,
@@ -233,6 +238,7 @@ export async function upsertSubscription(
         endDate: sub.endDate ?? null,
         paymentMethod: sub.paymentMethod ?? null,
         isArchived: sub.isArchived ?? false,
+        status: sub.status,
         reminderDays: sub.reminderDays ?? null,
         reminderHour: sub.reminderHour ?? null,
         notificationId: sub.notificationId ?? null,

@@ -10,7 +10,14 @@ export type SubscriptionCategory =
   | 'AI'
   | 'Other';
 
-export type BillingCycle = 'Monthly' | 'Yearly' | 'One-Time';
+export type BillingCycle =
+  | 'Weekly'
+  | 'Bi-weekly'
+  | 'Monthly'
+  | 'Quarterly'
+  | 'Semiannual'
+  | 'Yearly'
+  | 'One-Time';
 
 export type CurrencyCode = string;
 
@@ -37,6 +44,8 @@ export type Subscription = {
   endDate?: number;
   paymentMethod?: PaymentMethod;
   notes?: string;
+  status: 'Active' | 'Paused' | 'Archived';
+  /** @deprecated use status === 'Archived' */
   isArchived?: boolean;
   reminderDays?: number | null; // Days before billing to remind (null = no reminder)
   reminderHour?: number | null; // Hour of day for reminder (0-23, null = default noon)
@@ -83,6 +92,7 @@ export type SubscriptionListItem = {
   monthlyEquivalent: number;
   nextBillingDateISO: string;
   nextBillingInDays: number;
+  status: Subscription['status'];
 };
 
 export const SUBSCRIPTION_CATEGORIES: SubscriptionCategory[] = [
@@ -98,7 +108,15 @@ export const SUBSCRIPTION_CATEGORIES: SubscriptionCategory[] = [
   'Other',
 ];
 
-export const BILLING_CYCLES: BillingCycle[] = ['Monthly', 'Yearly', 'One-Time'];
+export const BILLING_CYCLES: BillingCycle[] = [
+  'Weekly',
+  'Bi-weekly',
+  'Monthly',
+  'Quarterly',
+  'Semiannual',
+  'Yearly',
+  'One-Time',
+];
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
   'Credit Card',
