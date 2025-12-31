@@ -26,14 +26,12 @@ import { useAuth } from '@/src/features/auth/AuthProvider';
 import { exportData, ExportFormat } from '@/src/features/export/exportService';
 import { useSubscriptionsQuery } from '@/src/features/subscriptions/subscriptionsHooks';
 import {
-  BellIcon,
   CalendarIcon,
   CaretRightIcon,
   ChatCircleDotsIcon,
   CoinsIcon,
   CrownIcon,
   DownloadSimpleIcon,
-  EnvelopeIcon,
   GridFourIcon,
   InfoIcon,
   InvoiceIcon,
@@ -109,20 +107,11 @@ function SettingRow({
 }
 
 export default function SettingsScreen() {
-  const {
-    user,
-    isPremium,
-    signOutUser,
-    settings,
-    setReminderDays,
-    setCurrency,
-    setDateFormat,
-    setPushNotificationsEnabled,
-  } = useAuth();
+  const { user, isPremium, signOutUser, settings, setReminderDays, setCurrency, setDateFormat } =
+    useAuth();
 
   const { themeMode, setThemeMode, colors } = useTheme();
 
-  const [emailEnabled, setEmailEnabled] = useState(false);
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [dateFormatModalVisible, setDateFormatModalVisible] = useState(false);
   const [themeModalVisible, setThemeModalVisible] = useState(false);
@@ -146,8 +135,9 @@ export default function SettingsScreen() {
   };
 
   const handleCurrencySelect = (currencyCode: string) => {
-    setCurrency(currencyCode);
     setCurrencyModalVisible(false);
+    // Defer state update to prevent Android crash when modal closes
+    setTimeout(() => setCurrency(currencyCode), 100);
   };
 
   const handleDateFormatSelect = (format: DateFormatId) => {
@@ -359,34 +349,6 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>NOTIFICATIONS</Text>
           <View style={[styles.card, { backgroundColor: colors.card }]}>
-            <SettingRow
-              colors={colors}
-              icon={<BellIcon />}
-              iconColor="#F97316"
-              iconBg="#FFEDD5"
-              label="Push Notifications"
-              isSwitch
-              switchValue={settings.pushNotificationsEnabled}
-              onSwitchChange={setPushNotificationsEnabled}
-              showChevron={false}
-            />
-
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-            <SettingRow
-              colors={colors}
-              icon={<EnvelopeIcon />}
-              iconColor="#3B82F6"
-              iconBg="#DBEAFE"
-              label="Email Alerts"
-              isSwitch
-              switchValue={emailEnabled}
-              onSwitchChange={setEmailEnabled}
-              showChevron={false}
-            />
-
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
             <SettingRow
               colors={colors}
               icon={<InvoiceIcon />}
