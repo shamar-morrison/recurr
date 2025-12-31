@@ -18,7 +18,11 @@ import {
 } from 'firebase/firestore';
 
 import { CustomService, CustomServiceInput } from '@/src/constants/customServices';
-import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
+import {
+  DefaultCategory,
+  isDefaultCategory,
+  SubscriptionCategory,
+} from '@/src/features/subscriptions/types';
 import { firestore, isFirebaseConfigured, timestampToMillis } from '@/src/lib/firebase';
 
 const STORAGE_KEY_PREFIX = 'customServices:v1:';
@@ -63,8 +67,8 @@ function nowMillis() {
   return Date.now();
 }
 
-function isValidCategory(value: string): value is SubscriptionCategory {
-  return SUBSCRIPTION_CATEGORIES.includes(value as SubscriptionCategory);
+function isValidCategory(value: string): value is DefaultCategory {
+  return isDefaultCategory(value);
 }
 
 function normalizeCustomService(raw: unknown): CustomService | null {

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CATEGORY_COLORS } from '@/constants/colors';
+import { getCategoryColors } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
@@ -206,7 +206,7 @@ export default function InsightsScreen() {
               {insights.categoryRows.map((row) => {
                 const pct =
                   insights.monthlyTotal <= 0 ? 0 : row.monthlyTotal / insights.monthlyTotal;
-                const categoryColors = CATEGORY_COLORS[row.category] || CATEGORY_COLORS.Other;
+                const categoryColors = getCategoryColors(row.category);
                 return (
                   <View
                     key={row.category}

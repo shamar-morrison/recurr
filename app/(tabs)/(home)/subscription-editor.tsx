@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 
+import { CategoryCreatorModal } from '@/src/components/CategoryCreatorModal';
 import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { FrequencySelectorModal } from '@/src/components/FrequencySelectorModal';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
@@ -36,7 +37,7 @@ import {
   PaymentMethodField,
   ReminderSection,
 } from '@/src/features/subscriptions/components';
-import { useSubscriptionForm } from '@/src/features/subscriptions/hooks';
+import { useCategories, useSubscriptionForm } from '@/src/features/subscriptions/hooks';
 import { buildSubscriptionPayload } from '@/src/features/subscriptions/subscriptionsUtils';
 import {
   BillingCycle,
@@ -66,6 +67,7 @@ export default function SubscriptionEditorScreen() {
   const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [showReminderTimeModal, setShowReminderTimeModal] = useState(false);
+  const [showCategoryCreatorModal, setShowCategoryCreatorModal] = useState(false);
 
   // Processing action state
   const [processingAction, setProcessingAction] = useState<'save' | 'pause' | 'delete' | null>(
@@ -76,6 +78,9 @@ export default function SubscriptionEditorScreen() {
     (date: Date) => formatDateUtil(date, settings.dateFormat),
     [settings.dateFormat]
   );
+
+  // Custom categories
+  const { allCategories, addCategory } = useCategories();
 
   // Handlers
   const handleServiceSelect = useCallback(
@@ -520,6 +525,8 @@ export default function SubscriptionEditorScreen() {
                 <CategoryChips
                   selectedCategory={form.category}
                   onSelectCategory={form.setCategory}
+                  categories={allCategories}
+                  onAddCategory={() => setShowCategoryCreatorModal(true)}
                   disabled={isProcessing}
                 />
               </FormSection>
@@ -683,6 +690,12 @@ export default function SubscriptionEditorScreen() {
         selectedFrequency={form.billingCycle}
         onSelect={handleFrequencySelect}
         onClose={() => setShowFrequencyModal(false)}
+      />
+      <CategoryCreatorModal
+        visible={showCategoryCreatorModal}
+        onClose={() => setShowCategoryCreatorModal(false)}
+        onSave={addCategory}
+        existingCategories={allCategories}
       />
     </>
   );

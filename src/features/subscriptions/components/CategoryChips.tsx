@@ -7,24 +7,34 @@ import {
   LightbulbIcon,
   MusicNotesIcon,
   PlayCircleIcon,
+  PlusIcon,
   RobotIcon,
   ShoppingCartIcon,
+  TagIcon,
 } from 'phosphor-react-native';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { CATEGORY_COLORS } from '@/constants/colors';
+import { getCategoryColors } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
-import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
+import {
+  DefaultCategory,
+  isDefaultCategory,
+  SubscriptionCategory,
+} from '@/src/features/subscriptions/types';
 
 interface CategoryChipsProps {
   selectedCategory: SubscriptionCategory;
   onSelectCategory: (category: SubscriptionCategory) => void;
+  /** All categories to display (defaults + custom) */
+  categories: SubscriptionCategory[];
+  /** Called when user taps the "+" button */
+  onAddCategory?: () => void;
   disabled?: boolean;
 }
 
-const CATEGORY_ICONS: Record<SubscriptionCategory, React.FC<any>> = {
+const CATEGORY_ICONS: Record<DefaultCategory, React.FC<any>> = {
   Streaming: PlayCircleIcon,
   Music: MusicNotesIcon,
   Software: AppWindowIcon,
@@ -38,12 +48,25 @@ const CATEGORY_ICONS: Record<SubscriptionCategory, React.FC<any>> = {
 };
 
 /**
+ * Get the icon component for a category.
+ * Returns TagIcon for custom categories.
+ */
+function getCategoryIcon(category: string): React.FC<any> {
+  if (isDefaultCategory(category)) {
+    return CATEGORY_ICONS[category];
+  }
+  return TagIcon;
+}
+
+/**
  * Category selection chips grid.
  * Displays all subscription categories with icons in a responsive grid.
  */
 export function CategoryChips({
   selectedCategory,
   onSelectCategory,
+  categories,
+  onAddCategory,
   disabled = false,
 }: CategoryChipsProps) {
   const { colors } = useTheme();
@@ -51,12 +74,18 @@ export function CategoryChips({
 
   return (
     <View style={styles.chipsRow} testID="subscriptionEditorCategories">
-      {SUBSCRIPTION_CATEGORIES.map((cat) => {
+      {categories.map((cat) => {
         const active = cat === selectedCategory;
-        const categoryColor = CATEGORY_COLORS[cat];
+        const categoryColor = getCategoryColors(cat);
         const iconColor = active ? '#fff' : colors.text;
-        const IconComponent = CATEGORY_ICONS[cat];
+        const IconComponent = getCategoryIcon(cat);
+        const isDefault = isDefaultCategory(cat);
         const weight = active ? 'fill' : 'regular';
+        // For certain icons, always use regular weight
+        const iconWeight =
+          cat === 'Music' || cat === 'Software' || cat === 'Other' || !isDefault
+            ? 'regular'
+            : weight;
 
         return (
           <Pressable
@@ -77,15 +106,38 @@ export function CategoryChips({
             ]}
             testID={`subscriptionEditorCategory_${cat}`}
           >
-            <IconComponent
-              color={iconColor}
-              size={iconSize}
-              weight={cat === 'Music' || cat === 'Software' || cat === 'Other' ? 'regular' : weight}
-            />
-            <Text style={[styles.chipText, { color: active ? '#fff' : colors.text }]}>{cat}</Text>
+            <IconComponent color={iconColor} size={iconSize} weight={iconWeight} />
+            <Text
+              style={[styles.chipText, { color: active ? '#fff' : colors.text }]}
+              numberOfLines={1}
+            >
+              {cat}
+            </Text>
           </Pressable>
         );
       })}
+
+      {/* Add Category Button */}
+      {onAddCategory && (
+        <Pressable
+          onPress={onAddCategory}
+          disabled={disabled}
+          style={[
+            styles.chip,
+            styles.addChip,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.border,
+              borderStyle: 'dashed',
+            },
+            disabled && styles.disabledInput,
+          ]}
+          testID="subscriptionEditorCategoryAdd"
+        >
+          <PlusIcon color={colors.primary} size={iconSize} weight="bold" />
+          <Text style={[styles.chipText, { color: colors.primary }]}>New</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -113,6 +165,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
+  },
+  addChip: {
+    borderStyle: 'dashed',
   },
   chipText: {
     fontSize: FONT_SIZE.md,
