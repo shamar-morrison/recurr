@@ -292,7 +292,14 @@ export default function SubscriptionEditorScreen() {
         }
       }
 
-      router.back();
+      // Small delay to prevent Android crash from race condition during navigation
+      setTimeout(() => {
+        try {
+          router.back();
+        } catch (navError) {
+          // Ignore navigation errors
+        }
+      }, 100);
     } catch (e) {
       console.log('[subscription-editor] save failed', e);
       const msg = e instanceof Error ? e.message : 'Unknown error';

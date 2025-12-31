@@ -6,7 +6,7 @@ import { getServiceByName, getServiceDomain } from '@/src/constants/services';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   useDeleteSubscriptionMutation,
-  useSubscriptionsQuery,
+  useSubscriptionQuery,
   useUpsertSubscriptionMutation,
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { clampBillingDay } from '@/src/features/subscriptions/subscriptionsUtils';
@@ -31,16 +31,12 @@ interface UseSubscriptionFormOptions {
 export function useSubscriptionForm({ editingId }: UseSubscriptionFormOptions = {}) {
   const { settings, user } = useAuth();
   const userId = user?.uid ?? '';
-  const subscriptionsQuery = useSubscriptionsQuery();
   const upsertMutation = useUpsertSubscriptionMutation();
   const deleteMutation = useDeleteSubscriptionMutation();
 
-  // Find existing subscription when editing
-  const existing = useMemo(() => {
-    if (!editingId) return null;
-    const list = subscriptionsQuery.data ?? [];
-    return list.find((s) => s.id === editingId) ?? null;
-  }, [editingId, subscriptionsQuery.data]);
+  // Load specific subscription (decoupled from list)
+  const subscriptionQuery = useSubscriptionQuery(editingId);
+  const existing = subscriptionQuery.data ?? null;
 
   // Default currency
   const defaultCurrency = useMemo(() => {
@@ -237,14 +233,14 @@ export function useSubscriptionForm({ editingId }: UseSubscriptionFormOptions = 
   }, [billingCycle, existing]);
 
   // Loading/not found states
-  const showLoading = Boolean(editingId) && subscriptionsQuery.isLoading;
-  const showNotFound = Boolean(editingId) && !subscriptionsQuery.isLoading && !existing;
+  const showLoading = Boolean(editingId) && subscriptionQuery.isLoading;
+  const showNotFound = Boolean(editingId) && !subscriptionQuery.isLoading && !existing;
 
   return {
     // Data
     userId,
     existing,
-    subscriptionsQuery,
+    subscriptionQuery,
     upsertMutation,
     deleteMutation,
     defaultCurrency,
