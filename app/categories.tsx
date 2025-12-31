@@ -30,12 +30,12 @@ export default function CategoriesScreen() {
     addCategory,
     updateCategory,
     deleteCategory,
+    getSubscriptionCount,
   } = useCategories();
 
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const { getSubscriptionCount } = useCategories();
 
   const handleOpenCreate = useCallback(() => {
     setEditingCategory(null);
