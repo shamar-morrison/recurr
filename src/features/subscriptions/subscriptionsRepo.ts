@@ -90,6 +90,37 @@ async function writeLocal(userId: string, subs: Subscription[]): Promise<void> {
   }
 }
 
+function mapDocToSubscription(
+  id: string,
+  userId: string,
+  data: Record<string, unknown>
+): Subscription {
+  return {
+    id,
+    userId,
+    serviceName: String(data.serviceName ?? ''),
+    category: String(data.category ?? 'Other') as Subscription['category'],
+    amount: typeof data.amount === 'number' ? data.amount : 0,
+    currency: String(data.currency ?? 'USD'),
+    billingCycle: String(data.billingCycle ?? 'Monthly') as Subscription['billingCycle'],
+    billingDay: typeof data.billingDay === 'number' ? data.billingDay : 1,
+    notes: typeof data.notes === 'string' ? data.notes : undefined,
+    startDate: typeof data.startDate === 'number' ? data.startDate : undefined,
+    endDate: typeof data.endDate === 'number' ? data.endDate : undefined,
+    paymentMethod:
+      typeof data.paymentMethod === 'string'
+        ? (data.paymentMethod as Subscription['paymentMethod'])
+        : undefined,
+    isArchived: Boolean(data.isArchived),
+    status: (data.status as Subscription['status']) ?? (data.isArchived ? 'Archived' : 'Active'),
+    reminderDays: typeof data.reminderDays === 'number' ? data.reminderDays : null,
+    reminderHour: typeof data.reminderHour === 'number' ? data.reminderHour : null,
+    notificationId: typeof data.notificationId === 'string' ? data.notificationId : null,
+    createdAt: typeof data.createdAt === 'number' ? data.createdAt : 0,
+    updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : 0,
+  };
+}
+
 export async function listSubscriptions(userId: string): Promise<Subscription[]> {
   if (!userId) return [];
 
@@ -113,35 +144,9 @@ export async function listSubscriptions(userId: string): Promise<Subscription[]>
     );
 
     const snap = await getDocs(q);
-    const out: Subscription[] = snap.docs.map((d) => {
-      const data = d.data() as Record<string, unknown>;
-
-      return {
-        id: d.id,
-        userId,
-        serviceName: String(data.serviceName ?? ''),
-        category: String(data.category ?? 'Other') as Subscription['category'],
-        amount: typeof data.amount === 'number' ? data.amount : 0,
-        currency: String(data.currency ?? 'USD'),
-        billingCycle: String(data.billingCycle ?? 'Monthly') as Subscription['billingCycle'],
-        billingDay: typeof data.billingDay === 'number' ? data.billingDay : 1,
-        notes: typeof data.notes === 'string' ? data.notes : undefined,
-        startDate: typeof data.startDate === 'number' ? data.startDate : undefined,
-        endDate: typeof data.endDate === 'number' ? data.endDate : undefined,
-        paymentMethod:
-          typeof data.paymentMethod === 'string'
-            ? (data.paymentMethod as Subscription['paymentMethod'])
-            : undefined,
-        isArchived: Boolean(data.isArchived),
-        status:
-          (data.status as Subscription['status']) ?? (data.isArchived ? 'Archived' : 'Active'),
-        reminderDays: typeof data.reminderDays === 'number' ? data.reminderDays : null,
-        reminderHour: typeof data.reminderHour === 'number' ? data.reminderHour : null,
-        notificationId: typeof data.notificationId === 'string' ? data.notificationId : null,
-        createdAt: typeof data.createdAt === 'number' ? data.createdAt : 0,
-        updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : 0,
-      };
-    });
+    const out: Subscription[] = snap.docs.map((d) =>
+      mapDocToSubscription(d.id, userId, d.data() as Record<string, unknown>)
+    );
 
     await writeLocal(userId, out);
 
@@ -171,30 +176,7 @@ export async function getSubscription(
     if (!d.exists()) return null;
     const data = d.data() as Record<string, unknown>;
 
-    return {
-      id: d.id,
-      userId,
-      serviceName: String(data.serviceName ?? ''),
-      category: String(data.category ?? 'Other') as Subscription['category'],
-      amount: typeof data.amount === 'number' ? data.amount : 0,
-      currency: String(data.currency ?? 'USD'),
-      billingCycle: String(data.billingCycle ?? 'Monthly') as Subscription['billingCycle'],
-      billingDay: typeof data.billingDay === 'number' ? data.billingDay : 1,
-      notes: typeof data.notes === 'string' ? data.notes : undefined,
-      startDate: typeof data.startDate === 'number' ? data.startDate : undefined,
-      endDate: typeof data.endDate === 'number' ? data.endDate : undefined,
-      paymentMethod:
-        typeof data.paymentMethod === 'string'
-          ? (data.paymentMethod as Subscription['paymentMethod'])
-          : undefined,
-      isArchived: Boolean(data.isArchived),
-      status: (data.status as Subscription['status']) ?? (data.isArchived ? 'Archived' : 'Active'),
-      reminderDays: typeof data.reminderDays === 'number' ? data.reminderDays : null,
-      reminderHour: typeof data.reminderHour === 'number' ? data.reminderHour : null,
-      notificationId: typeof data.notificationId === 'string' ? data.notificationId : null,
-      createdAt: typeof data.createdAt === 'number' ? data.createdAt : 0,
-      updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : 0,
-    };
+    return mapDocToSubscription(d.id, userId, d.data() as Record<string, unknown>);
   } catch (e) {
     console.log('[subscriptions] getSubscription failed', e);
     // Fallback to local
