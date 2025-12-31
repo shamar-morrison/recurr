@@ -191,8 +191,23 @@ export async function upsertSubscription(
 ): Promise<Subscription> {
   const now = nowMillis();
   const local = await readLocal(userId);
-  const existing = local.find((s) => s.id === input.id);
-  const existingCreatedAt = existing?.createdAt;
+  let existing = local.find((s) => s.id === input.id);
+  let existingCreatedAt = existing?.createdAt;
+
+  // Fallback: If not in local but is an existing remote ID, fetch from Firestore to preserve createdAt
+  if (!existingCreatedAt && input.id && !input.id.startsWith('local_') && isFirebaseConfigured()) {
+    try {
+      const snap = await getDoc(doc(firestore, 'users', userId, 'subscriptions', input.id));
+      if (snap.exists()) {
+        const data = snap.data();
+        if (typeof data.createdAt === 'number') {
+          existingCreatedAt = data.createdAt;
+        }
+      }
+    } catch (e) {
+      console.log('[subscriptions] failed to fetch existing createdAt', e);
+    }
+  }
 
   const sub: Subscription = {
     id: input.id ?? `local_${now}_${Math.random().toString(16).slice(2)}`,
