@@ -127,11 +127,16 @@ export default function SubscriptionEditorScreen() {
   );
 
   /**
-   * Reusable helper to update scheduled notifications.
-   * Cancels existing notification if present, requests permissions,
-   * and schedules a new reminder if reminderDays is enabled.
-   * @returns The new notificationId or null
+   * Computes the effective billing day based on billing cycle.
+   * For one-time subscriptions, uses the start date's day of month.
    */
+  const getEffectiveBillingDay = useCallback(
+    (billingCycle: BillingCycle, startDate: Date, billingDay: number) => {
+      return billingCycle === 'One-Time' ? startDate.getDate() : billingDay;
+    },
+    []
+  );
+
   const updateNotification = useCallback(
     async (params: {
       existingNotificationId: string | null | undefined;
@@ -200,13 +205,17 @@ export default function SubscriptionEditorScreen() {
 
     setProcessingAction('save');
     try {
-      const isOneTime = form.billingCycle === 'One-Time';
-      const effectiveBillingDay = isOneTime ? form.startDate.getDate() : form.billingDay;
-      const effectiveEndDate = isOneTime
-        ? undefined
-        : form.endDate
-          ? form.endDate.getTime()
-          : undefined;
+      const effectiveBillingDay = getEffectiveBillingDay(
+        form.billingCycle,
+        form.startDate,
+        form.billingDay
+      );
+      const effectiveEndDate =
+        form.billingCycle === 'One-Time'
+          ? undefined
+          : form.endDate
+            ? form.endDate.getTime()
+            : undefined;
 
       let notificationIdToSave: string | null = null;
 
@@ -271,6 +280,13 @@ export default function SubscriptionEditorScreen() {
                 notificationError
               );
               await cancelNotification(notificationId);
+              // Show non-blocking alert after navigation
+              setTimeout(() => {
+                Alert.alert(
+                  'Reminder Setup Issue',
+                  'Subscription saved, but reminder setup failed. You can edit it later to re-enable reminders.'
+                );
+              }, 100);
             }
           }
         }
@@ -321,11 +337,8 @@ export default function SubscriptionEditorScreen() {
       setProcessingAction('pause');
       try {
         const newStatus = form.existing!.status === 'Paused' ? 'Active' : 'Paused';
-        const isOneTime = form.billingCycle === 'One-Time';
         const effectiveBillingDay = shouldMerge
-          ? isOneTime
-            ? form.startDate.getDate()
-            : form.billingDay
+          ? getEffectiveBillingDay(form.billingCycle, form.startDate, form.billingDay)
           : form.existing!.billingDay;
 
         let notificationIdToSave: string | null | undefined = form.existing!.notificationId;
@@ -338,7 +351,9 @@ export default function SubscriptionEditorScreen() {
             reminderHour: form.reminderHour,
             existingSubscription: form.existing!,
             overrides: {
-              serviceName: form.serviceName.trim() || form.existing!.serviceName,
+              serviceName: form.serviceName.trim()
+                ? form.serviceName.trim()
+                : form.existing!.serviceName,
               billingDay: effectiveBillingDay,
               billingCycle: form.billingCycle,
               startDate: form.startDate.getTime(),
@@ -346,39 +361,31 @@ export default function SubscriptionEditorScreen() {
           });
         }
 
-        const payloadBase = shouldMerge
-          ? {
-              serviceName: form.serviceName.trim() || form.existing!.serviceName,
-              category: form.category,
-              amount: form.amount ?? form.existing!.amount,
-              currency: form.currency,
-              billingCycle: form.billingCycle,
-              billingDay: effectiveBillingDay,
-              notes: form.notes.trim() || form.existing!.notes,
-              startDate: form.startDate.getTime(),
-              endDate: form.endDate ? form.endDate.getTime() : undefined,
-              paymentMethod: form.paymentMethod,
-              reminderDays: form.reminderDays,
-              reminderHour: form.reminderHour,
-              notificationId: notificationIdToSave,
-              status: newStatus as any,
-            }
-          : {
-              serviceName: form.existing!.serviceName,
-              category: form.existing!.category,
-              amount: form.existing!.amount,
-              currency: form.existing!.currency,
-              billingCycle: form.existing!.billingCycle,
-              billingDay: form.existing!.billingDay,
-              notes: form.existing!.notes,
-              startDate: form.existing!.startDate,
-              endDate: form.existing!.endDate,
-              paymentMethod: form.existing!.paymentMethod,
-              reminderDays: form.existing!.reminderDays,
-              reminderHour: form.existing!.reminderHour,
-              notificationId: form.existing!.notificationId,
-              status: newStatus as any,
-            };
+        // Build payload with form values (if merging) or existing values
+        const existing = form.existing!;
+        const trimmedName = form.serviceName.trim();
+        const trimmedNotes = form.notes.trim();
+
+        const payloadBase = {
+          serviceName: shouldMerge ? trimmedName || existing.serviceName : existing.serviceName,
+          category: shouldMerge ? form.category : existing.category,
+          amount: shouldMerge ? (form.amount ?? existing.amount) : existing.amount,
+          currency: shouldMerge ? form.currency : existing.currency,
+          billingCycle: shouldMerge ? form.billingCycle : existing.billingCycle,
+          billingDay: shouldMerge ? effectiveBillingDay : existing.billingDay,
+          notes: shouldMerge ? trimmedNotes || undefined : existing.notes,
+          startDate: shouldMerge ? form.startDate.getTime() : existing.startDate,
+          endDate: shouldMerge
+            ? form.endDate
+              ? form.endDate.getTime()
+              : undefined
+            : existing.endDate,
+          paymentMethod: shouldMerge ? form.paymentMethod : existing.paymentMethod,
+          reminderDays: shouldMerge ? form.reminderDays : existing.reminderDays,
+          reminderHour: shouldMerge ? form.reminderHour : existing.reminderHour,
+          notificationId: shouldMerge ? notificationIdToSave : existing.notificationId,
+          status: newStatus as any,
+        };
 
         await form.upsertMutation.mutateAsync(
           buildSubscriptionPayload(form.existing, form.userId, payloadBase)
