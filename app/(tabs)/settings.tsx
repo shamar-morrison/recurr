@@ -39,6 +39,7 @@ import {
   ShareNetworkIcon,
   SignOutIcon,
   StarIcon,
+  TagIcon,
 } from 'phosphor-react-native';
 
 interface SettingRowProps {
@@ -396,6 +397,17 @@ export default function SettingsScreen() {
               label="Theme"
               value={getThemeLabel(themeMode)}
               onPress={() => setThemeModalVisible(true)}
+            />
+
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+            <SettingRow
+              colors={colors}
+              icon={<TagIcon />}
+              iconColor="#EC4899"
+              iconBg="#FCE7F3"
+              label="Manage Categories"
+              onPress={() => router.push('/categories')}
             />
           </View>
         </View>

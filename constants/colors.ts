@@ -102,9 +102,9 @@ export const GRADIENTS = {
 } as const;
 
 // Category-specific colors for badges
-import { SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { DefaultCategory, isDefaultCategory } from '@/src/features/subscriptions/types';
 
-export const CATEGORY_COLORS: Record<SubscriptionCategory, { bg: string; text: string }> = {
+export const CATEGORY_COLORS: Record<DefaultCategory, { bg: string; text: string }> = {
   Streaming: { bg: 'rgba(99, 102, 241, 0.12)', text: '#6366F1' }, // Indigo
   Music: { bg: 'rgba(34, 197, 94, 0.12)', text: '#16A34A' }, // Green
   Software: { bg: 'rgba(59, 130, 246, 0.12)', text: '#3B82F6' }, // Blue
@@ -116,3 +116,63 @@ export const CATEGORY_COLORS: Record<SubscriptionCategory, { bg: string; text: s
   AI: { bg: 'rgba(139, 92, 246, 0.12)', text: '#7C3AED' }, // Violet
   Other: { bg: 'rgba(168, 85, 247, 0.12)', text: '#9333EA' }, // Purple
 };
+
+// Fallback colors for custom categories (deterministic based on name hash)
+const CUSTOM_CATEGORY_COLORS = [
+  { bg: 'rgba(251, 146, 60, 0.12)', text: '#EA580C' }, // Orange
+  { bg: 'rgba(52, 211, 153, 0.12)', text: '#059669' }, // Emerald
+  { bg: 'rgba(251, 191, 36, 0.12)', text: '#D97706' }, // Amber
+  { bg: 'rgba(167, 139, 250, 0.12)', text: '#7C3AED' }, // Violet
+  { bg: 'rgba(244, 114, 182, 0.12)', text: '#DB2777' }, // Pink
+  { bg: 'rgba(56, 189, 248, 0.12)', text: '#0284C7' }, // Sky
+];
+
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * Convert a hex color to bg/text color pair.
+ */
+function hexToColorPair(hex: string): { bg: string; text: string } {
+  // Extract RGB values
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) {
+    return CUSTOM_CATEGORY_COLORS[0];
+  }
+  return {
+    bg: `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, 0.12)`,
+    text: hex.startsWith('#') ? hex : `#${hex}`,
+  };
+}
+
+/**
+ * Get colors for any category (default or custom).
+ * For custom categories with stored colors, uses the stored color.
+ * For custom categories without stored colors, returns a deterministic color based on the category name.
+ *
+ * @param category - The category name
+ * @param customCategoryColor - Optional stored color for custom category (hex format)
+ */
+export function getCategoryColors(
+  category: string,
+  customCategoryColor?: string
+): { bg: string; text: string } {
+  if (isDefaultCategory(category)) {
+    return CATEGORY_COLORS[category];
+  }
+
+  // If custom color is provided, use it
+  if (customCategoryColor) {
+    return hexToColorPair(customCategoryColor);
+  }
+
+  // Use hash of category name to pick a consistent fallback color
+  const index = hashString(category) % CUSTOM_CATEGORY_COLORS.length;
+  return CUSTOM_CATEGORY_COLORS[index];
+}

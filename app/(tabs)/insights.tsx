@@ -1,17 +1,122 @@
-import React, { useMemo } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CATEGORY_COLORS } from '@/constants/colors';
+import { getCategoryColors } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import { useCategories } from '@/src/features/subscriptions/hooks';
 import {
   useSubscriptionListItems,
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
-import { CalendarCheckIcon, CalendarIcon, ChartLineUpIcon, CrownIcon } from 'phosphor-react-native';
+import {
+  CalendarCheckIcon,
+  CalendarIcon,
+  CaretDownIcon,
+  CaretUpIcon,
+  ChartLineUpIcon,
+  CrownIcon,
+} from 'phosphor-react-native';
+
+const INITIAL_CATEGORIES_SHOWN = 5;
+
+interface CategoryRow {
+  category: SubscriptionCategory;
+  monthlyTotal: number;
+  customColor?: string;
+}
+
+interface CategoryBreakdownCardProps {
+  categoryRows: CategoryRow[];
+  monthlyTotal: number;
+  currency: string;
+  colors: ReturnType<typeof useTheme>['colors'];
+  formatMoney: (amount: number, currency: string) => string;
+}
+
+function CategoryBreakdownCard({
+  categoryRows,
+  monthlyTotal,
+  currency,
+  colors,
+  formatMoney,
+}: CategoryBreakdownCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const totalCount = categoryRows.length;
+  const hasMore = totalCount > INITIAL_CATEGORIES_SHOWN;
+  const visibleRows = isExpanded ? categoryRows : categoryRows.slice(0, INITIAL_CATEGORIES_SHOWN);
+
+  if (categoryRows.length === 0) {
+    return (
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
+        <Text style={[styles.cardTitle, { color: colors.text }]}>By category</Text>
+        <Text style={[styles.subtitle, { color: colors.secondaryText }]}>—</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.card, { backgroundColor: colors.card }]}>
+      <Text style={[styles.cardTitle, { color: colors.text }]}>By category</Text>
+      <View style={styles.bars} testID="insightsCategoryBreakdown">
+        {visibleRows.map((row) => {
+          const pct = monthlyTotal <= 0 ? 0 : row.monthlyTotal / monthlyTotal;
+          const categoryColors = getCategoryColors(row.category, row.customColor);
+          return (
+            <View
+              key={row.category}
+              style={styles.barRow}
+              testID={`insightsCategory_${row.category}`}
+            >
+              <View style={styles.barTop}>
+                <View style={[styles.categoryBadge, { backgroundColor: categoryColors.bg }]}>
+                  <Text style={[styles.categoryBadgeText, { color: categoryColors.text }]}>
+                    {row.category.toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={[styles.barValue, { color: colors.text }]}>
+                  {formatMoney(row.monthlyTotal, currency)}
+                </Text>
+              </View>
+              <View style={[styles.track, { backgroundColor: colors.cardAlt }]}>
+                <View
+                  style={[
+                    styles.fill,
+                    {
+                      width: `${Math.max(0, Math.min(1, pct)) * 100}%`,
+                      backgroundColor: categoryColors.text,
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+          );
+        })}
+      </View>
+
+      {hasMore && (
+        <Pressable
+          onPress={() => setIsExpanded(!isExpanded)}
+          style={styles.expandButton}
+          testID="insightsCategoryExpand"
+        >
+          <Text style={[styles.expandButtonText, { color: colors.primary }]}>
+            {isExpanded ? 'Show less' : `Show all ${totalCount} categories`}
+          </Text>
+          {isExpanded ? (
+            <CaretUpIcon color={colors.primary} size={16} />
+          ) : (
+            <CaretDownIcon color={colors.primary} size={16} />
+          )}
+        </Pressable>
+      )}
+    </View>
+  );
+}
 
 export default function InsightsScreen() {
   const { isPremium } = useAuth();
@@ -19,18 +124,30 @@ export default function InsightsScreen() {
 
   const subscriptionsQuery = useSubscriptionsQuery();
   const items = useSubscriptionListItems(subscriptionsQuery.data);
+  const { customCategories } = useCategories();
 
   const insights = useMemo(() => {
     const monthlyTotal = sum(items.map((i) => i.monthlyEquivalent));
     const yearlyTotal = monthlyTotal * 12;
 
     const byCategory = groupByCategory(items);
+
+    // Include custom categories even if they have no subscriptions
+    for (const customCat of customCategories) {
+      if (!byCategory[customCat.name]) {
+        byCategory[customCat.name] = [];
+      }
+    }
+
     const categoryRows = Object.entries(byCategory)
       .map(([category, list]) => {
         const total = sum(list.map((i) => i.monthlyEquivalent));
+        // Find custom category color if it's a custom category
+        const customCat = customCategories.find((c) => c.name === category);
         return {
           category: category as SubscriptionCategory,
           monthlyTotal: total,
+          customColor: customCat?.color,
         };
       })
       .sort((a, b) => b.monthlyTotal - a.monthlyTotal);
@@ -56,7 +173,7 @@ export default function InsightsScreen() {
       upcoming,
       next7Days,
     };
-  }, [items]);
+  }, [items, customCategories]);
 
   return (
     <SafeAreaView
@@ -197,49 +314,13 @@ export default function InsightsScreen() {
           )}
         </View>
 
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>By category</Text>
-          {items.length === 0 ? (
-            <Text style={[styles.subtitle, { color: colors.secondaryText }]}>—</Text>
-          ) : (
-            <View style={styles.bars} testID="insightsCategoryBreakdown">
-              {insights.categoryRows.map((row) => {
-                const pct =
-                  insights.monthlyTotal <= 0 ? 0 : row.monthlyTotal / insights.monthlyTotal;
-                const categoryColors = CATEGORY_COLORS[row.category] || CATEGORY_COLORS.Other;
-                return (
-                  <View
-                    key={row.category}
-                    style={styles.barRow}
-                    testID={`insightsCategory_${row.category}`}
-                  >
-                    <View style={styles.barTop}>
-                      <View style={[styles.categoryBadge, { backgroundColor: categoryColors.bg }]}>
-                        <Text style={[styles.categoryBadgeText, { color: categoryColors.text }]}>
-                          {row.category.toUpperCase()}
-                        </Text>
-                      </View>
-                      <Text style={[styles.barValue, { color: colors.text }]}>
-                        {formatMoney(row.monthlyTotal, items[0]?.currency ?? 'USD')}
-                      </Text>
-                    </View>
-                    <View style={[styles.track, { backgroundColor: colors.cardAlt }]}>
-                      <View
-                        style={[
-                          styles.fill,
-                          {
-                            width: `${Math.max(0, Math.min(1, pct)) * 100}%`,
-                            backgroundColor: categoryColors.text,
-                          },
-                        ]}
-                      />
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        </View>
+        <CategoryBreakdownCard
+          categoryRows={insights.categoryRows}
+          monthlyTotal={insights.monthlyTotal}
+          currency={items[0]?.currency ?? 'USD'}
+          colors={colors}
+          formatMoney={formatMoney}
+        />
 
         {!isPremium ? (
           <View style={styles.locked} testID="insightsLocked">
@@ -259,7 +340,8 @@ export default function InsightsScreen() {
 }
 
 function groupByCategory(items: ReturnType<typeof useSubscriptionListItems>) {
-  const map: Record<SubscriptionCategory, typeof items> = {
+  // Start with default categories initialized to empty arrays
+  const map: Record<string, typeof items> = {
     Streaming: [],
     Music: [],
     Software: [],
@@ -274,8 +356,11 @@ function groupByCategory(items: ReturnType<typeof useSubscriptionListItems>) {
 
   for (const item of items) {
     const cat = item.category;
-    const list = map[cat] ?? map.Other;
-    list.push(item);
+    // Initialize array for custom categories if not exists
+    if (!map[cat]) {
+      map[cat] = [];
+    }
+    map[cat].push(item);
   }
 
   return map;
@@ -537,5 +622,17 @@ const styles = StyleSheet.create({
   },
   footerSpace: {
     height: 20,
+  },
+  expandButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.xs,
+    paddingVertical: SPACING.md,
+    marginTop: SPACING.sm,
+  },
+  expandButtonText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
   },
 });

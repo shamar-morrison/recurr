@@ -1,4 +1,5 @@
-export type SubscriptionCategory =
+/** Default built-in categories */
+export type DefaultCategory =
   | 'Streaming'
   | 'Music'
   | 'Software'
@@ -9,6 +10,9 @@ export type SubscriptionCategory =
   | 'Shopping'
   | 'AI'
   | 'Other';
+
+/** Category can be a default or custom string */
+export type SubscriptionCategory = DefaultCategory | (string & {});
 
 export type BillingCycle =
   | 'Weekly'
@@ -95,7 +99,7 @@ export type SubscriptionListItem = {
   status: Subscription['status'];
 };
 
-export const SUBSCRIPTION_CATEGORIES: SubscriptionCategory[] = [
+export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   'Streaming',
   'Music',
   'Software',
@@ -107,6 +111,14 @@ export const SUBSCRIPTION_CATEGORIES: SubscriptionCategory[] = [
   'AI',
   'Other',
 ];
+
+/** @deprecated Use DEFAULT_CATEGORIES instead */
+export const SUBSCRIPTION_CATEGORIES = DEFAULT_CATEGORIES;
+
+/** Check if a category is a built-in default */
+export function isDefaultCategory(category: string): category is DefaultCategory {
+  return DEFAULT_CATEGORIES.includes(category as DefaultCategory);
+}
 
 export const BILLING_CYCLES: BillingCycle[] = [
   'Weekly',
