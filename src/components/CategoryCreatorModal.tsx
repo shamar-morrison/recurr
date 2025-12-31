@@ -1,4 +1,4 @@
-import { PlusIcon } from 'phosphor-react-native';
+import { CheckIcon, PlusIcon } from 'phosphor-react-native';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -14,16 +14,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
+import {
+  CATEGORY_COLOR_OPTIONS,
+  CustomCategoryInput,
+} from '@/src/features/subscriptions/categoriesRepo';
+
+const MAX_NAME_LENGTH = 30;
 
 interface CategoryCreatorModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (name: string) => Promise<unknown>;
+  onSave: (input: CustomCategoryInput) => Promise<unknown>;
   existingCategories: string[];
 }
 
 /**
- * Modal for creating a new custom category.
+ * Modal for creating a new custom category with color picker.
  * Validates input and prevents duplicates.
  */
 export function CategoryCreatorModal({
@@ -34,13 +40,20 @@ export function CategoryCreatorModal({
 }: CategoryCreatorModalProps) {
   const { colors } = useTheme();
   const [name, setName] = useState('');
+  const [selectedColor, setSelectedColor] = useState<string>(CATEGORY_COLOR_OPTIONS[0]);
   const [isSaving, setIsSaving] = useState(false);
 
   const trimmedName = name.trim();
+  const charCount = trimmedName.length;
 
   const handleSave = useCallback(async () => {
     if (!trimmedName) {
       Alert.alert('Invalid Name', 'Please enter a category name.');
+      return;
+    }
+
+    if (trimmedName.length > MAX_NAME_LENGTH) {
+      Alert.alert('Name Too Long', `Category name must be ${MAX_NAME_LENGTH} characters or less.`);
       return;
     }
 
@@ -55,8 +68,9 @@ export function CategoryCreatorModal({
 
     setIsSaving(true);
     try {
-      await onSave(trimmedName);
+      await onSave({ name: trimmedName, color: selectedColor });
       setName('');
+      setSelectedColor(CATEGORY_COLOR_OPTIONS[0]);
       onClose();
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Unknown error';
@@ -64,11 +78,12 @@ export function CategoryCreatorModal({
     } finally {
       setIsSaving(false);
     }
-  }, [trimmedName, existingCategories, onSave, onClose]);
+  }, [trimmedName, selectedColor, existingCategories, onSave, onClose]);
 
   const handleClose = useCallback(() => {
     if (isSaving) return;
     setName('');
+    setSelectedColor(CATEGORY_COLOR_OPTIONS[0]);
     onClose();
   }, [isSaving, onClose]);
 
@@ -78,30 +93,63 @@ export function CategoryCreatorModal({
         <SafeAreaView style={styles.safeArea}>
           <View style={[styles.container, { backgroundColor: colors.card }]}>
             <View style={styles.header}>
-              <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
+              <View style={[styles.iconContainer, { backgroundColor: selectedColor }]}>
                 <PlusIcon color="#fff" size={24} weight="bold" />
               </View>
               <Text style={[styles.title, { color: colors.text }]}>New Category</Text>
             </View>
 
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="e.g., Gaming, Travel, Pet Care"
-              placeholderTextColor={colors.secondaryText}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: colors.inputBackground,
-                  color: colors.text,
-                  borderColor: colors.border,
-                },
-              ]}
-              autoFocus
-              maxLength={30}
-              editable={!isSaving}
-              testID="categoryCreatorInput"
-            />
+            {/* Name Input */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder="e.g., Gaming, Travel, Pet Care"
+                placeholderTextColor={colors.secondaryText}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    color: colors.text,
+                    borderColor: colors.border,
+                  },
+                ]}
+                autoFocus
+                maxLength={MAX_NAME_LENGTH}
+                editable={!isSaving}
+                testID="categoryCreatorInput"
+              />
+              <Text
+                style={[
+                  styles.charCount,
+                  { color: charCount >= MAX_NAME_LENGTH ? colors.negative : colors.secondaryText },
+                ]}
+              >
+                {charCount}/{MAX_NAME_LENGTH}
+              </Text>
+            </View>
+
+            {/* Color Picker */}
+            <View style={styles.colorSection}>
+              <Text style={[styles.colorLabel, { color: colors.secondaryText }]}>COLOR</Text>
+              <View style={styles.colorRow}>
+                {CATEGORY_COLOR_OPTIONS.map((color) => (
+                  <Pressable
+                    key={color}
+                    onPress={() => setSelectedColor(color)}
+                    style={[
+                      styles.colorOption,
+                      { backgroundColor: color },
+                      selectedColor === color && styles.colorOptionSelected,
+                    ]}
+                    disabled={isSaving}
+                    testID={`categoryCreatorColor_${color}`}
+                  >
+                    {selectedColor === color && <CheckIcon color="#fff" size={18} weight="bold" />}
+                  </Pressable>
+                ))}
+              </View>
+            </View>
 
             <View style={styles.actions}>
               <Pressable
@@ -176,6 +224,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.3,
   },
+  inputContainer: {
+    gap: SPACING.xs,
+  },
   input: {
     height: 56,
     borderRadius: BORDER_RADIUS.xxl,
@@ -183,6 +234,37 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.lg,
     fontWeight: '600',
     borderWidth: 1,
+  },
+  charCount: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
+    textAlign: 'right',
+    marginRight: SPACING.sm,
+  },
+  colorSection: {
+    gap: SPACING.sm,
+  },
+  colorLabel: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    marginLeft: SPACING.xs,
+  },
+  colorRow: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+    justifyContent: 'center',
+  },
+  colorOption: {
+    width: 40,
+    height: 40,
+    borderRadius: BORDER_RADIUS.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  colorOptionSelected: {
+    borderWidth: 3,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   actions: {
     flexDirection: 'row',

@@ -137,13 +137,41 @@ function hashString(str: string): number {
 }
 
 /**
- * Get colors for any category (default or custom).
- * For custom categories, returns a deterministic color based on the category name.
+ * Convert a hex color to bg/text color pair.
  */
-export function getCategoryColors(category: string): { bg: string; text: string } {
+function hexToColorPair(hex: string): { bg: string; text: string } {
+  // Extract RGB values
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) {
+    return CUSTOM_CATEGORY_COLORS[0];
+  }
+  return {
+    bg: `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, 0.12)`,
+    text: hex.startsWith('#') ? hex : `#${hex}`,
+  };
+}
+
+/**
+ * Get colors for any category (default or custom).
+ * For custom categories with stored colors, uses the stored color.
+ * For custom categories without stored colors, returns a deterministic color based on the category name.
+ *
+ * @param category - The category name
+ * @param customCategoryColor - Optional stored color for custom category (hex format)
+ */
+export function getCategoryColors(
+  category: string,
+  customCategoryColor?: string
+): { bg: string; text: string } {
   if (isDefaultCategory(category)) {
     return CATEGORY_COLORS[category];
   }
+
+  // If custom color is provided, use it
+  if (customCategoryColor) {
+    return hexToColorPair(customCategoryColor);
+  }
+
   // Use hash of category name to pick a consistent fallback color
   const index = hashString(category) % CUSTOM_CATEGORY_COLORS.length;
   return CUSTOM_CATEGORY_COLORS[index];

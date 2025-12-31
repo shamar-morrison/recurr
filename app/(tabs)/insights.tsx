@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getCategoryColors } from '@/constants/colors';
@@ -11,7 +11,110 @@ import {
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
-import { CalendarCheckIcon, CalendarIcon, ChartLineUpIcon, CrownIcon } from 'phosphor-react-native';
+import {
+  CalendarCheckIcon,
+  CalendarIcon,
+  CaretDownIcon,
+  CaretUpIcon,
+  ChartLineUpIcon,
+  CrownIcon,
+} from 'phosphor-react-native';
+
+const INITIAL_CATEGORIES_SHOWN = 5;
+
+interface CategoryRow {
+  category: SubscriptionCategory;
+  monthlyTotal: number;
+}
+
+interface CategoryBreakdownCardProps {
+  categoryRows: CategoryRow[];
+  monthlyTotal: number;
+  currency: string;
+  colors: ReturnType<typeof useTheme>['colors'];
+  formatMoney: (amount: number, currency: string) => string;
+}
+
+function CategoryBreakdownCard({
+  categoryRows,
+  monthlyTotal,
+  currency,
+  colors,
+  formatMoney,
+}: CategoryBreakdownCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const totalCount = categoryRows.length;
+  const hasMore = totalCount > INITIAL_CATEGORIES_SHOWN;
+  const visibleRows = isExpanded ? categoryRows : categoryRows.slice(0, INITIAL_CATEGORIES_SHOWN);
+
+  if (categoryRows.length === 0) {
+    return (
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
+        <Text style={[styles.cardTitle, { color: colors.text }]}>By category</Text>
+        <Text style={[styles.subtitle, { color: colors.secondaryText }]}>—</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.card, { backgroundColor: colors.card }]}>
+      <Text style={[styles.cardTitle, { color: colors.text }]}>By category</Text>
+      <View style={styles.bars} testID="insightsCategoryBreakdown">
+        {visibleRows.map((row) => {
+          const pct = monthlyTotal <= 0 ? 0 : row.monthlyTotal / monthlyTotal;
+          const categoryColors = getCategoryColors(row.category);
+          return (
+            <View
+              key={row.category}
+              style={styles.barRow}
+              testID={`insightsCategory_${row.category}`}
+            >
+              <View style={styles.barTop}>
+                <View style={[styles.categoryBadge, { backgroundColor: categoryColors.bg }]}>
+                  <Text style={[styles.categoryBadgeText, { color: categoryColors.text }]}>
+                    {row.category.toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={[styles.barValue, { color: colors.text }]}>
+                  {formatMoney(row.monthlyTotal, currency)}
+                </Text>
+              </View>
+              <View style={[styles.track, { backgroundColor: colors.cardAlt }]}>
+                <View
+                  style={[
+                    styles.fill,
+                    {
+                      width: `${Math.max(0, Math.min(1, pct)) * 100}%`,
+                      backgroundColor: categoryColors.text,
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+          );
+        })}
+      </View>
+
+      {hasMore && (
+        <Pressable
+          onPress={() => setIsExpanded(!isExpanded)}
+          style={styles.expandButton}
+          testID="insightsCategoryExpand"
+        >
+          <Text style={[styles.expandButtonText, { color: colors.primary }]}>
+            {isExpanded ? 'Show less' : `Show all ${totalCount} categories`}
+          </Text>
+          {isExpanded ? (
+            <CaretUpIcon color={colors.primary} size={16} />
+          ) : (
+            <CaretDownIcon color={colors.primary} size={16} />
+          )}
+        </Pressable>
+      )}
+    </View>
+  );
+}
 
 export default function InsightsScreen() {
   const { isPremium } = useAuth();
@@ -197,49 +300,13 @@ export default function InsightsScreen() {
           )}
         </View>
 
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>By category</Text>
-          {items.length === 0 ? (
-            <Text style={[styles.subtitle, { color: colors.secondaryText }]}>—</Text>
-          ) : (
-            <View style={styles.bars} testID="insightsCategoryBreakdown">
-              {insights.categoryRows.map((row) => {
-                const pct =
-                  insights.monthlyTotal <= 0 ? 0 : row.monthlyTotal / insights.monthlyTotal;
-                const categoryColors = getCategoryColors(row.category);
-                return (
-                  <View
-                    key={row.category}
-                    style={styles.barRow}
-                    testID={`insightsCategory_${row.category}`}
-                  >
-                    <View style={styles.barTop}>
-                      <View style={[styles.categoryBadge, { backgroundColor: categoryColors.bg }]}>
-                        <Text style={[styles.categoryBadgeText, { color: categoryColors.text }]}>
-                          {row.category.toUpperCase()}
-                        </Text>
-                      </View>
-                      <Text style={[styles.barValue, { color: colors.text }]}>
-                        {formatMoney(row.monthlyTotal, items[0]?.currency ?? 'USD')}
-                      </Text>
-                    </View>
-                    <View style={[styles.track, { backgroundColor: colors.cardAlt }]}>
-                      <View
-                        style={[
-                          styles.fill,
-                          {
-                            width: `${Math.max(0, Math.min(1, pct)) * 100}%`,
-                            backgroundColor: categoryColors.text,
-                          },
-                        ]}
-                      />
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        </View>
+        <CategoryBreakdownCard
+          categoryRows={insights.categoryRows}
+          monthlyTotal={insights.monthlyTotal}
+          currency={items[0]?.currency ?? 'USD'}
+          colors={colors}
+          formatMoney={formatMoney}
+        />
 
         {!isPremium ? (
           <View style={styles.locked} testID="insightsLocked">
@@ -537,5 +604,17 @@ const styles = StyleSheet.create({
   },
   footerSpace: {
     height: 20,
+  },
+  expandButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.xs,
+    paddingVertical: SPACING.md,
+    marginTop: SPACING.sm,
+  },
+  expandButtonText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
   },
 });

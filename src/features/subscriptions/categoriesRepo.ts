@@ -1,5 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  orderBy,
+  query,
+  writeBatch,
+} from 'firebase/firestore';
 
 import { firestore, isFirebaseConfigured } from '@/src/lib/firebase';
 
@@ -12,8 +21,24 @@ function storageKey(userId: string) {
 export type CustomCategory = {
   id: string;
   name: string;
+  color: string;
   createdAt: number;
 };
+
+export type CustomCategoryInput = {
+  name: string;
+  color: string;
+};
+
+// Default color palette for custom categories
+export const CATEGORY_COLOR_OPTIONS = [
+  '#EA580C', // Orange
+  '#059669', // Emerald
+  '#D97706', // Amber
+  '#7C3AED', // Violet
+  '#DB2777', // Pink
+  '#0284C7', // Sky
+] as const;
 
 async function readLocal(userId: string): Promise<CustomCategory[]> {
   try {
@@ -21,14 +46,20 @@ async function readLocal(userId: string): Promise<CustomCategory[]> {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (item): item is CustomCategory =>
-        typeof item === 'object' &&
-        item !== null &&
-        typeof item.id === 'string' &&
-        typeof item.name === 'string' &&
-        typeof item.createdAt === 'number'
-    );
+    return parsed
+      .filter(
+        (item): item is CustomCategory =>
+          typeof item === 'object' &&
+          item !== null &&
+          typeof item.id === 'string' &&
+          typeof item.name === 'string' &&
+          typeof item.createdAt === 'number'
+      )
+      .map((item) => ({
+        ...item,
+        // Ensure color exists (migration for old data)
+        color: typeof item.color === 'string' ? item.color : CATEGORY_COLOR_OPTIONS[0],
+      }));
   } catch (e) {
     console.log('[categories] readLocal failed', e);
     return [];
@@ -62,6 +93,7 @@ export async function listCustomCategories(userId: string): Promise<CustomCatego
       return {
         id: d.id,
         name: String(data.name ?? ''),
+        color: typeof data.color === 'string' ? data.color : CATEGORY_COLOR_OPTIONS[0],
         createdAt: typeof data.createdAt === 'number' ? data.createdAt : Date.now(),
       };
     });
@@ -74,12 +106,19 @@ export async function listCustomCategories(userId: string): Promise<CustomCatego
   }
 }
 
-export async function addCustomCategory(userId: string, name: string): Promise<CustomCategory> {
+export async function addCustomCategory(
+  userId: string,
+  input: CustomCategoryInput
+): Promise<CustomCategory> {
   const now = Date.now();
-  const trimmedName = name.trim();
+  const trimmedName = input.name.trim();
 
   if (!trimmedName) {
     throw new Error('Category name cannot be empty');
+  }
+
+  if (trimmedName.length > 30) {
+    throw new Error('Category name cannot exceed 30 characters');
   }
 
   const local = await readLocal(userId);
@@ -92,6 +131,7 @@ export async function addCustomCategory(userId: string, name: string): Promise<C
   const newCategory: CustomCategory = {
     id: `local_${now}_${Math.random().toString(16).slice(2)}`,
     name: trimmedName,
+    color: input.color,
     createdAt: now,
   };
 
@@ -108,6 +148,7 @@ export async function addCustomCategory(userId: string, name: string): Promise<C
     const catCol = collection(firestore, 'users', userId, 'categories');
     const docRef = await addDoc(catCol, {
       name: trimmedName,
+      color: input.color,
       createdAt: now,
     });
 
@@ -124,6 +165,61 @@ export async function addCustomCategory(userId: string, name: string): Promise<C
   }
 }
 
+/**
+ * Delete a custom category and reassign all subscriptions using it to "Other".
+ * Returns the number of subscriptions that were reassigned.
+ */
+export async function deleteCustomCategoryWithReassignment(
+  userId: string,
+  categoryId: string,
+  categoryName: string
+): Promise<number> {
+  console.log('[categories] deleteCustomCategoryWithReassignment', {
+    userId,
+    categoryId,
+    categoryName,
+  });
+
+  // First, delete from local
+  const local = await readLocal(userId);
+  const nextLocal = local.filter((cat) => cat.id !== categoryId);
+  await writeLocal(userId, nextLocal);
+
+  if (!isFirebaseConfigured()) return 0;
+
+  try {
+    // Get all subscriptions with this category
+    const subsCol = collection(firestore, 'users', userId, 'subscriptions');
+    const snap = await getDocs(subsCol);
+
+    const batch = writeBatch(firestore);
+    let reassignedCount = 0;
+
+    snap.docs.forEach((d) => {
+      const data = d.data();
+      if (data.category === categoryName) {
+        batch.update(d.ref, { category: 'Other' });
+        reassignedCount++;
+      }
+    });
+
+    // Delete the category
+    batch.delete(doc(firestore, 'users', userId, 'categories', categoryId));
+
+    await batch.commit();
+    return reassignedCount;
+  } catch (e) {
+    console.log('[categories] deleteCustomCategoryWithReassignment Firestore failed', e);
+    // Still delete locally even if Firestore fails
+    try {
+      await deleteDoc(doc(firestore, 'users', userId, 'categories', categoryId));
+    } catch {
+      // Ignore
+    }
+    return 0;
+  }
+}
+
 export async function deleteCustomCategory(userId: string, categoryId: string): Promise<void> {
   console.log('[categories] deleteCustomCategory', { userId, categoryId });
 
@@ -137,5 +233,30 @@ export async function deleteCustomCategory(userId: string, categoryId: string): 
     await deleteDoc(doc(firestore, 'users', userId, 'categories', categoryId));
   } catch (e) {
     console.log('[categories] deleteCustomCategory Firestore failed', e);
+  }
+}
+
+/**
+ * Get count of subscriptions using a specific category.
+ */
+export async function getSubscriptionCountForCategory(
+  userId: string,
+  categoryName: string
+): Promise<number> {
+  if (!userId || !categoryName) return 0;
+
+  if (!isFirebaseConfigured()) {
+    // For local-only mode, we'd need to read subscriptions from local storage
+    // This is a simplified implementation
+    return 0;
+  }
+
+  try {
+    const subsCol = collection(firestore, 'users', userId, 'subscriptions');
+    const snap = await getDocs(subsCol);
+    return snap.docs.filter((d) => d.data().category === categoryName).length;
+  } catch (e) {
+    console.log('[categories] getSubscriptionCountForCategory failed', e);
+    return 0;
   }
 }
