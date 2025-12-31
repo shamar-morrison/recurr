@@ -2,6 +2,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useCallback, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { AppColors } from '@/constants/colors';
+import { FormSection } from '@/src/components/ui/FormSection';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { BillingCycle } from '@/src/features/subscriptions/types';
@@ -40,6 +42,14 @@ export function BillingDatesSection({
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
+  // Validate billing day range
+  const billingDayNumber = parseInt(billingDayText, 10);
+  const billingDayError =
+    billingDayText.trim() !== '' &&
+    (isNaN(billingDayNumber) || billingDayNumber < 1 || billingDayNumber > 31)
+      ? 'Must be between 1 and 31'
+      : null;
+
   const handleStartDateChange = useCallback(
     (event: any, selectedDate?: Date) => {
       setShowStartDatePicker(Platform.OS === 'ios');
@@ -64,8 +74,7 @@ export function BillingDatesSection({
 
   if (billingCycle === 'One-Time') {
     return (
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: colors.secondaryText }]}>Payment date</Text>
+      <FormSection label="Payment date">
         <Pressable
           style={[
             styles.dateInput,
@@ -86,29 +95,29 @@ export function BillingDatesSection({
             onChange={handleStartDateChange}
           />
         )}
-      </View>
+      </FormSection>
     );
   }
 
   return (
     <>
       {/* Billing Day */}
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: colors.secondaryText }]}>Billing day</Text>
-        <Text style={[styles.helper, { color: colors.secondaryText }]}>
-          Day of month (1–31). We'll calculate the next renewal date.
-        </Text>
+      <FormSection
+        label="Billing day"
+        helperText="Day of month (1–31). We'll calculate the next renewal date."
+      >
         <TextInput
           value={billingDayText}
           onChangeText={onBillingDayChange}
           keyboardType={Platform.OS === 'web' ? 'default' : 'number-pad'}
           placeholder="1"
           placeholderTextColor={colors.secondaryText}
+          maxLength={2}
           style={[
             styles.input,
             {
               backgroundColor: colors.card,
-              borderColor: colors.border,
+              borderColor: billingDayError ? AppColors.negative : colors.border,
               color: colors.text,
             },
             disabled && styles.disabledInput,
@@ -116,11 +125,11 @@ export function BillingDatesSection({
           editable={!disabled}
           testID="subscriptionEditorBillingDay"
         />
-      </View>
+        {billingDayError && <Text style={styles.errorText}>{billingDayError}</Text>}
+      </FormSection>
 
       {/* Start Date */}
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: colors.secondaryText }]}>Start date</Text>
+      <FormSection label="Start date">
         <Pressable
           style={[
             styles.dateInput,
@@ -141,9 +150,9 @@ export function BillingDatesSection({
             onChange={handleStartDateChange}
           />
         )}
-      </View>
+      </FormSection>
 
-      {/* End Date */}
+      {/* End Date - uses custom header with Clear button */}
       <View style={styles.section}>
         <View style={styles.row}>
           <Text style={[styles.label, { color: colors.secondaryText }]}>End date</Text>
@@ -153,7 +162,7 @@ export function BillingDatesSection({
               disabled={disabled}
               style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
             >
-              <Text style={{ color: colors.secondaryText, fontSize: 13 }}>Clear</Text>
+              <Text style={{ color: colors.secondaryText, fontSize: FONT_SIZE.sm }}>Clear</Text>
             </Pressable>
           )}
         </View>
@@ -185,6 +194,7 @@ export function BillingDatesSection({
 }
 
 const styles = StyleSheet.create({
+  // Only keep styles needed for End Date section (which has custom header) and inputs
   section: {
     gap: SPACING.md,
   },
@@ -194,13 +204,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.4,
     marginLeft: SPACING.xs,
-  },
-  helper: {
-    fontSize: FONT_SIZE.md,
-    lineHeight: 18,
-    marginLeft: SPACING.xs,
-    marginBottom: SPACING.xs,
-    marginTop: -SPACING.xs,
   },
   input: {
     minHeight: 56,
@@ -240,5 +243,11 @@ const styles = StyleSheet.create({
   },
   disabledInput: {
     opacity: 0.5,
+  },
+  errorText: {
+    color: AppColors.negative,
+    fontSize: FONT_SIZE.sm,
+    marginTop: -SPACING.xs,
+    marginLeft: SPACING.xs,
   },
 });

@@ -16,7 +16,7 @@ import {
 import { CurrencySelectorModal } from '@/src/components/CurrencySelectorModal';
 import { FrequencySelectorModal } from '@/src/components/FrequencySelectorModal';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
-import { ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
+import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { FormSection } from '@/src/components/ui/FormSection';
 import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
@@ -38,7 +38,12 @@ import {
 } from '@/src/features/subscriptions/components';
 import { useSubscriptionForm } from '@/src/features/subscriptions/hooks';
 import { buildSubscriptionPayload } from '@/src/features/subscriptions/subscriptionsUtils';
-import { BillingCycle } from '@/src/features/subscriptions/types';
+import {
+  BillingCycle,
+  PaymentMethod,
+  ReminderDays,
+  ReminderHour,
+} from '@/src/features/subscriptions/types';
 
 type RouteParams = {
   id?: string;
@@ -74,7 +79,7 @@ export default function SubscriptionEditorScreen() {
 
   // Handlers
   const handleServiceSelect = useCallback(
-    (service: any) => {
+    (service: ServiceSelection) => {
       form.handleServiceSelect(service);
       setShowServiceModal(false);
     },
@@ -98,7 +103,7 @@ export default function SubscriptionEditorScreen() {
   );
 
   const handlePaymentMethodChange = useCallback(
-    (method: any) => {
+    (method: PaymentMethod) => {
       form.setPaymentMethod(method);
       setShowPaymentMethodModal(false);
     },
@@ -106,7 +111,7 @@ export default function SubscriptionEditorScreen() {
   );
 
   const handleReminderDaysChange = useCallback(
-    (days: any) => {
+    (days: ReminderDays) => {
       form.setReminderDays(days);
       setShowReminderModal(false);
     },
@@ -114,7 +119,7 @@ export default function SubscriptionEditorScreen() {
   );
 
   const handleReminderHourChange = useCallback(
-    (hour: any) => {
+    (hour: ReminderHour) => {
       form.setReminderHour(hour);
       setShowReminderTimeModal(false);
     },

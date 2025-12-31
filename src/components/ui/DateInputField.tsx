@@ -74,7 +74,6 @@ interface OptionalDateInputFieldProps {
   placeholder?: string;
   disabled?: boolean;
   formatDate: (date: Date) => string;
-  onClear?: () => void;
   testID?: string;
 }
 
