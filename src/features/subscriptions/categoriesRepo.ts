@@ -166,6 +166,94 @@ export async function addCustomCategory(
 }
 
 /**
+ * Update a custom category (name and/or color).
+ * If name changes, subscriptions using the old name will be updated to the new name.
+ */
+export async function updateCustomCategory(
+  userId: string,
+  categoryId: string,
+  oldName: string,
+  input: CustomCategoryInput
+): Promise<CustomCategory> {
+  const trimmedName = input.name.trim();
+
+  if (!trimmedName) {
+    throw new Error('Category name cannot be empty');
+  }
+
+  if (trimmedName.length > 30) {
+    throw new Error('Category name cannot exceed 30 characters');
+  }
+
+  const local = await readLocal(userId);
+  const existing = local.find((cat) => cat.id === categoryId);
+
+  if (!existing) {
+    throw new Error('Category not found');
+  }
+
+  // Check for duplicates (case-insensitive, excluding current)
+  if (
+    trimmedName.toLowerCase() !== oldName.toLowerCase() &&
+    local.some(
+      (cat) => cat.name.toLowerCase() === trimmedName.toLowerCase() && cat.id !== categoryId
+    )
+  ) {
+    throw new Error('Category already exists');
+  }
+
+  const updated: CustomCategory = {
+    ...existing,
+    name: trimmedName,
+    color: input.color,
+  };
+
+  // Update local
+  const nextLocal = local.map((cat) => (cat.id === categoryId ? updated : cat));
+  await writeLocal(userId, nextLocal);
+
+  if (!isFirebaseConfigured()) {
+    console.log('[categories] updateCustomCategory local-only', { userId, name: trimmedName });
+    return updated;
+  }
+
+  try {
+    console.log('[categories] updateCustomCategory Firestore', {
+      userId,
+      categoryId,
+      name: trimmedName,
+    });
+    const batch = writeBatch(firestore);
+
+    // Update category document
+    const catRef = doc(firestore, 'users', userId, 'categories', categoryId);
+    batch.update(catRef, {
+      name: trimmedName,
+      color: input.color,
+    });
+
+    // If name changed, update all subscriptions using the old name
+    if (trimmedName !== oldName) {
+      const subsCol = collection(firestore, 'users', userId, 'subscriptions');
+      const snap = await getDocs(subsCol);
+
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        if (data.category === oldName) {
+          batch.update(d.ref, { category: trimmedName });
+        }
+      });
+    }
+
+    await batch.commit();
+    return updated;
+  } catch (e) {
+    console.log('[categories] updateCustomCategory Firestore failed (local kept)', e);
+    return updated;
+  }
+}
+
+/**
  * Delete a custom category and reassign all subscriptions using it to "Other".
  * Returns the number of subscriptions that were reassigned.
  */

@@ -1,5 +1,5 @@
-import { CheckIcon, PlusIcon } from 'phosphor-react-native';
-import React, { useCallback, useState } from 'react';
+import { CheckIcon, PencilSimpleIcon, PlusIcon } from 'phosphor-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -16,20 +16,23 @@ import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import {
   CATEGORY_COLOR_OPTIONS,
+  CustomCategory,
   CustomCategoryInput,
 } from '@/src/features/subscriptions/categoriesRepo';
 
 const MAX_NAME_LENGTH = 30;
 
-interface CategoryCreatorModalProps {
+interface CategoryEditorModalProps {
   visible: boolean;
   onClose: () => void;
   onSave: (input: CustomCategoryInput) => Promise<unknown>;
   existingCategories: string[];
+  /** If provided, the modal enters edit mode for this category */
+  editingCategory?: CustomCategory | null;
 }
 
 /**
- * Modal for creating a new custom category with color picker.
+ * Modal for creating or editing a custom category with color picker.
  * Validates input and prevents duplicates.
  */
 export function CategoryCreatorModal({
@@ -37,11 +40,25 @@ export function CategoryCreatorModal({
   onClose,
   onSave,
   existingCategories,
-}: CategoryCreatorModalProps) {
+  editingCategory,
+}: CategoryEditorModalProps) {
   const { colors } = useTheme();
   const [name, setName] = useState('');
   const [selectedColor, setSelectedColor] = useState<string>(CATEGORY_COLOR_OPTIONS[0]);
   const [isSaving, setIsSaving] = useState(false);
+
+  const isEditMode = Boolean(editingCategory);
+
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (visible && editingCategory) {
+      setName(editingCategory.name);
+      setSelectedColor(editingCategory.color);
+    } else if (visible && !editingCategory) {
+      setName('');
+      setSelectedColor(CATEGORY_COLOR_OPTIONS[0]);
+    }
+  }, [visible, editingCategory]);
 
   const trimmedName = name.trim();
   const charCount = trimmedName.length;
@@ -57,10 +74,16 @@ export function CategoryCreatorModal({
       return;
     }
 
-    // Check for duplicates (case-insensitive)
-    const isDuplicate = existingCategories.some(
-      (cat) => cat.toLowerCase() === trimmedName.toLowerCase()
-    );
+    // Check for duplicates (case-insensitive), excluding current category when editing
+    const isDuplicate = existingCategories.some((cat) => {
+      const isMatch = cat.toLowerCase() === trimmedName.toLowerCase();
+      // When editing, allow the same name (user might just change color)
+      if (isEditMode && editingCategory) {
+        return isMatch && cat.toLowerCase() !== editingCategory.name.toLowerCase();
+      }
+      return isMatch;
+    });
+
     if (isDuplicate) {
       Alert.alert('Duplicate Category', 'This category already exists.');
       return;
@@ -69,16 +92,14 @@ export function CategoryCreatorModal({
     setIsSaving(true);
     try {
       await onSave({ name: trimmedName, color: selectedColor });
-      setName('');
-      setSelectedColor(CATEGORY_COLOR_OPTIONS[0]);
-      onClose();
+      handleClose();
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Unknown error';
       Alert.alert('Error', msg);
     } finally {
       setIsSaving(false);
     }
-  }, [trimmedName, selectedColor, existingCategories, onSave, onClose]);
+  }, [trimmedName, selectedColor, existingCategories, isEditMode, editingCategory, onSave]);
 
   const handleClose = useCallback(() => {
     if (isSaving) return;
@@ -94,9 +115,15 @@ export function CategoryCreatorModal({
           <View style={[styles.container, { backgroundColor: colors.card }]}>
             <View style={styles.header}>
               <View style={[styles.iconContainer, { backgroundColor: selectedColor }]}>
-                <PlusIcon color="#fff" size={24} weight="bold" />
+                {isEditMode ? (
+                  <PencilSimpleIcon color="#fff" size={24} weight="bold" />
+                ) : (
+                  <PlusIcon color="#fff" size={24} weight="bold" />
+                )}
               </View>
-              <Text style={[styles.title, { color: colors.text }]}>New Category</Text>
+              <Text style={[styles.title, { color: colors.text }]}>
+                {isEditMode ? 'Edit Category' : 'New Category'}
+              </Text>
             </View>
 
             {/* Name Input */}
@@ -117,7 +144,7 @@ export function CategoryCreatorModal({
                 autoFocus
                 maxLength={MAX_NAME_LENGTH}
                 editable={!isSaving}
-                testID="categoryCreatorInput"
+                testID="categoryEditorInput"
               />
               <Text
                 style={[
@@ -143,7 +170,7 @@ export function CategoryCreatorModal({
                       selectedColor === color && styles.colorOptionSelected,
                     ]}
                     disabled={isSaving}
-                    testID={`categoryCreatorColor_${color}`}
+                    testID={`categoryEditorColor_${color}`}
                   >
                     {selectedColor === color && <CheckIcon color="#fff" size={18} weight="bold" />}
                   </Pressable>
@@ -156,7 +183,7 @@ export function CategoryCreatorModal({
                 onPress={handleClose}
                 style={[styles.button, styles.cancelButton, { borderColor: colors.border }]}
                 disabled={isSaving}
-                testID="categoryCreatorCancel"
+                testID="categoryEditorCancel"
               >
                 <Text style={[styles.buttonText, { color: colors.text }]}>Cancel</Text>
               </Pressable>
@@ -170,12 +197,14 @@ export function CategoryCreatorModal({
                   (!trimmedName || isSaving) && { opacity: 0.5 },
                 ]}
                 disabled={!trimmedName || isSaving}
-                testID="categoryCreatorSave"
+                testID="categoryEditorSave"
               >
                 {isSaving ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <Text style={[styles.buttonText, { color: '#fff' }]}>Create</Text>
+                  <Text style={[styles.buttonText, { color: '#fff' }]}>
+                    {isEditMode ? 'Save' : 'Create'}
+                  </Text>
                 )}
               </Pressable>
             </View>

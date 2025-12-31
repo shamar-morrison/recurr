@@ -9,6 +9,7 @@ import {
   deleteCustomCategoryWithReassignment,
   getSubscriptionCountForCategory,
   listCustomCategories,
+  updateCustomCategory,
 } from '@/src/features/subscriptions/categoriesRepo';
 import { DEFAULT_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
 
@@ -30,6 +31,26 @@ export function useCategories() {
 
   const addMutation = useMutation({
     mutationFn: (input: CustomCategoryInput) => addCustomCategory(userId, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories', userId] });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      categoryId,
+      oldName,
+      input,
+    }: {
+      categoryId: string;
+      oldName: string;
+      input: CustomCategoryInput;
+    }) => {
+      const result = await updateCustomCategory(userId, categoryId, oldName, input);
+      // Also invalidate subscriptions since category names may have changed
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories', userId] });
     },
@@ -71,8 +92,10 @@ export function useCategories() {
     customCategories,
     isLoading: customCategoriesQuery.isLoading,
     addCategory: addMutation.mutateAsync,
+    updateCategory: updateMutation.mutateAsync,
     deleteCategory: deleteMutation.mutateAsync,
     isAdding: addMutation.isPending,
+    isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
     getSubscriptionCount,
     refetch: customCategoriesQuery.refetch,

@@ -1,6 +1,6 @@
-import { router, Stack } from 'expo-router';
-import { CaretLeftIcon, PlusIcon, TagIcon, TrashIcon } from 'phosphor-react-native';
-import React, { useCallback, useState } from 'react';
+import { Stack } from 'expo-router';
+import { PencilSimpleIcon, PlusIcon, TagIcon, TrashIcon } from 'phosphor-react-native';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,9 +14,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getCategoryColors } from '@/constants/colors';
 import { CategoryCreatorModal } from '@/src/components/CategoryCreatorModal';
+import { StackHeader } from '@/src/components/ui/StackHeader';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
-import { CustomCategory } from '@/src/features/subscriptions/categoriesRepo';
+import { CustomCategory, CustomCategoryInput } from '@/src/features/subscriptions/categoriesRepo';
 import { useCategories } from '@/src/features/subscriptions/hooks';
 import { DEFAULT_CATEGORIES } from '@/src/features/subscriptions/types';
 
@@ -27,13 +28,46 @@ export default function CategoriesScreen() {
     allCategories,
     isLoading,
     addCategory,
+    updateCategory,
     deleteCategory,
-    isDeleting,
-    getSubscriptionCount,
   } = useCategories();
 
-  const [showCreatorModal, setShowCreatorModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { getSubscriptionCount } = useCategories();
+
+  const handleOpenCreate = useCallback(() => {
+    setEditingCategory(null);
+    setShowModal(true);
+  }, []);
+
+  const handleOpenEdit = useCallback((category: CustomCategory) => {
+    setEditingCategory(category);
+    setShowModal(true);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setShowModal(false);
+    setEditingCategory(null);
+  }, []);
+
+  const handleSaveCategory = useCallback(
+    async (input: CustomCategoryInput) => {
+      if (editingCategory) {
+        // Edit mode
+        await updateCategory({
+          categoryId: editingCategory.id,
+          oldName: editingCategory.name,
+          input,
+        });
+      } else {
+        // Create mode
+        await addCategory(input);
+      }
+    },
+    [editingCategory, addCategory, updateCategory]
+  );
 
   const handleDeleteCategory = useCallback(
     async (category: CustomCategory) => {
@@ -67,26 +101,27 @@ export default function CategoriesScreen() {
     [deleteCategory, getSubscriptionCount]
   );
 
-  const headerLeft = useCallback(
+  const headerRight = useMemo(
     () => (
       <Pressable
-        onPress={() => router.back()}
-        style={[styles.headerButton, { backgroundColor: colors.tertiaryBackground }]}
-        testID="categoriesBack"
+        onPress={handleOpenCreate}
+        style={[styles.headerButton, { backgroundColor: colors.primary }]}
+        testID="categoriesAddButton"
       >
-        <CaretLeftIcon color={colors.text} size={22} />
+        <PlusIcon color="#fff" size={20} weight="bold" />
       </Pressable>
     ),
-    [colors]
+    [colors, handleOpenCreate]
   );
 
   return (
     <>
       <Stack.Screen
         options={{
-          title: 'Manage Categories',
-          headerBackVisible: false,
-          headerLeft,
+          headerShown: true,
+          header: () => (
+            <StackHeader title="Manage Categories" showBack headerRight={headerRight} />
+          ),
         }}
       />
 
@@ -136,12 +171,20 @@ export default function CategoriesScreen() {
                 <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
                   No custom categories yet
                 </Text>
+                <Pressable
+                  onPress={handleOpenCreate}
+                  style={[styles.emptyButton, { backgroundColor: colors.primary }]}
+                >
+                  <PlusIcon color="#fff" size={18} weight="bold" />
+                  <Text style={styles.emptyButtonText}>Create One</Text>
+                </Pressable>
               </View>
             ) : (
               <View style={[styles.card, { backgroundColor: colors.card }]}>
                 {customCategories.map((cat, index) => {
                   const categoryColors = getCategoryColors(cat.name, cat.color);
                   const isDeleting = deletingId === cat.id;
+
                   return (
                     <View key={cat.id}>
                       {index > 0 && (
@@ -152,18 +195,30 @@ export default function CategoriesScreen() {
                         <Text style={[styles.categoryName, { color: colors.text }]}>
                           {cat.name}
                         </Text>
-                        <Pressable
-                          onPress={() => handleDeleteCategory(cat)}
-                          disabled={isDeleting}
-                          style={[styles.deleteButton, isDeleting && { opacity: 0.5 }]}
-                          testID={`categoryDelete_${cat.id}`}
-                        >
-                          {isDeleting ? (
-                            <ActivityIndicator color={colors.negative} size="small" />
-                          ) : (
-                            <TrashIcon color={colors.negative} size={20} />
-                          )}
-                        </Pressable>
+
+                        <View style={styles.actionButtons}>
+                          <Pressable
+                            onPress={() => handleOpenEdit(cat)}
+                            disabled={isDeleting}
+                            style={[styles.actionButton, isDeleting && { opacity: 0.5 }]}
+                            testID={`categoryEdit_${cat.id}`}
+                          >
+                            <PencilSimpleIcon color={colors.primary} size={20} />
+                          </Pressable>
+
+                          <Pressable
+                            onPress={() => handleDeleteCategory(cat)}
+                            disabled={isDeleting}
+                            style={[styles.actionButton, isDeleting && { opacity: 0.5 }]}
+                            testID={`categoryDelete_${cat.id}`}
+                          >
+                            {isDeleting ? (
+                              <ActivityIndicator color={colors.negative} size="small" />
+                            ) : (
+                              <TrashIcon color={colors.negative} size={20} />
+                            )}
+                          </Pressable>
+                        </View>
                       </View>
                     </View>
                   );
@@ -172,25 +227,14 @@ export default function CategoriesScreen() {
             )}
           </View>
         </ScrollView>
-
-        {/* Add Button */}
-        <View style={styles.footer}>
-          <Pressable
-            onPress={() => setShowCreatorModal(true)}
-            style={[styles.addButton, { backgroundColor: colors.primary }]}
-            testID="categoriesAddButton"
-          >
-            <PlusIcon color="#fff" size={20} weight="bold" />
-            <Text style={styles.addButtonText}>Add Category</Text>
-          </Pressable>
-        </View>
       </SafeAreaView>
 
       <CategoryCreatorModal
-        visible={showCreatorModal}
-        onClose={() => setShowCreatorModal(false)}
-        onSave={addCategory}
+        visible={showModal}
+        onClose={handleCloseModal}
+        onSave={handleSaveCategory}
         existingCategories={allCategories}
+        editingCategory={editingCategory}
       />
     </>
   );
@@ -202,7 +246,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING.xl,
-    paddingBottom: 100,
+    paddingBottom: SPACING.xxxl,
     gap: SPACING.xxl,
   },
   headerButton: {
@@ -240,6 +284,20 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.md,
     fontWeight: '500',
   },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.full,
+    marginTop: SPACING.sm,
+  },
+  emptyButtonText: {
+    color: '#fff',
+    fontSize: FONT_SIZE.md,
+    fontWeight: '700',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -261,7 +319,11 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     fontWeight: '600',
   },
-  deleteButton: {
+  actionButtons: {
+    flexDirection: 'row',
+    gap: SPACING.xs,
+  },
+  actionButton: {
     width: 36,
     height: 36,
     borderRadius: BORDER_RADIUS.full,
@@ -271,31 +333,5 @@ const styles = StyleSheet.create({
   divider: {
     height: StyleSheet.hairlineWidth,
     marginLeft: 44,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: SPACING.xl,
-    paddingBottom: SPACING.xxl,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: SPACING.sm,
-    height: 56,
-    borderRadius: BORDER_RADIUS.full,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
   },
 });
