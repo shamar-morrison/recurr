@@ -350,7 +350,7 @@ export default function SubscriptionEditorScreen() {
           ? {
               serviceName: form.serviceName.trim() || form.existing!.serviceName,
               category: form.category,
-              amount: form.amount || form.existing!.amount,
+              amount: form.amount ?? form.existing!.amount,
               currency: form.currency,
               billingCycle: form.billingCycle,
               billingDay: effectiveBillingDay,
