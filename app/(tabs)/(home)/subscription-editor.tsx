@@ -316,6 +316,18 @@ export default function SubscriptionEditorScreen() {
           onPress: async () => {
             setProcessingAction('delete');
             try {
+              // Cancel any scheduled notification first
+              if (form.existing!.notificationId) {
+                try {
+                  await cancelNotification(form.existing!.notificationId);
+                } catch (cancelError) {
+                  console.log(
+                    '[subscription-editor] failed to cancel notification on delete',
+                    cancelError
+                  );
+                  // Continue with deletion anyway
+                }
+              }
               await form.deleteMutation.mutateAsync(form.existing!.id);
               router.back();
             } catch (e) {
@@ -336,7 +348,9 @@ export default function SubscriptionEditorScreen() {
     const performPauseResume = async (shouldMerge: boolean) => {
       setProcessingAction('pause');
       try {
-        const newStatus = form.existing!.status === 'Paused' ? 'Active' : 'Paused';
+        const newStatus = (form.existing!.status === 'Paused' ? 'Active' : 'Paused') as
+          | 'Active'
+          | 'Paused';
         const effectiveBillingDay = shouldMerge
           ? getEffectiveBillingDay(form.billingCycle, form.startDate, form.billingDay)
           : form.existing!.billingDay;
@@ -384,7 +398,7 @@ export default function SubscriptionEditorScreen() {
           reminderDays: shouldMerge ? form.reminderDays : existing.reminderDays,
           reminderHour: shouldMerge ? form.reminderHour : existing.reminderHour,
           notificationId: shouldMerge ? notificationIdToSave : existing.notificationId,
-          status: newStatus as any,
+          status: newStatus,
         };
 
         await form.upsertMutation.mutateAsync(
