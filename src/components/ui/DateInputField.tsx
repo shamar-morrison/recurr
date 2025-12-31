@@ -5,6 +5,68 @@ import { Platform, Pressable, StyleSheet, Text } from 'react-native';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 
+interface BaseDateInputFieldProps {
+  pickerValue: Date;
+  displayText: string;
+  textColor: string;
+  onDateChange: (date: Date) => void;
+  disabled?: boolean;
+  testID?: string;
+}
+
+/**
+ * Internal base component containing shared date picker logic.
+ */
+function BaseDateInputField({
+  pickerValue,
+  displayText,
+  textColor,
+  onDateChange,
+  disabled = false,
+  testID,
+}: BaseDateInputFieldProps) {
+  const { colors } = useTheme();
+  const [showPicker, setShowPicker] = useState(false);
+
+  const handleChange = useCallback(
+    (event: any, selectedDate?: Date) => {
+      setShowPicker(Platform.OS === 'ios');
+      if (event.type === 'dismissed') {
+        return;
+      }
+      if (selectedDate) {
+        onDateChange(selectedDate);
+      }
+    },
+    [onDateChange]
+  );
+
+  return (
+    <>
+      <Pressable
+        style={[
+          styles.dateInput,
+          { backgroundColor: colors.card, borderColor: colors.border },
+          disabled && styles.disabledInput,
+        ]}
+        onPress={() => setShowPicker(true)}
+        disabled={disabled}
+        testID={testID}
+      >
+        <Text style={[styles.dateText, { color: textColor }]}>{displayText}</Text>
+      </Pressable>
+      {showPicker && (
+        <DateTimePicker
+          value={pickerValue}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleChange}
+        />
+      )}
+    </>
+  );
+}
+
 interface DateInputFieldProps {
   value: Date;
   onChange: (date: Date) => void;
@@ -21,50 +83,21 @@ interface DateInputFieldProps {
 export function DateInputField({
   value,
   onChange,
-  placeholder,
   disabled = false,
   formatDate,
   testID,
 }: DateInputFieldProps) {
   const { colors } = useTheme();
-  const [showPicker, setShowPicker] = useState(false);
-
-  const handleChange = useCallback(
-    (event: any, selectedDate?: Date) => {
-      setShowPicker(Platform.OS === 'ios');
-      if (event.type === 'dismissed') {
-        return;
-      }
-      if (selectedDate) {
-        onChange(selectedDate);
-      }
-    },
-    [onChange]
-  );
 
   return (
-    <>
-      <Pressable
-        style={[
-          styles.dateInput,
-          { backgroundColor: colors.card, borderColor: colors.border },
-          disabled && styles.disabledInput,
-        ]}
-        onPress={() => setShowPicker(true)}
-        disabled={disabled}
-        testID={testID}
-      >
-        <Text style={[styles.dateText, { color: colors.text }]}>{formatDate(value)}</Text>
-      </Pressable>
-      {showPicker && (
-        <DateTimePicker
-          value={value}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleChange}
-        />
-      )}
-    </>
+    <BaseDateInputField
+      pickerValue={value}
+      displayText={formatDate(value)}
+      textColor={colors.text}
+      onDateChange={onChange}
+      disabled={disabled}
+      testID={testID}
+    />
   );
 }
 
@@ -89,46 +122,16 @@ export function OptionalDateInputField({
   testID,
 }: OptionalDateInputFieldProps) {
   const { colors } = useTheme();
-  const [showPicker, setShowPicker] = useState(false);
-
-  const handleChange = useCallback(
-    (event: any, selectedDate?: Date) => {
-      setShowPicker(Platform.OS === 'ios');
-      if (event.type === 'dismissed') {
-        return;
-      }
-      if (selectedDate) {
-        onChange(selectedDate);
-      }
-    },
-    [onChange]
-  );
 
   return (
-    <>
-      <Pressable
-        style={[
-          styles.dateInput,
-          { backgroundColor: colors.card, borderColor: colors.border },
-          disabled && styles.disabledInput,
-        ]}
-        onPress={() => setShowPicker(true)}
-        disabled={disabled}
-        testID={testID}
-      >
-        <Text style={[styles.dateText, { color: value ? colors.text : colors.secondaryText }]}>
-          {value ? formatDate(value) : placeholder}
-        </Text>
-      </Pressable>
-      {showPicker && (
-        <DateTimePicker
-          value={value || new Date()}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleChange}
-        />
-      )}
-    </>
+    <BaseDateInputField
+      pickerValue={value || new Date()}
+      displayText={value ? formatDate(value) : placeholder}
+      textColor={value ? colors.text : colors.secondaryText}
+      onDateChange={onChange}
+      disabled={disabled}
+      testID={testID}
+    />
   );
 }
 
