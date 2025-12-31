@@ -116,8 +116,8 @@ function mapDocToSubscription(
     reminderDays: typeof data.reminderDays === 'number' ? data.reminderDays : null,
     reminderHour: typeof data.reminderHour === 'number' ? data.reminderHour : null,
     notificationId: typeof data.notificationId === 'string' ? data.notificationId : null,
-    createdAt: typeof data.createdAt === 'number' ? data.createdAt : 0,
-    updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : 0,
+    createdAt: typeof data.createdAt === 'number' ? data.createdAt : nowMillis(),
+    updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : nowMillis(),
   };
 }
 
@@ -174,7 +174,6 @@ export async function getSubscription(
   try {
     const d = await getDoc(doc(firestore, 'users', userId, 'subscriptions', subscriptionId));
     if (!d.exists()) return null;
-    const data = d.data() as Record<string, unknown>;
 
     return mapDocToSubscription(d.id, userId, d.data() as Record<string, unknown>);
   } catch (e) {
