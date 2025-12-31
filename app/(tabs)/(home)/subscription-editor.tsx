@@ -126,6 +126,71 @@ export default function SubscriptionEditorScreen() {
     [form]
   );
 
+  /**
+   * Reusable helper to update scheduled notifications.
+   * Cancels existing notification if present, requests permissions,
+   * and schedules a new reminder if reminderDays is enabled.
+   * @returns The new notificationId or null
+   */
+  const updateNotification = useCallback(
+    async (params: {
+      existingNotificationId: string | null | undefined;
+      reminderDays: number | null;
+      reminderHour: number | null;
+      existingSubscription: NonNullable<typeof form.existing>;
+      overrides: {
+        serviceName: string;
+        billingDay: number;
+        billingCycle: BillingCycle;
+        startDate: number;
+      };
+    }): Promise<string | null> => {
+      const {
+        existingNotificationId,
+        reminderDays,
+        reminderHour,
+        existingSubscription,
+        overrides,
+      } = params;
+
+      // Cancel existing notification if any
+      if (existingNotificationId) {
+        try {
+          await cancelNotification(existingNotificationId);
+        } catch (cancelError) {
+          console.log('[subscription-editor] failed to cancel existing notification', cancelError);
+          // Continue anyway - stale notification is better than blocking save
+        }
+      }
+
+      // Schedule new notification if reminder is enabled
+      if (reminderDays !== null && reminderDays > 0) {
+        try {
+          const hasPermission = await requestNotificationPermissions();
+          if (hasPermission) {
+            // Merge existing subscription with overrides for scheduling
+            const subscriptionForScheduling = {
+              ...existingSubscription,
+              ...overrides,
+            };
+            const notificationId = await scheduleSubscriptionReminder(
+              subscriptionForScheduling,
+              reminderDays,
+              reminderHour ?? 12
+            );
+            return notificationId;
+          }
+        } catch (scheduleError) {
+          console.log('[subscription-editor] failed to schedule notification', scheduleError);
+          // Continue anyway - missing notification is better than blocking save
+        }
+      }
+
+      return null;
+    },
+    []
+  );
+
   const handleSave = useCallback(async () => {
     const error = form.validate();
     if (error) {
@@ -143,30 +208,22 @@ export default function SubscriptionEditorScreen() {
           ? form.endDate.getTime()
           : undefined;
 
-      // Cancel existing notification if any
-      if (form.existing?.notificationId) {
-        await cancelNotification(form.existing.notificationId);
-      }
-
       let notificationIdToSave: string | null = null;
 
-      // Schedule notification if reminder is enabled
-      if (form.reminderDays !== null && form.reminderDays > 0) {
-        const hasPermission = await requestNotificationPermissions();
-        if (hasPermission && form.existing) {
-          const tempSubscription = {
-            ...form.existing,
+      // For existing subscriptions, update notification
+      if (form.existing) {
+        notificationIdToSave = await updateNotification({
+          existingNotificationId: form.existing.notificationId,
+          reminderDays: form.reminderDays,
+          reminderHour: form.reminderHour,
+          existingSubscription: form.existing,
+          overrides: {
             serviceName: form.serviceName.trim(),
             billingDay: effectiveBillingDay,
             billingCycle: form.billingCycle,
             startDate: form.startDate.getTime(),
-          };
-          notificationIdToSave = await scheduleSubscriptionReminder(
-            tempSubscription,
-            form.reminderDays,
-            form.reminderHour ?? 12
-          );
-        }
+          },
+        });
       }
 
       const payload = buildSubscriptionPayload(form.existing, form.userId, {
@@ -227,7 +284,7 @@ export default function SubscriptionEditorScreen() {
     } finally {
       setProcessingAction(null);
     }
-  }, [form]);
+  }, [form, updateNotification]);
 
   const handleDelete = useCallback(() => {
     if (!form.existing) return;
@@ -264,6 +321,31 @@ export default function SubscriptionEditorScreen() {
       setProcessingAction('pause');
       try {
         const newStatus = form.existing!.status === 'Paused' ? 'Active' : 'Paused';
+        const isOneTime = form.billingCycle === 'One-Time';
+        const effectiveBillingDay = shouldMerge
+          ? isOneTime
+            ? form.startDate.getDate()
+            : form.billingDay
+          : form.existing!.billingDay;
+
+        let notificationIdToSave: string | null | undefined = form.existing!.notificationId;
+
+        // Update notifications if merging form changes (reminder settings may have changed)
+        if (shouldMerge) {
+          notificationIdToSave = await updateNotification({
+            existingNotificationId: form.existing!.notificationId,
+            reminderDays: form.reminderDays,
+            reminderHour: form.reminderHour,
+            existingSubscription: form.existing!,
+            overrides: {
+              serviceName: form.serviceName.trim() || form.existing!.serviceName,
+              billingDay: effectiveBillingDay,
+              billingCycle: form.billingCycle,
+              startDate: form.startDate.getTime(),
+            },
+          });
+        }
+
         const payloadBase = shouldMerge
           ? {
               serviceName: form.serviceName.trim() || form.existing!.serviceName,
@@ -271,13 +353,14 @@ export default function SubscriptionEditorScreen() {
               amount: form.amount || form.existing!.amount,
               currency: form.currency,
               billingCycle: form.billingCycle,
-              billingDay: form.billingDay,
+              billingDay: effectiveBillingDay,
               notes: form.notes.trim() || form.existing!.notes,
               startDate: form.startDate.getTime(),
               endDate: form.endDate ? form.endDate.getTime() : undefined,
               paymentMethod: form.paymentMethod,
               reminderDays: form.reminderDays,
               reminderHour: form.reminderHour,
+              notificationId: notificationIdToSave,
               status: newStatus as any,
             }
           : {
@@ -293,6 +376,7 @@ export default function SubscriptionEditorScreen() {
               paymentMethod: form.existing!.paymentMethod,
               reminderDays: form.existing!.reminderDays,
               reminderHour: form.existing!.reminderHour,
+              notificationId: form.existing!.notificationId,
               status: newStatus as any,
             };
 
@@ -329,7 +413,7 @@ export default function SubscriptionEditorScreen() {
     } else {
       performPauseResume(false);
     }
-  }, [form]);
+  }, [form, updateNotification]);
 
   const headerLeft = useCallback(
     () => (
