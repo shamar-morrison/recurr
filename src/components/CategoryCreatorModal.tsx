@@ -12,13 +12,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { SERVICE_COLORS } from '@/src/constants/customServices';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
-import {
-  CATEGORY_COLOR_OPTIONS,
-  CustomCategory,
-  CustomCategoryInput,
-} from '@/src/features/subscriptions/categoriesRepo';
+import { CustomCategory, CustomCategoryInput } from '@/src/features/subscriptions/categoriesRepo';
 
 const MAX_NAME_LENGTH = 30;
 
@@ -44,7 +41,7 @@ export function CategoryCreatorModal({
 }: CategoryEditorModalProps) {
   const { colors } = useTheme();
   const [name, setName] = useState('');
-  const [selectedColor, setSelectedColor] = useState<string>(CATEGORY_COLOR_OPTIONS[0]);
+  const [selectedColor, setSelectedColor] = useState<string>(SERVICE_COLORS[0]);
   const [isSaving, setIsSaving] = useState(false);
 
   const isEditMode = Boolean(editingCategory);
@@ -56,7 +53,7 @@ export function CategoryCreatorModal({
       setSelectedColor(editingCategory.color);
     } else if (visible && !editingCategory) {
       setName('');
-      setSelectedColor(CATEGORY_COLOR_OPTIONS[0]);
+      setSelectedColor(SERVICE_COLORS[0]);
     }
   }, [visible, editingCategory]);
 
@@ -104,7 +101,7 @@ export function CategoryCreatorModal({
   const handleClose = useCallback(() => {
     if (isSaving) return;
     setName('');
-    setSelectedColor(CATEGORY_COLOR_OPTIONS[0]);
+    setSelectedColor(SERVICE_COLORS[0]);
     onClose();
   }, [isSaving, onClose]);
 
@@ -160,7 +157,7 @@ export function CategoryCreatorModal({
             <View style={styles.colorSection}>
               <Text style={[styles.colorLabel, { color: colors.secondaryText }]}>COLOR</Text>
               <View style={styles.colorRow}>
-                {CATEGORY_COLOR_OPTIONS.map((color) => (
+                {SERVICE_COLORS.map((color) => (
                   <Pressable
                     key={color}
                     onPress={() => setSelectedColor(color)}
@@ -281,8 +278,11 @@ const styles = StyleSheet.create({
   },
   colorRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: SPACING.md,
     justifyContent: 'center',
+    maxWidth: 200, // Constrain to fit 4 colors per row
+    alignSelf: 'center',
   },
   colorOption: {
     width: 40,

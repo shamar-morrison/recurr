@@ -24,7 +24,8 @@ import { SERVICE_COLORS } from '@/src/constants/customServices';
 import { Service, SERVICES } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useCustomServices } from '@/src/features/services/useCustomServices';
-import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { useCategories } from '@/src/features/subscriptions/hooks';
+import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 import { getFirestoreErrorMessage } from '@/src/lib/firestore';
 
 // Union type for both predefined and custom services
@@ -48,6 +49,8 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
     isLoading: isLoadingCustomServices,
     addService: addCustomService,
   } = useCustomServices();
+
+  const { allCategories } = useCategories();
 
   const [search, setSearch] = useState('');
 
@@ -247,7 +250,7 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
               <View style={styles.section}>
                 <Text style={styles.label}>Category</Text>
                 <View style={styles.categoryGrid}>
-                  {SUBSCRIPTION_CATEGORIES.map((category) => {
+                  {allCategories.map((category) => {
                     const isCategorySelected = category === selectedCategory;
                     return (
                       <Pressable
