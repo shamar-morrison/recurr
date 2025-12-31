@@ -79,7 +79,6 @@ export default function SubscriptionEditorScreen() {
     [settings.dateFormat]
   );
 
-  // Custom categories
   const {
     allCategories,
     addCategory,
@@ -87,11 +86,9 @@ export default function SubscriptionEditorScreen() {
     isLoading: isLoadingCategories,
   } = useCategories();
 
-  // Handler for adding a category - auto-selects after creation
   const handleAddCategory = useCallback(
     async (input: { name: string; color: string }) => {
       const newCategory = await addCategory(input);
-      // Auto-select the newly created category
       form.setCategory(newCategory.name);
       return newCategory;
     },
