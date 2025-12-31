@@ -208,6 +208,9 @@ export async function upsertSubscription(
   input: SubscriptionInput
 ): Promise<Subscription> {
   const now = nowMillis();
+  const local = await readLocal(userId);
+  const existing = local.find((s) => s.id === input.id);
+  const existingCreatedAt = existing?.createdAt;
 
   const sub: Subscription = {
     id: input.id ?? `local_${now}_${Math.random().toString(16).slice(2)}`,
@@ -227,11 +230,10 @@ export async function upsertSubscription(
     reminderDays: input.reminderDays ?? null,
     reminderHour: input.reminderHour ?? null,
     notificationId: input.notificationId ?? null,
-    createdAt: (input as Partial<Subscription>).createdAt ?? now,
+    createdAt: (input as Partial<Subscription>).createdAt ?? existingCreatedAt ?? now,
     updatedAt: now,
   };
 
-  const local = await readLocal(userId);
   const nextLocal = mergeLocal(local, sub);
   await writeLocal(userId, nextLocal);
 
@@ -291,7 +293,6 @@ export async function upsertSubscription(
         reminderHour: sub.reminderHour ?? null,
         notificationId: sub.notificationId ?? null,
         updatedAt: now,
-        createdAt: now,
       },
       { merge: true }
     );
