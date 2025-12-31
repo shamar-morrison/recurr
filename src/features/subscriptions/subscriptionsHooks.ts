@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   deleteSubscription,
+  getSubscription,
   listSubscriptions,
   upsertSubscription,
 } from '@/src/features/subscriptions/subscriptionsRepo';
@@ -30,6 +31,23 @@ export function useSubscriptionsQuery() {
   });
 }
 
+export function useSubscriptionQuery(subscriptionId: string | undefined) {
+  const { user } = useAuth();
+  const userId = user?.uid ?? '';
+  const qc = useQueryClient();
+
+  return useQuery({
+    queryKey: ['subscription', userId, subscriptionId],
+    enabled: Boolean(userId && subscriptionId),
+    queryFn: () => getSubscription(userId, subscriptionId!),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    placeholderData: () => {
+      const list = qc.getQueryData<Subscription[]>(subscriptionsKey(userId));
+      return list?.find((s) => s.id === subscriptionId);
+    },
+  });
+}
+
 export function useSubscriptionListItems(subs: Subscription[] | undefined): SubscriptionListItem[] {
   return useMemo(() => {
     const list = subs ?? [];
@@ -51,13 +69,22 @@ export function useUpsertSubscriptionMutation() {
       if (!userId) throw new Error('Not signed in');
       return upsertSubscription(userId, input);
     },
-    onSuccess: async () => {
-      // Delay invalidation to prevent Android crash from heavy re-render during navigation
-      setTimeout(() => {
-        qc.invalidateQueries({ queryKey: subscriptionsKey(userId) }).catch((err) => {
-          console.error('[subscriptions] invalidateQueries failed', err);
-        });
-      }, 500);
+    onSuccess: (savedSub) => {
+      // Optimistically update list without refetching
+      qc.setQueryData<Subscription[]>(subscriptionsKey(userId), (old) => {
+        const list = old ? [...old] : [];
+        const index = list.findIndex((s) => s.id === savedSub.id);
+        if (index >= 0) {
+          list[index] = savedSub;
+        } else {
+          list.unshift(savedSub);
+        }
+        // Maintain sort order (updatedAt desc would be ideal, or just let next fetch clean up)
+        return list;
+      });
+
+      // Update single doc cache
+      qc.setQueryData(['subscription', userId, savedSub.id], savedSub);
     },
   });
 }
@@ -73,13 +100,14 @@ export function useDeleteSubscriptionMutation() {
       await deleteSubscription(userId, id);
       return id;
     },
-    onSuccess: async () => {
-      // Delay invalidation to prevent Android crash
-      setTimeout(() => {
-        qc.invalidateQueries({ queryKey: subscriptionsKey(userId) }).catch((err) => {
-          console.error('[subscriptions] invalidateQueries failed', err);
-        });
-      }, 500);
+    onSuccess: (deletedId) => {
+      // Optimistically remove from list
+      qc.setQueryData<Subscription[]>(subscriptionsKey(userId), (old) => {
+        return (old ?? []).filter((s) => s.id !== deletedId);
+      });
+
+      // Clear single doc cache
+      qc.removeQueries({ queryKey: ['subscription', userId, deletedId] });
     },
   });
 }
