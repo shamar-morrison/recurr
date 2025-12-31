@@ -80,7 +80,12 @@ export default function SubscriptionEditorScreen() {
   );
 
   // Custom categories
-  const { allCategories, addCategory, isAdding: isAddingCategory } = useCategories();
+  const {
+    allCategories,
+    addCategory,
+    isAdding: isAddingCategory,
+    isLoading: isLoadingCategories,
+  } = useCategories();
 
   // Handler for adding a category - auto-selects after creation
   const handleAddCategory = useCallback(
@@ -540,6 +545,7 @@ export default function SubscriptionEditorScreen() {
                   onAddCategory={() => setShowCategoryCreatorModal(true)}
                   disabled={isProcessing}
                   isAddingCategory={isAddingCategory}
+                  isLoading={isLoadingCategories}
                 />
               </FormSection>
 

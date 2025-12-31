@@ -34,6 +34,8 @@ interface CategoryChipsProps {
   disabled?: boolean;
   /** Show loading state on the Add button */
   isAddingCategory?: boolean;
+  /** Show loading skeleton while categories are being fetched */
+  isLoading?: boolean;
 }
 
 const CATEGORY_ICONS: Record<DefaultCategory, React.FC<any>> = {
@@ -71,9 +73,32 @@ export function CategoryChips({
   onAddCategory,
   disabled = false,
   isAddingCategory = false,
+  isLoading = false,
 }: CategoryChipsProps) {
   const { colors } = useTheme();
   const iconSize = 26;
+
+  if (isLoading) {
+    return (
+      <View style={styles.chipsRow} testID="subscriptionEditorCategoriesLoading">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <View
+            key={i}
+            style={[
+              styles.chip,
+              styles.skeletonChip,
+              {
+                backgroundColor: colors.cardAlt,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <ActivityIndicator color={colors.secondaryText} size="small" />
+          </View>
+        ))}
+      </View>
+    );
+  }
 
   return (
     <View style={styles.chipsRow} testID="subscriptionEditorCategories">
@@ -184,5 +209,8 @@ const styles = StyleSheet.create({
   },
   disabledInput: {
     opacity: 0.5,
+  },
+  skeletonChip: {
+    opacity: 0.6,
   },
 });
