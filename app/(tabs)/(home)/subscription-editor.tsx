@@ -354,31 +354,27 @@ export default function SubscriptionEditorScreen() {
         const effectiveBillingDay = shouldMerge
           ? getEffectiveBillingDay(form.billingCycle, form.startDate, form.billingDay)
           : form.existing!.billingDay;
+        const existing = form.existing!;
+        const trimmedName = form.serviceName.trim();
+        const trimmedNotes = form.notes.trim();
 
-        let notificationIdToSave: string | null | undefined = form.existing!.notificationId;
+        let notificationIdToSave: string | null | undefined = existing.notificationId;
 
         // Update notifications if merging form changes (reminder settings may have changed)
         if (shouldMerge) {
           notificationIdToSave = await updateNotification({
-            existingNotificationId: form.existing!.notificationId,
+            existingNotificationId: existing.notificationId,
             reminderDays: form.reminderDays,
             reminderHour: form.reminderHour,
-            existingSubscription: form.existing!,
+            existingSubscription: existing,
             overrides: {
-              serviceName: form.serviceName.trim()
-                ? form.serviceName.trim()
-                : form.existing!.serviceName,
+              serviceName: trimmedName || existing.serviceName,
               billingDay: effectiveBillingDay,
               billingCycle: form.billingCycle,
               startDate: form.startDate.getTime(),
             },
           });
         }
-
-        // Build payload with form values (if merging) or existing values
-        const existing = form.existing!;
-        const trimmedName = form.serviceName.trim();
-        const trimmedNotes = form.notes.trim();
 
         const payloadBase = {
           serviceName: shouldMerge ? trimmedName || existing.serviceName : existing.serviceName,
