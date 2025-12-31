@@ -13,7 +13,7 @@ import {
   TagIcon,
 } from 'phosphor-react-native';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getCategoryColors } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
@@ -32,6 +32,8 @@ interface CategoryChipsProps {
   /** Called when user taps the "+" button */
   onAddCategory?: () => void;
   disabled?: boolean;
+  /** Show loading state on the Add button */
+  isAddingCategory?: boolean;
 }
 
 const CATEGORY_ICONS: Record<DefaultCategory, React.FC<any>> = {
@@ -68,6 +70,7 @@ export function CategoryChips({
   categories,
   onAddCategory,
   disabled = false,
+  isAddingCategory = false,
 }: CategoryChipsProps) {
   const { colors } = useTheme();
   const iconSize = 26;
@@ -121,7 +124,7 @@ export function CategoryChips({
       {onAddCategory && (
         <Pressable
           onPress={onAddCategory}
-          disabled={disabled}
+          disabled={disabled || isAddingCategory}
           style={[
             styles.chip,
             styles.addChip,
@@ -130,12 +133,18 @@ export function CategoryChips({
               borderColor: colors.border,
               borderStyle: 'dashed',
             },
-            disabled && styles.disabledInput,
+            (disabled || isAddingCategory) && styles.disabledInput,
           ]}
           testID="subscriptionEditorCategoryAdd"
         >
-          <PlusIcon color={colors.primary} size={iconSize} weight="bold" />
-          <Text style={[styles.chipText, { color: colors.primary }]}>New</Text>
+          {isAddingCategory ? (
+            <ActivityIndicator color={colors.primary} size="small" />
+          ) : (
+            <PlusIcon color={colors.primary} size={iconSize} weight="bold" />
+          )}
+          <Text style={[styles.chipText, { color: colors.primary }]}>
+            {isAddingCategory ? 'Adding...' : 'New'}
+          </Text>
         </Pressable>
       )}
     </View>

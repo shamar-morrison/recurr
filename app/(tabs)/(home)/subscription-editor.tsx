@@ -80,7 +80,18 @@ export default function SubscriptionEditorScreen() {
   );
 
   // Custom categories
-  const { allCategories, addCategory } = useCategories();
+  const { allCategories, addCategory, isAdding: isAddingCategory } = useCategories();
+
+  // Handler for adding a category - auto-selects after creation
+  const handleAddCategory = useCallback(
+    async (input: { name: string; color: string }) => {
+      const newCategory = await addCategory(input);
+      // Auto-select the newly created category
+      form.setCategory(newCategory.name);
+      return newCategory;
+    },
+    [addCategory, form]
+  );
 
   // Handlers
   const handleServiceSelect = useCallback(
@@ -528,6 +539,7 @@ export default function SubscriptionEditorScreen() {
                   categories={allCategories}
                   onAddCategory={() => setShowCategoryCreatorModal(true)}
                   disabled={isProcessing}
+                  isAddingCategory={isAddingCategory}
                 />
               </FormSection>
 
@@ -694,7 +706,7 @@ export default function SubscriptionEditorScreen() {
       <CategoryCreatorModal
         visible={showCategoryCreatorModal}
         onClose={() => setShowCategoryCreatorModal(false)}
-        onSave={addCategory}
+        onSave={handleAddCategory}
         existingCategories={allCategories}
       />
     </>

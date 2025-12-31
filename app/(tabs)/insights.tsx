@@ -6,6 +6,7 @@ import { getCategoryColors } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import { useCategories } from '@/src/features/subscriptions/hooks';
 import {
   useSubscriptionListItems,
   useSubscriptionsQuery,
@@ -25,6 +26,7 @@ const INITIAL_CATEGORIES_SHOWN = 5;
 interface CategoryRow {
   category: SubscriptionCategory;
   monthlyTotal: number;
+  customColor?: string;
 }
 
 interface CategoryBreakdownCardProps {
@@ -63,7 +65,7 @@ function CategoryBreakdownCard({
       <View style={styles.bars} testID="insightsCategoryBreakdown">
         {visibleRows.map((row) => {
           const pct = monthlyTotal <= 0 ? 0 : row.monthlyTotal / monthlyTotal;
-          const categoryColors = getCategoryColors(row.category);
+          const categoryColors = getCategoryColors(row.category, row.customColor);
           return (
             <View
               key={row.category}
@@ -122,18 +124,30 @@ export default function InsightsScreen() {
 
   const subscriptionsQuery = useSubscriptionsQuery();
   const items = useSubscriptionListItems(subscriptionsQuery.data);
+  const { customCategories } = useCategories();
 
   const insights = useMemo(() => {
     const monthlyTotal = sum(items.map((i) => i.monthlyEquivalent));
     const yearlyTotal = monthlyTotal * 12;
 
     const byCategory = groupByCategory(items);
+
+    // Include custom categories even if they have no subscriptions
+    for (const customCat of customCategories) {
+      if (!byCategory[customCat.name]) {
+        byCategory[customCat.name] = [];
+      }
+    }
+
     const categoryRows = Object.entries(byCategory)
       .map(([category, list]) => {
         const total = sum(list.map((i) => i.monthlyEquivalent));
+        // Find custom category color if it's a custom category
+        const customCat = customCategories.find((c) => c.name === category);
         return {
           category: category as SubscriptionCategory,
           monthlyTotal: total,
+          customColor: customCat?.color,
         };
       })
       .sort((a, b) => b.monthlyTotal - a.monthlyTotal);
@@ -159,7 +173,7 @@ export default function InsightsScreen() {
       upcoming,
       next7Days,
     };
-  }, [items]);
+  }, [items, customCategories]);
 
   return (
     <SafeAreaView
@@ -326,7 +340,8 @@ export default function InsightsScreen() {
 }
 
 function groupByCategory(items: ReturnType<typeof useSubscriptionListItems>) {
-  const map: Record<SubscriptionCategory, typeof items> = {
+  // Start with default categories initialized to empty arrays
+  const map: Record<string, typeof items> = {
     Streaming: [],
     Music: [],
     Software: [],
@@ -341,8 +356,11 @@ function groupByCategory(items: ReturnType<typeof useSubscriptionListItems>) {
 
   for (const item of items) {
     const cat = item.category;
-    const list = map[cat] ?? map.Other;
-    list.push(item);
+    // Initialize array for custom categories if not exists
+    if (!map[cat]) {
+      map[cat] = [];
+    }
+    map[cat].push(item);
   }
 
   return map;
