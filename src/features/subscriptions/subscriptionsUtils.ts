@@ -1,8 +1,52 @@
 import {
   BillingCycle,
+  PaymentMethod,
   Subscription,
+  SubscriptionCategory,
   SubscriptionListItem,
 } from '@/src/features/subscriptions/types';
+
+/**
+ * Build a subscription payload for create/update operations.
+ */
+export function buildSubscriptionPayload(
+  existing: Subscription | null,
+  userId: string,
+  base: {
+    serviceName: string;
+    category: SubscriptionCategory;
+    amount: number;
+    currency: string;
+    billingCycle: Subscription['billingCycle'];
+    billingDay: number;
+    notes?: string;
+    startDate?: number;
+    endDate?: number;
+    paymentMethod?: PaymentMethod;
+    reminderDays?: number | null;
+    reminderHour?: number | null;
+    status?: Subscription['status'];
+  }
+) {
+  return {
+    id: existing?.id,
+    userId: existing?.userId ?? userId,
+    serviceName: base.serviceName,
+    category: base.category,
+    amount: base.amount,
+    currency: base.currency,
+    billingCycle: base.billingCycle,
+    billingDay: base.billingDay,
+    notes: base.notes,
+    startDate: base.startDate,
+    endDate: base.endDate,
+    paymentMethod: base.paymentMethod,
+    reminderDays: base.reminderDays ?? null,
+    reminderHour: base.reminderHour ?? 12,
+    isArchived: false,
+    status: base.status ?? (existing?.isArchived ? 'Archived' : 'Active'),
+  };
+}
 
 export function clampBillingDay(day: number): number {
   const safe = Math.round(day);
