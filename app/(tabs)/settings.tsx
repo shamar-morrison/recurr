@@ -137,12 +137,12 @@ export default function SettingsScreen() {
   const handleCurrencySelect = (currencyCode: string) => {
     setCurrencyModalVisible(false);
     // Defer state update to prevent Android crash when modal closes
-    setTimeout(() => setCurrency(currencyCode), 100);
+    setTimeout(() => setCurrency(currencyCode), 500);
   };
 
   const handleDateFormatSelect = (format: DateFormatId) => {
-    setDateFormat(format);
     setDateFormatModalVisible(false);
+    setTimeout(() => setDateFormat(format), 500);
   };
 
   const handleRateUs = async () => {

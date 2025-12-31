@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -7,12 +7,12 @@ import {
   listSubscriptions,
   upsertSubscription,
 } from '@/src/features/subscriptions/subscriptionsRepo';
+import { toListItem } from '@/src/features/subscriptions/subscriptionsUtils';
 import {
   Subscription,
   SubscriptionInput,
   SubscriptionListItem,
 } from '@/src/features/subscriptions/types';
-import { toListItem } from '@/src/features/subscriptions/subscriptionsUtils';
 
 export const subscriptionsKey = (userId: string | null | undefined) =>
   ['subscriptions', userId ?? 'anon'] as const;
@@ -52,7 +52,12 @@ export function useUpsertSubscriptionMutation() {
       return upsertSubscription(userId, input);
     },
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: subscriptionsKey(userId) });
+      // Delay invalidation to prevent Android crash from heavy re-render during navigation
+      setTimeout(() => {
+        qc.invalidateQueries({ queryKey: subscriptionsKey(userId) }).catch((err) => {
+          console.error('[subscriptions] invalidateQueries failed', err);
+        });
+      }, 500);
     },
   });
 }
@@ -69,7 +74,12 @@ export function useDeleteSubscriptionMutation() {
       return id;
     },
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: subscriptionsKey(userId) });
+      // Delay invalidation to prevent Android crash
+      setTimeout(() => {
+        qc.invalidateQueries({ queryKey: subscriptionsKey(userId) }).catch((err) => {
+          console.error('[subscriptions] invalidateQueries failed', err);
+        });
+      }, 500);
     },
   });
 }
