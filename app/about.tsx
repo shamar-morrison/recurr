@@ -5,71 +5,48 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
-import { useTheme } from '@/src/context/ThemeContext';
 import { CaretLeftIcon } from 'phosphor-react-native';
 
 export default function AboutScreen() {
-  const { colors, isDark } = useTheme();
-
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <LinearGradient
-        colors={
-          isDark
-            ? [colors.background, '#1a1635'] // Subtle purple tint for dark mode
-            : ['#ffffff', '#f0f4ff'] // Subtle blue tint for light mode
-        }
+        colors={['#6365E9', '#593CEF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-          {/* Header */}
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+          {/* Back Button */}
           <View style={styles.header}>
-            <Pressable
-              onPress={() => router.back()}
-              style={[styles.backButton, { backgroundColor: colors.card }]}
-            >
-              <CaretLeftIcon size={24} color={colors.text} />
+            <Pressable onPress={() => router.back()} style={styles.backButton}>
+              <CaretLeftIcon size={24} color="#FFFFFF" weight="bold" />
             </Pressable>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>About</Text>
-            <View style={styles.headerSpacer} />
           </View>
 
           {/* Content */}
           <View style={styles.content}>
             {/* App Icon */}
-            <View
-              style={[
-                styles.iconContainer,
-                { backgroundColor: colors.card, shadowColor: colors.text },
-              ]}
-            >
+            <View style={styles.iconContainer}>
               <Image
                 source={require('@/assets/images/icon.png')}
                 style={styles.appIcon}
-                resizeMode="contain"
+                resizeMode="cover"
               />
             </View>
 
-            {/* App Name & Version */}
-            <Text style={[styles.appName, { color: colors.text }]}>Recurr</Text>
-            <Text style={[styles.version, { color: colors.secondaryText }]}>Version 1.0.0</Text>
+            {/* App Name */}
+            <Text style={styles.appName}>Recurr</Text>
+
+            {/* Separator */}
+            <View style={styles.separator} />
 
             {/* Description */}
-            <View style={[styles.descriptionCard, { backgroundColor: colors.card }]}>
-              <Text style={[styles.description, { color: colors.secondaryText }]}>
-                Recurr helps you track and manage all your recurring subscriptions in one place.
-                Never miss a payment or forget about a subscription again.
-              </Text>
-            </View>
-
-            {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={[styles.copyright, { color: colors.secondaryText }]}>
-                © 2024 The Avg Coder
-              </Text>
-              <Text style={[styles.madeWith, { color: colors.secondaryText }]}>Made with ❤️</Text>
-            </View>
+            <Text style={styles.description}>
+              Recurr helps you track and manage all your recurring subscriptions in one place. Never
+              miss a payment or forget about a subscription again.
+            </Text>
           </View>
         </SafeAreaView>
       </LinearGradient>
@@ -88,91 +65,63 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: BORDER_RADIUS.xxl,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  headerTitle: {
-    fontSize: FONT_SIZE.xl,
-    fontWeight: '700',
-  },
-  headerSpacer: {
-    width: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   content: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: SPACING.xxl,
-    paddingTop: 40,
+    paddingBottom: 60,
   },
   iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: BORDER_RADIUS.xxxl,
+    width: 140,
+    height: 140,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     marginBottom: SPACING.xl,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 12,
+    overflow: 'hidden',
   },
   appIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: BORDER_RADIUS.xl,
+    width: 140,
+    height: 140,
+    borderRadius: 32,
   },
   appName: {
-    fontSize: FONT_SIZE.display,
+    fontSize: 36,
     fontWeight: '800',
     letterSpacing: -0.5,
+    color: '#FFFFFF',
+    marginBottom: SPACING.lg,
   },
-  version: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: '500',
-    marginTop: SPACING.xs,
-  },
-  descriptionCard: {
-    borderRadius: BORDER_RADIUS.xl,
-    padding: SPACING.xl,
-    marginTop: SPACING.xxxl,
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 4,
+  separator: {
+    width: 60,
+    height: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderRadius: 2,
+    marginBottom: SPACING.lg,
   },
   description: {
     fontSize: FONT_SIZE.lg,
-    lineHeight: 24,
+    lineHeight: 26,
     textAlign: 'center',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 40,
-    alignItems: 'center',
-  },
-  copyright: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: '500',
-  },
-  madeWith: {
-    fontSize: FONT_SIZE.md,
-    marginTop: SPACING.xs,
+    color: 'rgba(255, 255, 255, 0.9)',
+    maxWidth: 320,
   },
 });
