@@ -114,12 +114,24 @@ export default function ServicesScreen() {
         style={[styles.container, { backgroundColor: colors.background }]}
         edges={['bottom']}
       >
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            !isLoading && customServices.length === 0 && styles.contentEmpty,
+          ]}
+        >
           {/* Custom Services */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>
-              CUSTOM SERVICES
-            </Text>
+          <View
+            style={[
+              styles.section,
+              !isLoading && customServices.length === 0 && styles.sectionEmpty,
+            ]}
+          >
+            {customServices.length > 0 && (
+              <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>
+                CUSTOM SERVICES
+              </Text>
+            )}
             {isLoading ? (
               <View style={[styles.card, styles.loadingCard, { backgroundColor: colors.card }]}>
                 <ActivityIndicator color={colors.primary} />
@@ -218,6 +230,10 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xxxl,
     gap: SPACING.xxl,
   },
+  contentEmpty: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   headerButton: {
     width: 40,
     height: 40,
@@ -227,6 +243,10 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: SPACING.sm,
+  },
+  sectionEmpty: {
+    flex: 1,
+    justifyContent: 'center',
   },
   sectionTitle: {
     fontSize: FONT_SIZE.md,
