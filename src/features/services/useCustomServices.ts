@@ -105,9 +105,11 @@ export function useCustomServices() {
     },
     onSuccess: async (newService) => {
       // Optimistically update the cache with the new service
-      // (The real-time listener will also push the update, but this makes it instant)
+      // Check for duplicates since the real-time listener might have already added it
       qc.setQueryData<CustomService[]>(customServicesKey(userId), (old) => {
         if (!old) return [newService];
+        // Avoid duplicates - the real-time listener might have already added this service
+        if (old.some((s) => s.id === newService.id)) return old;
         return [newService, ...old].sort((a, b) => a.name.localeCompare(b.name));
       });
     },

@@ -277,7 +277,12 @@ export function ServiceEditorModal({
             <View style={styles.actions}>
               <Pressable
                 onPress={handleClose}
-                style={[styles.button, styles.cancelButton, { borderColor: colors.border }]}
+                style={[
+                  styles.button,
+                  styles.cancelButton,
+                  { borderColor: colors.border },
+                  isSaving && { opacity: 0.5 },
+                ]}
                 disabled={isSaving}
                 testID="serviceEditorCancel"
               >
