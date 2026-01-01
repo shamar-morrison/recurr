@@ -34,11 +34,12 @@ import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
+import { useCategories } from '@/src/features/subscriptions/hooks';
 import {
   useSubscriptionListItems,
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
-import { SUBSCRIPTION_CATEGORIES, SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 
 type FilterChip = SubscriptionCategory | 'All';
 type SortOption = 'Date' | 'CostAsc' | 'CostDesc' | 'Name';
@@ -48,6 +49,7 @@ export default function SubscriptionsHomeScreen() {
   const { isPremium, settings } = useAuth();
   const { freeTierLimit, loading: configLoading } = useRemoteConfig();
   const { colors } = useTheme();
+  const { allCategories } = useCategories();
 
   const subscriptionsQuery = useSubscriptionsQuery();
   const items = useSubscriptionListItems(subscriptionsQuery.data);
@@ -388,7 +390,7 @@ export default function SubscriptionsHomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.chipsScrollContent}
           >
-            {(['All', ...SUBSCRIPTION_CATEGORIES] as const).map((chip) => {
+            {(['All', ...allCategories] as FilterChip[]).map((chip) => {
               const active = chip === filter;
               return (
                 <Pressable

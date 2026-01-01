@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CATEGORY_COLORS } from '@/constants/colors';
+import { CATEGORY_COLORS, getCategoryColors } from '@/constants/colors';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
@@ -22,6 +22,7 @@ import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { cancelNotification } from '@/src/features/notifications/notificationService';
+import { useCategories } from '@/src/features/subscriptions/hooks';
 import {
   useSubscriptionsQuery,
   useUpsertSubscriptionMutation,
@@ -29,7 +30,6 @@ import {
 import {
   REMINDER_OPTIONS,
   Subscription,
-  SUBSCRIPTION_CATEGORIES,
   SubscriptionCategory,
 } from '@/src/features/subscriptions/types';
 import { scheduleTestNotification } from '@/src/utils/devUtils';
@@ -41,6 +41,7 @@ export default function RemindersScreen() {
   const subscriptionsQuery = useSubscriptionsQuery();
   const upsertMutation = useUpsertSubscriptionMutation();
   const { colors } = useTheme();
+  const { allCategories, customCategories } = useCategories();
 
   const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('All');
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -357,14 +358,13 @@ export default function RemindersScreen() {
         onClose={() => setShowFilterModal(false)}
       >
         <FlatList<FilterCategory>
-          data={['All', ...SUBSCRIPTION_CATEGORIES] as FilterCategory[]}
+          data={['All', ...allCategories] as FilterCategory[]}
           keyExtractor={(item) => item}
           renderItem={({ item }) => {
             const isSelected = item === selectedCategory;
+            const customCat = customCategories.find((c) => c.name === item);
             const categoryColors =
-              item === 'All'
-                ? null
-                : CATEGORY_COLORS[item as SubscriptionCategory] || CATEGORY_COLORS.Other;
+              item === 'All' ? null : getCategoryColors(item, customCat?.color);
             const hasReminders =
               item === 'All' || categoriesWithReminders.includes(item as SubscriptionCategory);
 
