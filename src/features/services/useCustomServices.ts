@@ -9,8 +9,10 @@ import { CustomService, CustomServiceInput } from '@/src/constants/customService
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
   addCustomService,
+  deleteCustomService,
   listCustomServices,
   subscribeToCustomServices,
+  updateCustomService,
 } from '@/src/features/services/customServicesRepo';
 
 // Query key factory for custom services
@@ -111,6 +113,36 @@ export function useCustomServices() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ serviceId, input }: { serviceId: string; input: CustomServiceInput }) => {
+      if (!userId) throw new Error('Not signed in');
+      return updateCustomService(userId, serviceId, input);
+    },
+    onSuccess: async (updatedService) => {
+      // Optimistically update the cache
+      qc.setQueryData<CustomService[]>(customServicesKey(userId), (old) => {
+        if (!old) return [updatedService];
+        return old
+          .map((s) => (s.id === updatedService.id ? updatedService : s))
+          .sort((a, b) => a.name.localeCompare(b.name));
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (serviceId: string) => {
+      if (!userId) throw new Error('Not signed in');
+      return deleteCustomService(userId, serviceId);
+    },
+    onSuccess: async (_, serviceId) => {
+      // Optimistically remove from cache
+      qc.setQueryData<CustomService[]>(customServicesKey(userId), (old) => {
+        if (!old) return [];
+        return old.filter((s) => s.id !== serviceId);
+      });
+    },
+  });
+
   // Wrapper function for backward compatibility
   const addService = async (input: CustomServiceInput): Promise<CustomService | null> => {
     try {
@@ -126,6 +158,10 @@ export function useCustomServices() {
     customServices: query.data ?? [],
     isLoading: query.isLoading,
     addService,
+    updateService: updateMutation.mutateAsync,
+    deleteService: deleteMutation.mutateAsync,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
     refreshServices: () => qc.invalidateQueries({ queryKey: customServicesKey(userId) }),
   };
 }

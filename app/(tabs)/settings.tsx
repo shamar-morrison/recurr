@@ -31,6 +31,7 @@ import {
   ChatCircleDotsIcon,
   CoinsIcon,
   CrownIcon,
+  CubeIcon,
   DownloadSimpleIcon,
   GridFourIcon,
   InfoIcon,
@@ -408,6 +409,17 @@ export default function SettingsScreen() {
               iconBg="#FCE7F3"
               label="Manage Categories"
               onPress={() => router.push('/categories')}
+            />
+
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+            <SettingRow
+              colors={colors}
+              icon={<CubeIcon />}
+              iconColor="#14B8A6"
+              iconBg="#CCFBF1"
+              label="Manage Services"
+              onPress={() => router.push('/services')}
             />
           </View>
         </View>

@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getCategoryColors } from '@/constants/colors';
+import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
@@ -73,11 +74,7 @@ function CategoryBreakdownCard({
               testID={`insightsCategory_${row.category}`}
             >
               <View style={styles.barTop}>
-                <View style={[styles.categoryBadge, { backgroundColor: categoryColors.bg }]}>
-                  <Text style={[styles.categoryBadgeText, { color: categoryColors.text }]}>
-                    {row.category.toUpperCase()}
-                  </Text>
-                </View>
+                <CategoryBadge category={row.category} customColor={row.customColor} size="md" />
                 <Text style={[styles.barValue, { color: colors.text }]}>
                   {formatMoney(row.monthlyTotal, currency)}
                 </Text>
@@ -578,17 +575,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: SPACING.md,
   },
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderRadius: BORDER_RADIUS.xs,
-  },
-  categoryBadgeText: {
-    fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
+
   barValue: {
     fontSize: FONT_SIZE.md,
     fontWeight: '700',

@@ -26,9 +26,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppColors, CATEGORY_COLORS } from '@/constants/colors';
+import { AppColors } from '@/constants/colors';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { Button } from '@/src/components/ui/Button';
+import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -138,7 +139,6 @@ export default function SubscriptionsHomeScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof filteredItems)[number] }) => {
-      const categoryColors = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Other;
       const daysUntilBilling = Math.max(0, item.nextBillingInDays);
 
       const isPaused = item.status === 'Paused';
@@ -173,11 +173,7 @@ export default function SubscriptionsHomeScreen() {
             <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1}>
               {item.serviceName}
             </Text>
-            <View style={[styles.categoryBadge, { backgroundColor: categoryColors.bg }]}>
-              <Text style={[styles.categoryBadgeText, { color: categoryColors.text }]}>
-                {item.category.toUpperCase()}
-              </Text>
-            </View>
+            <CategoryBadge category={item.category} size="sm" />
           </View>
 
           <View style={styles.rowRight}>
@@ -911,17 +907,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: -0.3,
   },
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: SPACING.xs,
-    borderRadius: 6,
-  },
-  categoryBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
+
   rowRight: {
     alignItems: 'flex-end',
     gap: 2,

@@ -13,10 +13,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CATEGORY_COLORS, getCategoryColors } from '@/constants/colors';
+import { getCategoryColors } from '@/constants/colors';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
+import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
 import { StackHeader } from '@/src/components/ui/StackHeader';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
@@ -179,8 +180,6 @@ export default function RemindersScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: Subscription }) => {
-      const categoryColors = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Other;
-
       return (
         <Pressable
           onPress={() => handleEditSubscription(item.id)}
@@ -198,11 +197,7 @@ export default function RemindersScreen() {
             <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1}>
               {item.serviceName}
             </Text>
-            <View style={[styles.categoryBadge, { backgroundColor: categoryColors.bg }]}>
-              <Text style={[styles.categoryBadgeText, { color: categoryColors.text }]}>
-                {item.category.toUpperCase()}
-              </Text>
-            </View>
+            <CategoryBadge category={item.category} size="sm" />
           </View>
 
           <View style={styles.rowRight}>
@@ -460,17 +455,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 3,
-    borderRadius: BORDER_RADIUS.xs,
-  },
-  categoryBadgeText: {
-    fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
+
   billingInfo: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -328,6 +328,91 @@ export async function addCustomService(
   });
 }
 
+export async function updateCustomService(
+  userId: string,
+  serviceId: string,
+  input: CustomServiceInput
+): Promise<CustomService> {
+  if (!userId) {
+    throw new Error('[customServices] updateCustomService: userId is required');
+  }
+
+  // Validate and normalize name
+  const trimmedName = input.name?.trim() ?? '';
+  if (!trimmedName) {
+    throw new Error('[customServices] updateCustomService: name is required');
+  }
+  const MAX_NAME_LENGTH = 100;
+  if (trimmedName.length > MAX_NAME_LENGTH) {
+    throw new Error(
+      `[customServices] updateCustomService: name exceeds max length of ${MAX_NAME_LENGTH} characters`
+    );
+  }
+
+  // Validate and normalize color (hex format: #RGB or #RRGGBB)
+  const HEX_COLOR_REGEX = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+  const normalizedColor = input.color?.toLowerCase() ?? '';
+  if (!HEX_COLOR_REGEX.test(normalizedColor)) {
+    throw new Error(
+      '[customServices] updateCustomService: invalid color format (expected hex like #RGB or #RRGGBB)'
+    );
+  }
+
+  // Serialize per-user to prevent concurrent writes from clobbering each other
+  return withUserLock(userId, async () => {
+    const local = await readLocal(userId);
+    const existing = local.find((s) => s.id === serviceId);
+
+    if (!existing) {
+      throw new Error('[customServices] updateCustomService: service not found');
+    }
+
+    const updated: CustomService = {
+      ...existing,
+      name: trimmedName,
+      category: input.category,
+      color: normalizedColor,
+      websiteUrl: input.websiteUrl?.trim() || undefined,
+      notes: input.notes?.trim() || undefined,
+    };
+
+    // Update local storage
+    const nextLocal = local.map((s) => (s.id === serviceId ? updated : s));
+    await writeLocal(userId, nextLocal);
+
+    if (!isFirebaseConfigured()) {
+      console.log('[customServices] updateCustomService local-only', {
+        userIdSuffix: userId.slice(-4),
+        id: serviceId,
+      });
+      return updated;
+    }
+
+    try {
+      console.log('[customServices] updateCustomService Firestore', {
+        userIdSuffix: userId.slice(-4),
+        serviceId,
+        name: updated.name,
+      });
+
+      const { updateDoc } = await import('firebase/firestore');
+      const docRef = doc(firestore, 'users', userId, 'customServices', serviceId);
+      await updateDoc(docRef, {
+        name: updated.name,
+        category: updated.category,
+        color: updated.color,
+        ...(updated.websiteUrl && { websiteUrl: updated.websiteUrl }),
+        ...(updated.notes && { notes: updated.notes }),
+      });
+
+      return updated;
+    } catch (e) {
+      console.log('[customServices] updateCustomService Firestore failed (local kept)', e);
+      return updated;
+    }
+  });
+}
+
 export async function deleteCustomService(userId: string, serviceId: string): Promise<void> {
   if (!userId) {
     throw new Error('[customServices] deleteCustomService: userId is required');
