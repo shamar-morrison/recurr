@@ -1,4 +1,5 @@
-import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router, Stack } from 'expo-router';
 import React from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,62 +9,82 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { CaretLeftIcon } from 'phosphor-react-native';
 
 export default function AboutScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      edges={['top']}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: colors.card }]}
-        >
-          <CaretLeftIcon size={24} color={colors.text} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>About</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+    <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <LinearGradient
+        colors={
+          isDark
+            ? [colors.background, '#1a1635'] // Subtle purple tint for dark mode
+            : ['#ffffff', '#f0f4ff'] // Subtle blue tint for light mode
+        }
+        style={styles.gradient}
+      >
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Pressable
+              onPress={() => router.back()}
+              style={[styles.backButton, { backgroundColor: colors.card }]}
+            >
+              <CaretLeftIcon size={24} color={colors.text} />
+            </Pressable>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>About</Text>
+            <View style={styles.headerSpacer} />
+          </View>
 
-      {/* Content */}
-      <View style={styles.content}>
-        {/* App Icon */}
-        <View style={[styles.iconContainer, { backgroundColor: colors.card }]}>
-          <Image
-            source={require('@/assets/images/icon.png')}
-            style={styles.appIcon}
-            resizeMode="contain"
-          />
-        </View>
+          {/* Content */}
+          <View style={styles.content}>
+            {/* App Icon */}
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: colors.card, shadowColor: colors.text },
+              ]}
+            >
+              <Image
+                source={require('@/assets/images/icon.png')}
+                style={styles.appIcon}
+                resizeMode="contain"
+              />
+            </View>
 
-        {/* App Name & Version */}
-        <Text style={[styles.appName, { color: colors.text }]}>Recurr</Text>
-        <Text style={[styles.version, { color: colors.secondaryText }]}>Version 1.0.0</Text>
+            {/* App Name & Version */}
+            <Text style={[styles.appName, { color: colors.text }]}>Recurr</Text>
+            <Text style={[styles.version, { color: colors.secondaryText }]}>Version 1.0.0</Text>
 
-        {/* Description */}
-        <View style={[styles.descriptionCard, { backgroundColor: colors.card }]}>
-          <Text style={[styles.description, { color: colors.secondaryText }]}>
-            Recurr helps you track and manage all your recurring subscriptions in one place. Never
-            miss a payment or forget about a subscription again.
-          </Text>
-        </View>
+            {/* Description */}
+            <View style={[styles.descriptionCard, { backgroundColor: colors.card }]}>
+              <Text style={[styles.description, { color: colors.secondaryText }]}>
+                Recurr helps you track and manage all your recurring subscriptions in one place.
+                Never miss a payment or forget about a subscription again.
+              </Text>
+            </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={[styles.copyright, { color: colors.secondaryText }]}>
-            © 2024 Horizon Apps
-          </Text>
-          <Text style={[styles.madeWith, { color: colors.secondaryText }]}>Made with ❤️</Text>
-        </View>
-      </View>
-    </SafeAreaView>
+            {/* Footer */}
+            <View style={styles.footer}>
+              <Text style={[styles.copyright, { color: colors.secondaryText }]}>
+                © 2024 The Avg Coder
+              </Text>
+              <Text style={[styles.madeWith, { color: colors.secondaryText }]}>Made with ❤️</Text>
+            </View>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  gradient: {
+    flex: 1,
+  },
+  safeArea: {
     flex: 1,
   },
   header: {
@@ -79,6 +100,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: BORDER_RADIUS.xxl,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerTitle: {
     fontSize: FONT_SIZE.xl,
@@ -100,11 +126,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.xl,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
   },
   appIcon: {
     width: 80,
@@ -126,6 +151,11 @@ const styles = StyleSheet.create({
     padding: SPACING.xl,
     marginTop: SPACING.xxxl,
     width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 4,
   },
   description: {
     fontSize: FONT_SIZE.lg,
