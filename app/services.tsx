@@ -13,7 +13,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ServiceEditorModal } from '@/src/components/ServiceEditorModal';
+import { Button } from '@/src/components/ui/Button';
 import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
+import { EmptyState } from '@/src/components/ui/EmptyState';
 import { StackHeader } from '@/src/components/ui/StackHeader';
 import { CustomService, CustomServiceInput } from '@/src/constants/customServices';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
@@ -123,22 +125,19 @@ export default function ServicesScreen() {
                 <ActivityIndicator color={colors.primary} />
               </View>
             ) : customServices.length === 0 ? (
-              <View style={[styles.card, styles.emptyCard, { backgroundColor: colors.card }]}>
-                <CubeIcon color={colors.secondaryText} size={32} />
-                <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-                  No custom services yet
-                </Text>
-                <Text style={[styles.emptySubtext, { color: colors.secondaryText }]}>
-                  Custom services you create when adding subscriptions will appear here.
-                </Text>
-                <Pressable
-                  onPress={handleOpenCreate}
-                  style={[styles.emptyButton, { backgroundColor: colors.primary }]}
-                >
-                  <PlusIcon color="#fff" size={18} weight="bold" />
-                  <Text style={styles.emptyButtonText}>Create One</Text>
-                </Pressable>
-              </View>
+              <EmptyState
+                icon={<CubeIcon color={colors.secondaryText} size={48} />}
+                title="No custom services yet"
+                description="Custom services you create when adding subscriptions will appear here."
+                size="lg"
+                action={
+                  <Button
+                    title="Create One"
+                    onPress={handleOpenCreate}
+                    icon={<PlusIcon color="#fff" size={18} weight="bold" />}
+                  />
+                }
+              />
             ) : (
               <View style={[styles.card, { backgroundColor: colors.card }]}>
                 {customServices.map((service, index) => {
@@ -243,36 +242,6 @@ const styles = StyleSheet.create({
     padding: SPACING.xxl,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  emptyCard: {
-    padding: SPACING.xxl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: SPACING.md,
-  },
-  emptyText: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: '500',
-  },
-  emptySubtext: {
-    fontSize: FONT_SIZE.sm,
-    fontWeight: '400',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  emptyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.xs,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.full,
-    marginTop: SPACING.sm,
-  },
-  emptyButtonText: {
-    color: '#fff',
-    fontSize: FONT_SIZE.md,
-    fontWeight: '700',
   },
   row: {
     flexDirection: 'row',

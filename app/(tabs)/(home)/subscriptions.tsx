@@ -30,6 +30,7 @@ import { AppColors } from '@/constants/colors';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { Button } from '@/src/components/ui/Button';
 import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
+import { EmptyState } from '@/src/components/ui/EmptyState';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -431,35 +432,32 @@ export default function SubscriptionsHomeScreen() {
         ) : null}
 
         {!subscriptionsQuery.isLoading && filteredItems.length === 0 ? (
-          <View
-            style={[styles.empty, { backgroundColor: colors.card, borderColor: colors.border }]}
-            testID="subscriptionsEmpty"
-          >
-            <View style={styles.emptyIcon}>
-              {filter === 'All' && !searchQuery ? (
-                <PlusCircleIcon color={colors.tint} size={22} />
+          <EmptyState
+            icon={
+              filter === 'All' && !searchQuery ? (
+                <PlusCircleIcon color={colors.tint} size={48} />
               ) : (
-                <XCircleIcon color={colors.tint} size={22} />
-              )}
-            </View>
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              {filter === 'All' && !searchQuery ? 'Add your first subscription' : 'No matches'}
-            </Text>
-            <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-              {filter === 'All' && !searchQuery
+                <XCircleIcon color={colors.tint} size={48} />
+              )
+            }
+            title={filter === 'All' && !searchQuery ? 'Add your first subscription' : 'No matches'}
+            description={
+              filter === 'All' && !searchQuery
                 ? `Start with your top 3. We'll estimate your monthly spend automatically.`
-                : 'Try adjusting your search or filters.'}
-            </Text>
-
-            {filter === 'All' && !searchQuery ? (
-              <Button
-                title="Add Subscription"
-                onPress={handleAdd}
-                testID="subscriptionsAddFirst"
-                style={{ marginTop: 6 }}
-              />
-            ) : null}
-          </View>
+                : 'Try adjusting your search or filters.'
+            }
+            size="lg"
+            action={
+              filter === 'All' && !searchQuery ? (
+                <Button
+                  title="Add Subscription"
+                  onPress={handleAdd}
+                  testID="subscriptionsAddFirst"
+                />
+              ) : undefined
+            }
+            testID="subscriptionsEmpty"
+          />
         ) : null}
       </View>
     );
@@ -824,38 +822,6 @@ const styles = StyleSheet.create({
     color: AppColors.secondaryText,
     fontSize: FONT_SIZE.sm,
     lineHeight: 16,
-  },
-  empty: {
-    borderRadius: BORDER_RADIUS.xxxl,
-    padding: SPACING.xxl,
-    backgroundColor: AppColors.card,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: AppColors.border,
-    gap: SPACING.md,
-    marginTop: SPACING.xs,
-    alignItems: 'center',
-  },
-  emptyIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: BORDER_RADIUS.xl,
-    backgroundColor: 'rgba(79,140,255,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: {
-    color: AppColors.text,
-    fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-    textAlign: 'center',
-  },
-  emptyText: {
-    color: AppColors.secondaryText,
-    fontSize: FONT_SIZE.md,
-    lineHeight: 20,
-    maxWidth: 280,
-    textAlign: 'center',
   },
   primary: {
     marginTop: 6,

@@ -14,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getCategoryColors } from '@/constants/colors';
 import { CategoryCreatorModal } from '@/src/components/CategoryCreatorModal';
+import { Button } from '@/src/components/ui/Button';
+import { EmptyState } from '@/src/components/ui/EmptyState';
 import { StackHeader } from '@/src/components/ui/StackHeader';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -166,19 +168,19 @@ export default function CategoriesScreen() {
                 <ActivityIndicator color={colors.primary} />
               </View>
             ) : customCategories.length === 0 ? (
-              <View style={[styles.card, styles.emptyCard, { backgroundColor: colors.card }]}>
-                <TagIcon color={colors.secondaryText} size={32} />
-                <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-                  No custom categories yet
-                </Text>
-                <Pressable
-                  onPress={handleOpenCreate}
-                  style={[styles.emptyButton, { backgroundColor: colors.primary }]}
-                >
-                  <PlusIcon color="#fff" size={18} weight="bold" />
-                  <Text style={styles.emptyButtonText}>Create One</Text>
-                </Pressable>
-              </View>
+              <EmptyState
+                icon={<TagIcon color={colors.secondaryText} size={48} />}
+                title="No custom categories yet"
+                description="Create custom categories to better organize your subscriptions."
+                size="lg"
+                action={
+                  <Button
+                    title="Create One"
+                    onPress={handleOpenCreate}
+                    icon={<PlusIcon color="#fff" size={18} weight="bold" />}
+                  />
+                }
+              />
             ) : (
               <View style={[styles.card, { backgroundColor: colors.card }]}>
                 {customCategories.map((cat, index) => {
@@ -273,30 +275,6 @@ const styles = StyleSheet.create({
     padding: SPACING.xxl,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  emptyCard: {
-    padding: SPACING.xxl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: SPACING.md,
-  },
-  emptyText: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: '500',
-  },
-  emptyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.xs,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    borderRadius: BORDER_RADIUS.full,
-    marginTop: SPACING.sm,
-  },
-  emptyButtonText: {
-    color: '#fff',
-    fontSize: FONT_SIZE.md,
-    fontWeight: '700',
   },
   row: {
     flexDirection: 'row',

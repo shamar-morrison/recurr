@@ -17,7 +17,9 @@ import { getCategoryColors } from '@/constants/colors';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
+import { Button } from '@/src/components/ui/Button';
 import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
+import { EmptyState } from '@/src/components/ui/EmptyState';
 import { StackHeader } from '@/src/components/ui/StackHeader';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
@@ -221,34 +223,26 @@ export default function RemindersScreen() {
 
   const ListEmptyComponent = useMemo(
     () => (
-      <View style={styles.empty}>
-        <View style={[styles.emptyIcon, { backgroundColor: colors.cardAlt }]}>
-          <BellSlashIcon color={colors.secondaryText} size={48} />
-        </View>
-        <Text style={[styles.emptyTitle, { color: colors.text }]}>
-          {selectedCategory === 'All' ? 'No Reminders Set' : 'No Reminders Found'}
-        </Text>
-        <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-          {selectedCategory === 'All'
+      <EmptyState
+        icon={<BellSlashIcon color={colors.secondaryText} size={48} />}
+        title={selectedCategory === 'All' ? 'No Reminders Set' : 'No Reminders Found'}
+        description={
+          selectedCategory === 'All'
             ? 'Add reminders to your subscriptions to get notified before they renew. You can set reminders when creating or editing a subscription.'
-            : `No reminders found for ${selectedCategory} subscriptions. Try selecting a different category.`}
-        </Text>
-        {selectedCategory === 'All' ? (
-          <Pressable
-            onPress={() => router.push('/(tabs)/(home)/subscriptions')}
-            style={[styles.emptyButton, { backgroundColor: colors.tint }]}
-          >
-            <Text style={styles.emptyButtonText}>View Subscriptions</Text>
-          </Pressable>
-        ) : (
-          <Pressable
-            onPress={() => setSelectedCategory('All')}
-            style={[styles.emptyButton, { backgroundColor: colors.tint }]}
-          >
-            <Text style={styles.emptyButtonText}>Clear Filter</Text>
-          </Pressable>
-        )}
-      </View>
+            : `No reminders found for ${selectedCategory} subscriptions. Try selecting a different category.`
+        }
+        size="lg"
+        action={
+          selectedCategory === 'All' ? (
+            <Button
+              title="View Subscriptions"
+              onPress={() => router.push('/(tabs)/(home)/subscriptions')}
+            />
+          ) : (
+            <Button title="Clear Filter" onPress={() => setSelectedCategory('All')} />
+          )
+        }
+      />
     ),
     [selectedCategory, colors]
   );
@@ -488,41 +482,7 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.sm,
     backgroundColor: 'rgba(255,107,107,0.1)',
   },
-  empty: {
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xxxl,
-    gap: SPACING.lg,
-  },
-  emptyIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: BORDER_RADIUS.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: SPACING.sm,
-  },
-  emptyTitle: {
-    fontSize: FONT_SIZE.xxxl,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  emptyText: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: '500',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  emptyButton: {
-    paddingHorizontal: SPACING.xxl,
-    paddingVertical: SPACING.lg,
-    borderRadius: BORDER_RADIUS.lg,
-    marginTop: SPACING.sm,
-  },
-  emptyButtonText: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
-    color: '#fff',
-  },
+
   // Filter button styles
   filterButton: {
     width: 40,
