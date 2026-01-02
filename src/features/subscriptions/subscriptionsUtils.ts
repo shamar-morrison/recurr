@@ -75,6 +75,36 @@ export function monthlyEquivalent(amount: number, cycle: BillingCycle): number {
   }
 }
 
+/**
+ * Advance a date by one billing cycle period.
+ * Shared helper used by both nextBillingDate and advanceByBillingCycle.
+ */
+function applyBillingCycleStep(date: Date, cycle: BillingCycle): void {
+  switch (cycle) {
+    case 'Weekly':
+      date.setDate(date.getDate() + 7);
+      break;
+    case 'Bi-weekly':
+      date.setDate(date.getDate() + 14);
+      break;
+    case 'Monthly':
+      date.setMonth(date.getMonth() + 1);
+      break;
+    case 'Quarterly':
+      date.setMonth(date.getMonth() + 3);
+      break;
+    case 'Semiannual':
+      date.setMonth(date.getMonth() + 6);
+      break;
+    case 'Yearly':
+      date.setFullYear(date.getFullYear() + 1);
+      break;
+    case 'One-Time':
+      // No advancement for one-time
+      break;
+  }
+}
+
 export function nextBillingDate(from: Date, cycle: BillingCycle, anchor: Date): Date {
   // One-Time subscriptions don't recur
   if (cycle === 'One-Time') {
@@ -128,29 +158,7 @@ export function nextBillingDate(from: Date, cycle: BillingCycle, anchor: Date): 
 
   // Iterate forward until we find a date >= today
   while (candidate.getTime() < today.getTime()) {
-    switch (cycle) {
-      case 'Weekly':
-        candidate.setDate(candidate.getDate() + 7);
-        break;
-      case 'Bi-weekly':
-        candidate.setDate(candidate.getDate() + 14);
-        break;
-      case 'Monthly':
-        candidate.setMonth(candidate.getMonth() + 1);
-        break;
-      case 'Quarterly':
-        candidate.setMonth(candidate.getMonth() + 3);
-        break;
-      case 'Semiannual':
-        candidate.setMonth(candidate.getMonth() + 6);
-        break;
-      case 'Yearly':
-        candidate.setFullYear(candidate.getFullYear() + 1);
-        break;
-      default:
-        // Should not happen for valid recurring cycles
-        return candidate;
-    }
+    applyBillingCycleStep(candidate, cycle);
   }
 
   return candidate;
@@ -231,29 +239,7 @@ export interface PaymentHistoryEntry {
  */
 function advanceByBillingCycle(date: Date, cycle: BillingCycle): Date {
   const next = new Date(date);
-  switch (cycle) {
-    case 'Weekly':
-      next.setDate(next.getDate() + 7);
-      break;
-    case 'Bi-weekly':
-      next.setDate(next.getDate() + 14);
-      break;
-    case 'Monthly':
-      next.setMonth(next.getMonth() + 1);
-      break;
-    case 'Quarterly':
-      next.setMonth(next.getMonth() + 3);
-      break;
-    case 'Semiannual':
-      next.setMonth(next.getMonth() + 6);
-      break;
-    case 'Yearly':
-      next.setFullYear(next.getFullYear() + 1);
-      break;
-    case 'One-Time':
-      // No advancement for one-time
-      break;
-  }
+  applyBillingCycleStep(next, cycle);
   return next;
 }
 
@@ -480,10 +466,21 @@ export function getLastPaymentDate(sub: Subscription, now: Date = new Date()): D
     return new Date(anchor);
   }
 
-  // Find the most recent payment date by iterating forward
-  let lastPayment = new Date(anchor);
-  let next = advanceByBillingCycle(lastPayment, sub.billingCycle);
+  // Optimization: use countPaymentsMade to jump close to the last payment
+  // instead of iterating from anchor (could be hundreds of iterations for old subscriptions)
+  const paymentCount = countPaymentsMade(sub, now);
+  if (paymentCount <= 0) {
+    return null;
+  }
 
+  // Jump forward (paymentCount - 1) cycles from anchor to get near the last payment
+  let lastPayment = new Date(anchor);
+  for (let i = 1; i < paymentCount; i++) {
+    applyBillingCycleStep(lastPayment, sub.billingCycle);
+  }
+
+  // Fine-tune: iterate forward in case of any edge cases with date boundaries
+  let next = advanceByBillingCycle(lastPayment, sub.billingCycle);
   while (next.getTime() <= today.getTime()) {
     lastPayment = new Date(next);
     next = advanceByBillingCycle(next, sub.billingCycle);
