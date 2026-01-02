@@ -7,7 +7,7 @@ import {
   signOut,
   User,
 } from 'firebase/auth';
-import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
 import { GoogleAuth } from 'react-native-google-auth';
@@ -99,10 +99,17 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
     }
 
     const auth = getFirebaseAuth();
+    let unsubUserDoc: (() => void) | null = null;
 
     const unsub = onAuthStateChanged(auth, async (u) => {
       console.log('[auth] onAuthStateChanged', { uid: u?.uid ?? null });
       setUser(u);
+
+      // Clean up previous user doc listener if any
+      if (unsubUserDoc) {
+        unsubUserDoc();
+        unsubUserDoc = null;
+      }
 
       if (!u) {
         setIsPremium(false);
@@ -111,10 +118,11 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
         return;
       }
 
-      try {
-        const userRef = doc(firestore, 'users', u.uid);
-        const snap = await getDoc(userRef);
+      const userRef = doc(firestore, 'users', u.uid);
 
+      // Check if user doc exists, create if not
+      try {
+        const snap = await getDoc(userRef);
         if (!snap.exists()) {
           // Determine auth provider from user's providerData
           const authProvider =
@@ -139,9 +147,25 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
             },
             authProvider,
           });
-          setIsPremium(false);
-          setSettings(DEFAULT_SETTINGS);
-        } else {
+        }
+      } catch (e) {
+        console.log('[auth] failed to check/create user doc', e);
+        setIsReady(true);
+        return;
+      }
+
+      // Set up real-time listener for user document
+      // This ensures isPremium and settings update immediately when changed in Firestore
+      unsubUserDoc = onSnapshot(
+        userRef,
+        async (snap) => {
+          if (!snap.exists()) {
+            setIsPremium(false);
+            setSettings(DEFAULT_SETTINGS);
+            setIsReady(true);
+            return;
+          }
+
           const data = snap.data() as {
             isPremium?: boolean;
             settings?: Partial<UserSettings>;
@@ -162,10 +186,15 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
             updates.email = u.email;
           }
           if (Object.keys(updates).length > 0) {
-            await updateDoc(userRef, updates);
+            try {
+              await updateDoc(userRef, updates);
+            } catch (e) {
+              console.log('[auth] failed to update profile data', e);
+            }
           }
 
           setIsPremium(Boolean(data.isPremium));
+
           // Validate dateFormat from Firestore - fall back to default if invalid or missing
           const rawDateFormat = data.settings?.dateFormat;
           const validatedDateFormat = isValidDateFormatId(rawDateFormat)
@@ -180,15 +209,22 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
             pushNotificationsEnabled:
               data.settings?.pushNotificationsEnabled ?? DEFAULT_SETTINGS.pushNotificationsEnabled,
           });
+
+          setIsReady(true);
+        },
+        (error) => {
+          console.log('[auth] user doc listener error', error);
+          setIsReady(true);
         }
-      } catch (e) {
-        console.log('[auth] failed to hydrate user doc', e);
-      } finally {
-        setIsReady(true);
-      }
+      );
     });
 
-    return () => unsub();
+    return () => {
+      unsub();
+      if (unsubUserDoc) {
+        unsubUserDoc();
+      }
+    };
   }, [isFirebaseReady]);
 
   useEffect(() => {
