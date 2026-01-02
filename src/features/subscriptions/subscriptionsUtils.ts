@@ -214,3 +214,268 @@ export function toListItem(sub: Subscription, now: Date = new Date()): Subscript
     status,
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Payment History Utilities
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface PaymentHistoryEntry {
+  date: Date;
+  amount: number;
+  currency: string;
+  isPast: boolean;
+}
+
+/**
+ * Advance a date by one billing cycle.
+ */
+function advanceByBillingCycle(date: Date, cycle: BillingCycle): Date {
+  const next = new Date(date);
+  switch (cycle) {
+    case 'Weekly':
+      next.setDate(next.getDate() + 7);
+      break;
+    case 'Bi-weekly':
+      next.setDate(next.getDate() + 14);
+      break;
+    case 'Monthly':
+      next.setMonth(next.getMonth() + 1);
+      break;
+    case 'Quarterly':
+      next.setMonth(next.getMonth() + 3);
+      break;
+    case 'Semiannual':
+      next.setMonth(next.getMonth() + 6);
+      break;
+    case 'Yearly':
+      next.setFullYear(next.getFullYear() + 1);
+      break;
+    case 'One-Time':
+      // No advancement for one-time
+      break;
+  }
+  return next;
+}
+
+/**
+ * Generate payment history entries for a subscription.
+ * Returns past payments (from startDate to now) and optionally future payments.
+ *
+ * @param sub - The subscription to generate history for
+ * @param options - Configuration options
+ * @param options.now - Reference date for "today" (defaults to current date)
+ * @param options.futureCount - Number of future payments to include (default: 6)
+ * @param options.maxPastCount - Maximum past payments to include (default: 100)
+ */
+export function generatePaymentHistory(
+  sub: Subscription,
+  options: {
+    now?: Date;
+    futureCount?: number;
+    maxPastCount?: number;
+  } = {}
+): PaymentHistoryEntry[] {
+  const { now = new Date(), futureCount = 6, maxPastCount = 100 } = options;
+
+  const anchor = sub.startDate ? new Date(sub.startDate) : new Date(sub.createdAt);
+  anchor.setHours(0, 0, 0, 0);
+
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  const entries: PaymentHistoryEntry[] = [];
+
+  // One-Time subscriptions have only one payment
+  if (sub.billingCycle === 'One-Time') {
+    entries.push({
+      date: new Date(anchor),
+      amount: sub.amount,
+      currency: sub.currency,
+      isPast: anchor.getTime() <= today.getTime(),
+    });
+    return entries;
+  }
+
+  // Generate past payments
+  let current = new Date(anchor);
+  while (current.getTime() <= today.getTime() && entries.length < maxPastCount) {
+    entries.push({
+      date: new Date(current),
+      amount: sub.amount,
+      currency: sub.currency,
+      isPast: true,
+    });
+    current = advanceByBillingCycle(current, sub.billingCycle);
+  }
+
+  // Generate future payments
+  let futureAdded = 0;
+  while (futureAdded < futureCount) {
+    entries.push({
+      date: new Date(current),
+      amount: sub.amount,
+      currency: sub.currency,
+      isPast: false,
+    });
+    current = advanceByBillingCycle(current, sub.billingCycle);
+    futureAdded++;
+  }
+
+  return entries;
+}
+
+/**
+ * Calculate the total amount spent on a subscription since start date.
+ */
+export function calculateTotalSpent(sub: Subscription, now: Date = new Date()): number {
+  const payments = countPaymentsMade(sub, now);
+  return payments * sub.amount;
+}
+
+/**
+ * Count the number of payments made since the subscription started.
+ */
+export function countPaymentsMade(sub: Subscription, now: Date = new Date()): number {
+  const anchor = sub.startDate ? new Date(sub.startDate) : new Date(sub.createdAt);
+  anchor.setHours(0, 0, 0, 0);
+
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  // If start date is in the future, no payments made yet
+  if (anchor.getTime() > today.getTime()) {
+    return 0;
+  }
+
+  // One-Time has exactly one payment if the date has passed
+  if (sub.billingCycle === 'One-Time') {
+    return 1;
+  }
+
+  // Count payments by iterating
+  let count = 0;
+
+  // Optimization: calculate roughly for efficiency
+  const diffMs = today.getTime() - anchor.getTime();
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  switch (sub.billingCycle) {
+    case 'Weekly':
+      count = Math.floor(diffMs / (7 * DAY_MS)) + 1;
+      break;
+    case 'Bi-weekly':
+      count = Math.floor(diffMs / (14 * DAY_MS)) + 1;
+      break;
+    case 'Monthly': {
+      const months =
+        (today.getFullYear() - anchor.getFullYear()) * 12 + (today.getMonth() - anchor.getMonth());
+      // Check if we've passed this month's billing day
+      count = today.getDate() >= anchor.getDate() ? months + 1 : months;
+      break;
+    }
+    case 'Quarterly': {
+      const months =
+        (today.getFullYear() - anchor.getFullYear()) * 12 + (today.getMonth() - anchor.getMonth());
+      count = Math.floor(months / 3) + (today.getDate() >= anchor.getDate() ? 1 : 0);
+      break;
+    }
+    case 'Semiannual': {
+      const months =
+        (today.getFullYear() - anchor.getFullYear()) * 12 + (today.getMonth() - anchor.getMonth());
+      count = Math.floor(months / 6) + (today.getDate() >= anchor.getDate() ? 1 : 0);
+      break;
+    }
+    case 'Yearly': {
+      const years = today.getFullYear() - anchor.getFullYear();
+      // Check if we've passed the anniversary this year
+      const monthDiff = today.getMonth() - anchor.getMonth();
+      if (monthDiff > 0 || (monthDiff === 0 && today.getDate() >= anchor.getDate())) {
+        count = years + 1;
+      } else {
+        count = years;
+      }
+      break;
+    }
+    default:
+      count = 1;
+  }
+
+  return Math.max(1, count); // At least 1 payment if started
+}
+
+/**
+ * Calculate how long the user has been subscribed.
+ * Returns an object with years, months, and days.
+ */
+export function calculateSubscriptionDuration(
+  sub: Subscription,
+  now: Date = new Date()
+): { years: number; months: number; days: number; formatted: string } {
+  const anchor = sub.startDate ? new Date(sub.startDate) : new Date(sub.createdAt);
+  anchor.setHours(0, 0, 0, 0);
+
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  // If start date is in the future
+  if (anchor.getTime() > today.getTime()) {
+    return { years: 0, months: 0, days: 0, formatted: 'Not started' };
+  }
+
+  let years = today.getFullYear() - anchor.getFullYear();
+  let months = today.getMonth() - anchor.getMonth();
+  let days = today.getDate() - anchor.getDate();
+
+  if (days < 0) {
+    months--;
+    // Get days in previous month
+    const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
+
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  // Format the duration string
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years} ${years === 1 ? 'year' : 'years'}`);
+  if (months > 0) parts.push(`${months} ${months === 1 ? 'month' : 'months'}`);
+  if (days > 0 || parts.length === 0) parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
+
+  return { years, months, days, formatted: parts.join(', ') };
+}
+
+/**
+ * Get the most recent payment date for a subscription.
+ * Returns null if no payments have been made yet.
+ */
+export function getLastPaymentDate(sub: Subscription, now: Date = new Date()): Date | null {
+  const anchor = sub.startDate ? new Date(sub.startDate) : new Date(sub.createdAt);
+  anchor.setHours(0, 0, 0, 0);
+
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  // If start date is in the future, no payment yet
+  if (anchor.getTime() > today.getTime()) {
+    return null;
+  }
+
+  // One-Time: the start date is the only payment
+  if (sub.billingCycle === 'One-Time') {
+    return new Date(anchor);
+  }
+
+  // Find the most recent payment date by iterating forward
+  let lastPayment = new Date(anchor);
+  let next = advanceByBillingCycle(lastPayment, sub.billingCycle);
+
+  while (next.getTime() <= today.getTime()) {
+    lastPayment = new Date(next);
+    next = advanceByBillingCycle(next, sub.billingCycle);
+  }
+
+  return lastPayment;
+}

@@ -156,7 +156,7 @@ export default function SubscriptionsHomeScreen() {
         <Pressable
           onPress={() =>
             router.push({
-              pathname: '/(tabs)/(home)/subscription-editor',
+              pathname: '/(tabs)/(home)/subscription-details',
               params: { id: item.id },
             })
           }

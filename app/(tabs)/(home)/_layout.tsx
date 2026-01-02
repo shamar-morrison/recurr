@@ -22,6 +22,20 @@ function EditorHeader({ options, navigation }: NativeStackHeaderProps) {
   return <StackHeader title={title} headerLeft={headerLeft} />;
 }
 
+function DetailsHeader({ options, navigation }: NativeStackHeaderProps) {
+  const title = typeof options.title === 'string' ? options.title : 'Details';
+  const headerLeft = options.headerLeft?.({ canGoBack: navigation.canGoBack() });
+
+  return <StackHeader title={title} headerLeft={headerLeft} />;
+}
+
+function HistoryHeader({ options, navigation }: NativeStackHeaderProps) {
+  const title = typeof options.title === 'string' ? options.title : 'Payment History';
+  const headerLeft = options.headerLeft?.({ canGoBack: navigation.canGoBack() });
+
+  return <StackHeader title={title} headerLeft={headerLeft} />;
+}
+
 export default function HomeStackLayout() {
   const { colors } = useTheme();
 
@@ -42,9 +56,21 @@ export default function HomeStackLayout() {
         }}
       />
       <Stack.Screen
+        name="subscription-details"
+        options={{
+          header: (props) => <DetailsHeader {...props} />,
+        }}
+      />
+      <Stack.Screen
         name="subscription-editor"
         options={{
           header: (props) => <EditorHeader {...props} />,
+        }}
+      />
+      <Stack.Screen
+        name="payment-history"
+        options={{
+          header: (props) => <HistoryHeader {...props} />,
         }}
       />
     </Stack>
