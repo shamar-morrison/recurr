@@ -169,12 +169,13 @@ export default function CategoriesScreen() {
               </View>
             ) : customCategories.length === 0 ? (
               <EmptyState
-                icon={<TagIcon color={colors.secondaryText} size={48} />}
+                icon={<TagIcon color={colors.secondaryText} size={40} />}
                 title="No custom categories yet"
                 description="Create custom categories to better organize your subscriptions."
-                size="lg"
+                size="md"
                 action={
                   <Button
+                    size="sm"
                     title="Create One"
                     onPress={handleOpenCreate}
                     icon={<PlusIcon color="#fff" size={18} weight="bold" />}

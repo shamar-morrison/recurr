@@ -435,9 +435,9 @@ export default function SubscriptionsHomeScreen() {
           <EmptyState
             icon={
               filter === 'All' && !searchQuery ? (
-                <PlusCircleIcon color={colors.tint} size={48} />
+                <PlusCircleIcon color={colors.tint} size={40} />
               ) : (
-                <XCircleIcon color={colors.tint} size={48} />
+                <XCircleIcon color={colors.tint} size={40} />
               )
             }
             title={filter === 'All' && !searchQuery ? 'Add your first subscription' : 'No matches'}
@@ -446,10 +446,11 @@ export default function SubscriptionsHomeScreen() {
                 ? `Start with your top 3. We'll estimate your monthly spend automatically.`
                 : 'Try adjusting your search or filters.'
             }
-            size="lg"
+            size="md"
             action={
               filter === 'All' && !searchQuery ? (
                 <Button
+                  size="sm"
                   title="Add Subscription"
                   onPress={handleAdd}
                   testID="subscriptionsAddFirst"
