@@ -55,6 +55,12 @@ export default function PaymentHistoryScreen() {
     return { pastPayments: past, futurePayments: future };
   }, [payments]);
 
+  // Combine past and future payments for the FlatList (must be above early returns)
+  const combinedPayments = useMemo(
+    () => [...pastPayments, ...futurePayments],
+    [pastPayments, futurePayments]
+  );
+
   const headerLeft = useCallback(
     () => (
       <Pressable
@@ -174,11 +180,6 @@ export default function PaymentHistoryScreen() {
       </>
     );
   }
-
-  const combinedPayments = useMemo(
-    () => [...pastPayments, ...futurePayments],
-    [pastPayments, futurePayments]
-  );
 
   return (
     <>

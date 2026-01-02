@@ -78,6 +78,9 @@ export function monthlyEquivalent(amount: number, cycle: BillingCycle): number {
 /**
  * Advance a date by one billing cycle period.
  * Shared helper used by both nextBillingDate and advanceByBillingCycle.
+ *
+ * @param date - The date to advance. **Note:** This date is mutated in place.
+ * @param cycle - The billing cycle period to advance by.
  */
 function applyBillingCycleStep(date: Date, cycle: BillingCycle): void {
   switch (cycle) {
