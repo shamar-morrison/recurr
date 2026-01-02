@@ -287,15 +287,21 @@ export const validateAndroidPurchase = functions.https.onRequest(
         googleApiStatusText: googleError?.status,
       });
 
-      res.status(500).json({
+      // Build base error response
+      const errorResponse: ValidatePurchaseResponse & { debug?: { googleApiError?: string; googleApiCode?: number } } = {
         valid: false,
         message: 'Failed to validate purchase',
-        // Include error details in dev for debugging (remove in production)
-        debug: {
+      };
+
+      // Include debug details only in development
+      if (process.env.NODE_ENV !== 'production') {
+        errorResponse.debug = {
           googleApiError: googleError?.message,
           googleApiCode: googleError?.code,
-        },
-      } as ValidatePurchaseResponse);
+        };
+      }
+
+      res.status(500).json(errorResponse);
     }
   }
 );
