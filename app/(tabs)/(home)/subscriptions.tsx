@@ -1,17 +1,20 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, Stack } from 'expo-router';
 import {
   CheckIcon,
   CirclesThreePlusIcon,
   CrownIcon,
+  ListBulletsIcon,
   MagnifyingGlassIcon,
   PlusCircleIcon,
   PlusIcon,
   SlidersIcon,
   SortAscendingIcon,
   SortDescendingIcon,
+  SquaresFourIcon,
   XCircleIcon,
 } from 'phosphor-react-native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -44,8 +47,11 @@ import {
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 import { formatMoney } from '@/src/utils/formatMoney';
 
+const VIEW_MODE_STORAGE_KEY = '@recurr/subscriptions_view_mode';
+
 type FilterChip = SubscriptionCategory | 'All';
 type SortOption = 'Date' | 'CostAsc' | 'CostDesc' | 'Name';
+type ViewMode = 'list' | 'grid';
 
 export default function SubscriptionsHomeScreen() {
   const insets = useSafeAreaInsets();
@@ -61,6 +67,22 @@ export default function SubscriptionsHomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('Date');
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+
+  // Load saved view mode on mount
+  useEffect(() => {
+    AsyncStorage.getItem(VIEW_MODE_STORAGE_KEY).then((saved) => {
+      if (saved === 'list' || saved === 'grid') {
+        setViewMode(saved);
+      }
+    });
+  }, []);
+
+  const toggleViewMode = useCallback(() => {
+    const newMode = viewMode === 'list' ? 'grid' : 'list';
+    setViewMode(newMode);
+    AsyncStorage.setItem(VIEW_MODE_STORAGE_KEY, newMode);
+  }, [viewMode]);
 
   const filteredItems = useMemo(() => {
     let result = items;
@@ -139,7 +161,7 @@ export default function SubscriptionsHomeScreen() {
     );
   }, [handleAdd, colors]);
 
-  const renderItem = useCallback(
+  const renderListItem = useCallback(
     ({ item }: { item: (typeof filteredItems)[number] }) => {
       const daysUntilBilling = Math.max(0, item.nextBillingInDays);
 
@@ -191,6 +213,62 @@ export default function SubscriptionsHomeScreen() {
               {billingText}
             </Text>
           </View>
+        </Pressable>
+      );
+    },
+    [styles, colors]
+  );
+
+  const renderGridItem = useCallback(
+    ({ item }: { item: (typeof filteredItems)[number] }) => {
+      const daysUntilBilling = Math.max(0, item.nextBillingInDays);
+
+      const isPaused = item.status === 'Paused';
+
+      const billingText = isPaused
+        ? 'Paused'
+        : daysUntilBilling === 0
+          ? 'Today'
+          : daysUntilBilling === 1
+            ? 'Tomorrow'
+            : `in ${daysUntilBilling} days`;
+
+      return (
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: '/(tabs)/(home)/subscription-details',
+              params: { id: item.id },
+            })
+          }
+          style={[styles.gridCard, { backgroundColor: colors.card, opacity: isPaused ? 0.6 : 1 }]}
+          testID={`subscriptionGridItem_${item.id}`}
+        >
+          <ServiceLogo
+            serviceName={item.serviceName}
+            domain={getServiceDomain(item.serviceName)}
+            size={40}
+            borderRadius={12}
+          />
+
+          <Text style={[styles.gridCardTitle, { color: colors.text }]} numberOfLines={1}>
+            {item.serviceName}
+          </Text>
+
+          <CategoryBadge category={item.category} size="sm" style={{ alignSelf: 'center' }} />
+
+          <Text style={[styles.gridCardPrice, { color: colors.text }]}>
+            {formatMoney(item.amount, item.currency)}
+          </Text>
+
+          <Text
+            style={[
+              styles.gridCardDate,
+              { color: isPaused ? colors.warning : colors.secondaryText },
+            ]}
+          >
+            {billingText}
+          </Text>
         </Pressable>
       );
     },
@@ -288,6 +366,21 @@ export default function SubscriptionsHomeScreen() {
               <SortAscendingIcon color={colors.text} size={20} />
             ) : (
               <SortDescendingIcon color={colors.text} size={20} />
+            )}
+          </Pressable>
+
+          <Pressable
+            onPress={toggleViewMode}
+            style={[
+              styles.sortButton,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+            testID="viewModeToggle"
+          >
+            {viewMode === 'list' ? (
+              <SquaresFourIcon color={colors.text} size={20} />
+            ) : (
+              <ListBulletsIcon color={colors.text} size={20} />
             )}
           </Pressable>
         </View>
@@ -482,6 +575,9 @@ export default function SubscriptionsHomeScreen() {
     showSortMenu,
     configLoading,
     freeTierLimit,
+    viewMode,
+    toggleViewMode,
+    allCategories,
   ]);
 
   return (
@@ -493,11 +589,14 @@ export default function SubscriptionsHomeScreen() {
         testID="subscriptionsHomeScreen"
       >
         <FlatList
+          key={viewMode}
           data={filteredItems}
           keyExtractor={keyExtractor}
-          renderItem={renderItem}
+          renderItem={viewMode === 'grid' ? renderGridItem : renderListItem}
           ListHeaderComponent={listHeader}
           contentContainerStyle={styles.listContent}
+          numColumns={viewMode === 'grid' ? 2 : 1}
+          columnWrapperStyle={viewMode === 'grid' ? styles.gridColumnWrapper : undefined}
           refreshControl={
             <RefreshControl
               refreshing={Boolean(subscriptionsQuery.isFetching)}
@@ -890,5 +989,44 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
     elevation: 6,
+  },
+  // Grid view styles
+  gridColumnWrapper: {
+    gap: SPACING.md,
+  },
+  gridCard: {
+    flex: 1,
+    alignItems: 'center',
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xxxl,
+    backgroundColor: AppColors.card,
+    shadowColor: 'rgba(15,23,42,0.12)',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    gap: SPACING.sm,
+  },
+  gridCardTitle: {
+    color: AppColors.text,
+    fontSize: FONT_SIZE.md,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+    textAlign: 'center',
+    marginTop: SPACING.sm,
+  },
+  gridCardPrice: {
+    color: AppColors.text,
+    fontSize: FONT_SIZE.xl,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+    marginTop: SPACING.xs,
+  },
+  gridCardDate: {
+    color: AppColors.secondaryText,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '500',
   },
 });
