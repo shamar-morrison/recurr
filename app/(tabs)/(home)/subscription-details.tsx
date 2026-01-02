@@ -3,13 +3,16 @@ import {
   ArrowSquareOutIcon,
   CalendarIcon,
   CaretLeftIcon,
+  CaretRightIcon,
   ClockIcon,
   CurrencyCircleDollarIcon,
   HourglassHighIcon,
   ListBulletsIcon,
+  NotePencilIcon,
   PauseCircleIcon,
   PlayCircleIcon,
   RepeatIcon,
+  TrashIcon,
 } from 'phosphor-react-native';
 import React, { useCallback, useMemo } from 'react';
 import {
@@ -24,6 +27,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppColors } from '@/constants/colors';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { Button } from '@/src/components/ui/Button';
 import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
@@ -49,6 +53,72 @@ import {
 type RouteParams = {
   id: string;
 };
+
+// Settings-style row component
+interface SettingRowProps {
+  icon: React.ReactNode;
+  iconColor: string;
+  iconBg: string;
+  label: string;
+  value?: string;
+  onPress?: () => void;
+  showChevron?: boolean;
+  valueColor?: string;
+  colors: ReturnType<typeof useTheme>['colors'];
+}
+
+function SettingRow({
+  icon,
+  iconColor,
+  iconBg,
+  label,
+  value,
+  onPress,
+  showChevron = false,
+  valueColor,
+  colors,
+}: SettingRowProps) {
+  const content = (
+    <>
+      <View style={[styles.iconContainer, { backgroundColor: iconBg }]}>
+        {React.cloneElement(icon as React.ReactElement<{ size?: number; color?: string }>, {
+          size: 20,
+          color: iconColor,
+        })}
+      </View>
+
+      <Text style={[styles.rowLabel, { color: colors.text }]} numberOfLines={1}>
+        {label}
+      </Text>
+
+      <View style={styles.rowRight}>
+        {value && (
+          <Text
+            style={[styles.rowValue, { color: valueColor ?? colors.secondaryText }]}
+            numberOfLines={1}
+          >
+            {value}
+          </Text>
+        )}
+        {showChevron && <CaretRightIcon size={20} color={colors.secondaryText} />}
+      </View>
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable onPress={onPress} style={styles.row}>
+        {content}
+      </Pressable>
+    );
+  }
+
+  return <View style={styles.row}>{content}</View>;
+}
+
+function Divider({ colors }: { colors: ReturnType<typeof useTheme>['colors'] }) {
+  return <View style={[styles.divider, { backgroundColor: colors.border }]} />;
+}
 
 export default function SubscriptionDetailsScreen() {
   const params = useLocalSearchParams<RouteParams>();
@@ -265,184 +335,190 @@ export default function SubscriptionDetailsScreen() {
           </View>
         </View>
 
-        {/* Information Section */}
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          {/* Price */}
-          <InfoRow
-            icon={<CurrencyCircleDollarIcon color={colors.tint} size={22} />}
-            label="Price"
-            value={formatMoney(subscription.amount, subscription.currency)}
-            colors={colors}
-          />
+        {/* Billing Information Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>
+            BILLING INFORMATION
+          </Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
+            <SettingRow
+              colors={colors}
+              icon={<CurrencyCircleDollarIcon />}
+              iconColor="#10B981"
+              iconBg="#D1FAE5"
+              label="Price"
+              value={formatMoney(subscription.amount, subscription.currency)}
+            />
 
-          <Divider colors={colors} />
+            <Divider colors={colors} />
 
-          {/* Billing Cycle */}
-          <InfoRow
-            icon={<RepeatIcon color={colors.tint} size={22} />}
-            label="Billing cycle"
-            value={billingCycleLabel}
-            colors={colors}
-          />
+            <SettingRow
+              colors={colors}
+              icon={<RepeatIcon />}
+              iconColor="#6366F1"
+              iconBg="#E0E7FF"
+              label="Billing cycle"
+              value={billingCycleLabel}
+            />
 
-          <Divider colors={colors} />
+            <Divider colors={colors} />
 
-          {/* Due In */}
-          <InfoRow
-            icon={<HourglassHighIcon color={colors.tint} size={22} />}
-            label="Due in"
-            value={
-              subscription.billingCycle === 'One-Time'
-                ? '—'
-                : derivedData.daysUntil === 0
-                  ? 'Today'
-                  : `${derivedData.daysUntil} days`
-            }
-            colors={colors}
-          />
+            <SettingRow
+              colors={colors}
+              icon={<HourglassHighIcon />}
+              iconColor="#F59E0B"
+              iconBg="#FEF3C7"
+              label="Due in"
+              value={
+                subscription.billingCycle === 'One-Time'
+                  ? '—'
+                  : derivedData.daysUntil === 0
+                    ? 'Today'
+                    : `${derivedData.daysUntil} days`
+              }
+            />
 
-          <Divider colors={colors} />
+            <Divider colors={colors} />
 
-          {/* Next Payment */}
-          <InfoRow
-            icon={<CalendarIcon color={colors.tint} size={22} />}
-            label="Next payment"
-            value={
-              subscription.billingCycle === 'One-Time' ? '—' : formatDate(derivedData.nextPayment)
-            }
-            colors={colors}
-          />
+            <SettingRow
+              colors={colors}
+              icon={<CalendarIcon />}
+              iconColor="#8B5CF6"
+              iconBg="#EDE9FE"
+              label="Next payment"
+              value={
+                subscription.billingCycle === 'One-Time' ? '—' : formatDate(derivedData.nextPayment)
+              }
+            />
+          </View>
         </View>
 
         {/* Statistics Section */}
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          {/* Total Spent */}
-          <InfoRow
-            icon={<CurrencyCircleDollarIcon color={colors.positive} size={22} />}
-            label="Total spent"
-            value={formatMoney(derivedData.totalSpent, subscription.currency)}
-            colors={colors}
-          />
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>STATISTICS</Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
+            <SettingRow
+              colors={colors}
+              icon={<CurrencyCircleDollarIcon />}
+              iconColor="#059669"
+              iconBg="#D1FAE5"
+              label="Total spent"
+              value={formatMoney(derivedData.totalSpent, subscription.currency)}
+            />
 
-          <Divider colors={colors} />
+            <Divider colors={colors} />
 
-          {/* Number of Payments */}
-          <InfoRow
-            icon={<ListBulletsIcon color={colors.tint} size={22} />}
-            label="Number of payments"
-            value={String(derivedData.paymentCount)}
-            colors={colors}
-          />
+            <SettingRow
+              colors={colors}
+              icon={<ListBulletsIcon />}
+              iconColor="#EC4899"
+              iconBg="#FCE7F3"
+              label="Number of payments"
+              value={String(derivedData.paymentCount)}
+            />
 
-          <Divider colors={colors} />
+            <Divider colors={colors} />
 
-          {/* Subscribed For */}
-          <InfoRow
-            icon={<ClockIcon color={colors.tint} size={22} />}
-            label="Subscribed for"
-            value={derivedData.duration.formatted}
-            colors={colors}
-          />
+            <SettingRow
+              colors={colors}
+              icon={<ClockIcon />}
+              iconColor="#06B6D4"
+              iconBg="#CFFAFE"
+              label="Subscribed for"
+              value={derivedData.duration.formatted}
+            />
 
-          <Divider colors={colors} />
+            <Divider colors={colors} />
 
-          {/* Start Date */}
-          <InfoRow
-            icon={<CalendarIcon color={colors.tint} size={22} />}
-            label="Start date"
-            value={formatDate(derivedData.startDate)}
-            colors={colors}
-          />
+            <SettingRow
+              colors={colors}
+              icon={<CalendarIcon />}
+              iconColor="#8B5CF6"
+              iconBg="#EDE9FE"
+              label="Start date"
+              value={formatDate(derivedData.startDate)}
+            />
 
-          <Divider colors={colors} />
+            <Divider colors={colors} />
 
-          {/* Last Payment */}
-          <InfoRow
-            icon={<CalendarIcon color={colors.tint} size={22} />}
-            label="Last payment"
-            value={derivedData.lastPayment ? formatDate(derivedData.lastPayment) : '—'}
-            colors={colors}
-          />
+            <SettingRow
+              colors={colors}
+              icon={<CalendarIcon />}
+              iconColor="#6366F1"
+              iconBg="#E0E7FF"
+              label="Last payment"
+              value={derivedData.lastPayment ? formatDate(derivedData.lastPayment) : '—'}
+            />
 
-          {/* Website (if available) */}
-          {websiteUrl && (
-            <>
-              <Divider colors={colors} />
-              <Pressable onPress={handleOpenWebsite} style={styles.infoRow}>
-                <View style={styles.infoRowLeft}>
-                  <ArrowSquareOutIcon color={colors.tint} size={22} />
-                  <Text style={[styles.infoLabel, { color: colors.secondaryText }]}>Website</Text>
-                </View>
-                <Text style={[styles.infoValueLink, { color: colors.tint }]} numberOfLines={1}>
-                  {websiteUrl.replace('https://', '')}
-                </Text>
-              </Pressable>
-            </>
-          )}
+            {/* Website (if available) */}
+            {websiteUrl && (
+              <>
+                <Divider colors={colors} />
+                <SettingRow
+                  colors={colors}
+                  icon={<ArrowSquareOutIcon />}
+                  iconColor="#3B82F6"
+                  iconBg="#DBEAFE"
+                  label="Website"
+                  value={websiteUrl.replace('https://', '')}
+                  valueColor={colors.tint}
+                  onPress={handleOpenWebsite}
+                  showChevron
+                />
+              </>
+            )}
+
+            {/* See All Payments */}
+            <Divider colors={colors} />
+            <SettingRow
+              colors={colors}
+              icon={<ListBulletsIcon />}
+              iconColor="#A855F7"
+              iconBg="#F3E8FF"
+              label="See all payments"
+              onPress={handleSeeAllPayments}
+              showChevron
+            />
+          </View>
         </View>
 
-        {/* See All Payments Button */}
-        <Pressable
-          onPress={handleSeeAllPayments}
-          style={[
-            styles.seePaymentsButton,
-            { backgroundColor: colors.card, borderColor: colors.border },
-          ]}
-          testID="seeAllPaymentsButton"
-        >
-          <ListBulletsIcon color={colors.tint} size={20} />
-          <Text style={[styles.seePaymentsText, { color: colors.text }]}>See all payments</Text>
-        </Pressable>
-
         {/* Action Buttons */}
-        <View style={styles.actions}>
-          <Button
-            title="Edit Subscription"
-            onPress={handleEdit}
-            size="lg"
-            testID="subscriptionDetailsEdit"
-          />
-          <Button
-            title="Delete Subscription"
-            onPress={handleDelete}
-            variant="danger"
-            size="lg"
-            loading={deleteMutation.isPending}
-            testID="subscriptionDetailsDelete"
-          />
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>ACTIONS</Text>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
+            <SettingRow
+              colors={colors}
+              icon={<NotePencilIcon />}
+              iconColor="#3B82F6"
+              iconBg="#DBEAFE"
+              label="Edit Subscription"
+              onPress={handleEdit}
+              showChevron
+            />
+
+            <Divider colors={colors} />
+
+            <Pressable
+              onPress={handleDelete}
+              style={styles.row}
+              disabled={deleteMutation.isPending}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: 'rgba(255,68,56,0.12)' }]}>
+                {deleteMutation.isPending ? (
+                  <ActivityIndicator size="small" color={AppColors.negative} />
+                ) : (
+                  <TrashIcon size={20} color={AppColors.negative} />
+                )}
+              </View>
+              <Text style={[styles.rowLabel, { color: AppColors.negative }]} numberOfLines={1}>
+                Delete Subscription
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </ScrollView>
     </>
   );
-}
-
-// Helper Components
-function InfoRow({
-  icon,
-  label,
-  value,
-  colors,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  colors: ReturnType<typeof useTheme>['colors'];
-}) {
-  return (
-    <View style={styles.infoRow}>
-      <View style={styles.infoRowLeft}>
-        {icon}
-        <Text style={[styles.infoLabel, { color: colors.secondaryText }]}>{label}</Text>
-      </View>
-      <Text style={[styles.infoValue, { color: colors.text }]} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
-  );
-}
-
-function Divider({ colors }: { colors: ReturnType<typeof useTheme>['colors'] }) {
-  return <View style={[styles.divider, { backgroundColor: colors.border }]} />;
 }
 
 const styles = StyleSheet.create({
@@ -451,7 +527,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING.xl,
-    gap: SPACING.lg,
   },
   centered: {
     flex: 1,
@@ -474,6 +549,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: SPACING.md,
     paddingVertical: SPACING.lg,
+    marginBottom: SPACING.lg,
   },
   serviceName: {
     fontSize: 24,
@@ -495,58 +571,51 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  section: {
+    marginBottom: SPACING.xl,
+  },
+  sectionTitle: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    marginLeft: SPACING.xs,
+    marginBottom: SPACING.sm,
+    letterSpacing: 0.5,
+  },
   card: {
-    borderRadius: BORDER_RADIUS.xxl,
-    borderWidth: 1,
-    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xl,
+    overflow: 'hidden',
   },
-  infoRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
   },
-  infoRowLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-    flex: 1,
-  },
-  infoLabel: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: '500',
-  },
-  infoValue: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: '600',
-    textAlign: 'right',
-    maxWidth: '50%',
-  },
-  infoValueLink: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: '600',
-    textAlign: 'right',
-    maxWidth: '50%',
-  },
-  divider: {
-    height: 1,
-    marginVertical: SPACING.xs,
-  },
-  seePaymentsButton: {
-    flexDirection: 'row',
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: BORDER_RADIUS.full,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: SPACING.md,
-    paddingVertical: SPACING.lg,
-    borderRadius: BORDER_RADIUS.xxl,
-    borderWidth: 1,
+    marginRight: SPACING.md,
   },
-  seePaymentsText: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+  rowLabel: {
+    flex: 1,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '500',
   },
-  actions: {
-    gap: SPACING.md,
-    marginTop: SPACING.md,
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: SPACING.sm,
+  },
+  rowValue: {
+    fontSize: FONT_SIZE.lg,
+    marginRight: 6,
+    maxWidth: 160,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: 64,
   },
 });
