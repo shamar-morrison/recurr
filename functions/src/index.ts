@@ -50,6 +50,10 @@ interface ValidatePurchaseRequest {
 interface ValidatePurchaseResponse {
   valid: boolean;
   message?: string;
+  debug?: {
+    googleApiError?: string;
+    googleApiCode?: number;
+  };
 }
 
 /**
@@ -269,11 +273,43 @@ export const validateAndroidPurchase = functions.https.onRequest(
         message: 'Purchase validated successfully',
       } as ValidatePurchaseResponse);
     } catch (error) {
-      console.error('[validateAndroidPurchase] Error:', error);
-      res.status(500).json({
+      // Extract detailed error information for debugging
+      const err = error as {
+        response?: {
+          status?: number;
+          data?: { error?: { message?: string; code?: number; status?: string } };
+        };
+        message?: string;
+      };
+      const googleError = err.response?.data?.error;
+
+      console.error('[validateAndroidPurchase] Error:', {
+        message: err.message,
+        googleApiStatus: err.response?.status,
+        googleApiError: googleError?.message,
+        googleApiCode: googleError?.code,
+        googleApiStatusText: googleError?.status,
+      });
+
+      // Build base error response
+      const errorResponse: ValidatePurchaseResponse = {
         valid: false,
         message: 'Failed to validate purchase',
-      } as ValidatePurchaseResponse);
+      };
+
+      // Include debug details only in explicit development mode or emulator
+      // Secure default: treat missing/unknown environment config as production
+      const envMode = functions.config().environment?.mode;
+      const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
+
+      if (envMode === 'development' || isEmulator) {
+        errorResponse.debug = {
+          googleApiError: googleError?.message,
+          googleApiCode: googleError?.code,
+        };
+      }
+
+      res.status(500).json(errorResponse);
     }
   }
 );

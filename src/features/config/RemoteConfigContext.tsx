@@ -19,7 +19,7 @@ export function RemoteConfigProvider({ children }: RemoteConfigProviderProps) {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    console.log('[RemoteConfigProvider] Fetching via REST API...');
+    console.log('[RemoteConfigProvider] Fetching config...');
 
     fetchRemoteConfig()
       .then((config) => {

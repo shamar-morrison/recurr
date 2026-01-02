@@ -126,6 +126,45 @@ export async function restorePurchases(): Promise<Purchase[]> {
 }
 
 /**
+ * [DEV ONLY] Consume (reset) a one-time purchase so it can be purchased again.
+ * This is useful for testing the purchase flow multiple times.
+ * Only works in development mode.
+ */
+export async function consumePurchaseForTesting(): Promise<void> {
+  if (!__DEV__) {
+    console.warn('[IAP] consumePurchaseForTesting is only available in development mode');
+    return;
+  }
+
+  try {
+    console.log('[IAP] [DEV] Starting purchase consumption for testing...');
+
+    // Get all available purchases
+    const purchases = await getAvailablePurchases();
+    const premiumPurchases = purchases.filter(
+      (purchase) => purchase.productId === PREMIUM_PRODUCT_ID
+    );
+
+    if (premiumPurchases.length === 0) {
+      console.log('[IAP] [DEV] No premium purchases found to consume');
+      return;
+    }
+
+    // Consume each premium purchase by finishing it as consumable
+    for (const purchase of premiumPurchases) {
+      console.log('[IAP] [DEV] Consuming purchase:', purchase.transactionId);
+      await finishTransaction({ purchase, isConsumable: true });
+      console.log('[IAP] [DEV] Purchase consumed successfully:', purchase.transactionId);
+    }
+
+    console.log('[IAP] [DEV] All purchases consumed. Product can now be purchased again.');
+  } catch (error) {
+    console.error('[IAP] [DEV] Failed to consume purchase:', error);
+    throw new Error('Failed to reset purchase. Please try again.');
+  }
+}
+
+/**
  * Validate a purchase with the server
  * Requires Firebase Auth token for authentication
  */
