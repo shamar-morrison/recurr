@@ -25,6 +25,11 @@ export default function AuthScreen() {
 
   const handleGoogleSignIn = async () => {
     setIsWorking(true);
+
+    // Allow React to render the loading spinner before the native Google
+    // sign-in sheet blocks the JS thread
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
     try {
       await signInWithGoogle();
     } catch (e) {
