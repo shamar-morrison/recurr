@@ -355,11 +355,81 @@ async function getFailedPurchases(): Promise<Purchase[]> {
   }
 }
 
+// Flag to track if the background task has been defined
+let taskDefined = false;
+
+/**
+ * Define the IAP background task handler.
+ * Separated to allow lazy definition if module-load definition fails.
+ */
+function defineIAPBackgroundTask() {
+  if (taskDefined) return;
+
+  try {
+    TaskManager.defineTask(IAP_ACK_RETRY_TASK, async () => {
+      console.log('[IAP] Background task running: retrying acknowledgements');
+
+      const failedList = await getFailedPurchases();
+      if (failedList.length === 0) return BackgroundTask.BackgroundTaskResult.Success;
+
+      let connectionInitialized = false;
+      try {
+        connectionInitialized = await initIAP();
+        if (!connectionInitialized) {
+          console.error('[IAP] Background task: Failed to initialize IAP connection');
+          return BackgroundTask.BackgroundTaskResult.Failed;
+        }
+
+        let successCount = 0;
+
+        for (const purchase of failedList) {
+          try {
+            if (!purchase.purchaseToken) continue;
+
+            await finishTransaction({ purchase, isConsumable: false });
+            await removeFailedPurchase(purchase.purchaseToken);
+            successCount++;
+          } catch (e) {
+            console.error('[IAP] Background retry failed for token:', purchase.purchaseToken, e);
+          }
+        }
+
+        console.log(
+          `[IAP] Background retry finished. Success: ${successCount}/${failedList.length}`
+        );
+
+        return failedList.length === successCount
+          ? BackgroundTask.BackgroundTaskResult.Success
+          : BackgroundTask.BackgroundTaskResult.Failed;
+      } catch (error) {
+        console.error('[IAP] Background task error:', error);
+        return BackgroundTask.BackgroundTaskResult.Failed;
+      } finally {
+        if (connectionInitialized) {
+          try {
+            await endConnection();
+            console.log('[IAP] Background task: Connection closed');
+          } catch (endError) {
+            console.error('[IAP] Background task: Failed to close connection:', endError);
+          }
+        }
+      }
+    });
+    taskDefined = true;
+    console.log('[IAP] Background task defined successfully');
+  } catch (error) {
+    console.warn('[IAP] Failed to define background task:', error);
+  }
+}
+
 /**
  * Register background task for retries
  */
 async function registerBackgroundTask() {
   try {
+    // Ensure the task is defined before trying to register
+    defineIAPBackgroundTask();
+
     const isRegistered = await TaskManager.isTaskRegisteredAsync(IAP_ACK_RETRY_TASK);
     if (!isRegistered) {
       await BackgroundTask.registerTaskAsync(IAP_ACK_RETRY_TASK, {
@@ -384,60 +454,14 @@ function logError(message: string, context: object) {
   }
 }
 
-// Define the background task
-TaskManager.defineTask(IAP_ACK_RETRY_TASK, async () => {
-  console.log('[IAP] Background task running: retrying acknowledgements');
-
-  // Use the per-purchase key helper to get all failed purchases atomically
-  const failedList = await getFailedPurchases();
-  if (failedList.length === 0) return BackgroundTask.BackgroundTaskResult.Success;
-
-  // Initialize IAP connection before attempting to acknowledge purchases
-  let connectionInitialized = false;
-  try {
-    connectionInitialized = await initIAP();
-    if (!connectionInitialized) {
-      console.error('[IAP] Background task: Failed to initialize IAP connection');
-      return BackgroundTask.BackgroundTaskResult.Failed;
-    }
-
-    let successCount = 0;
-
-    // Try to acknowledge each again
-    for (const purchase of failedList) {
-      try {
-        if (!purchase.purchaseToken) continue;
-
-        await finishTransaction({ purchase, isConsumable: false });
-        // If we succeed here, remove it immediately
-        await removeFailedPurchase(purchase.purchaseToken);
-        successCount++;
-      } catch (e) {
-        console.error('[IAP] Background retry failed for token:', purchase.purchaseToken, e);
-        // It stays in storage for next time
-      }
-    }
-
-    console.log(`[IAP] Background retry finished. Success: ${successCount}/${failedList.length}`);
-
-    return failedList.length === successCount
-      ? BackgroundTask.BackgroundTaskResult.Success
-      : BackgroundTask.BackgroundTaskResult.Failed;
-  } catch (error) {
-    console.error('[IAP] Background task error:', error);
-    return BackgroundTask.BackgroundTaskResult.Failed;
-  } finally {
-    // Always clean up the billing connection
-    if (connectionInitialized) {
-      try {
-        await endConnection();
-        console.log('[IAP] Background task: Connection closed');
-      } catch (endError) {
-        console.error('[IAP] Background task: Failed to close connection:', endError);
-      }
-    }
-  }
-});
+// Attempt to define the background task at module load time for optimal startup.
+// If this fails (e.g., native modules not ready), it will be retried lazily
+// when registerBackgroundTask() is called.
+try {
+  defineIAPBackgroundTask();
+} catch (error) {
+  console.warn('[IAP] Module-load task definition failed, will retry lazily:', error);
+}
 
 /**
  * Check if a purchase error is a user cancellation

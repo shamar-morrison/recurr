@@ -3,12 +3,12 @@ module.exports = function (api) {
 
   const plugins = [];
 
-  // Remove console statements in production
+  // Remove console statements in production (except error/warn for debugging)
   if (process.env.NODE_ENV === 'production') {
     plugins.push([
       'transform-remove-console',
       {
-        // exclude: ['error', 'warn'],
+        exclude: ['error', 'warn'],
       },
     ]);
   }

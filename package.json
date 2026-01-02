@@ -2,6 +2,7 @@
   "name": "recurr",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "packageManager": "pnpm@8.5.1",
   "scripts": {
     "start": "expo start",
     "android": "expo start --dev-client",
