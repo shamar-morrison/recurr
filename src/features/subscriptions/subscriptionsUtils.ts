@@ -319,6 +319,28 @@ export function calculateTotalSpent(sub: Subscription, now: Date = new Date()): 
 }
 
 /**
+ * Helper for counting payments in multi-month billing cycles (Quarterly, Semiannual).
+ * Computes the last anniversary date with month-end day clamping to handle edge cases
+ * like Jan 31 + 3 months → April 30 (not May 1).
+ */
+function countMultiMonthPayments(anchor: Date, today: Date, periodMonths: number): number {
+  const months =
+    (today.getFullYear() - anchor.getFullYear()) * 12 + (today.getMonth() - anchor.getMonth());
+  const fullPeriods = Math.floor(months / periodMonths);
+
+  // Compute the last anniversary date with clamping to avoid month-end overflow
+  const targetYear =
+    anchor.getFullYear() + Math.floor((anchor.getMonth() + fullPeriods * periodMonths) / 12);
+  const targetMonth = (anchor.getMonth() + fullPeriods * periodMonths) % 12;
+  const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+  const clampedDay = Math.min(anchor.getDate(), daysInTargetMonth);
+  const lastAnniversary = new Date(targetYear, targetMonth, clampedDay);
+
+  // Check if today >= last anniversary
+  return today >= lastAnniversary ? fullPeriods + 1 : fullPeriods;
+}
+
+/**
  * Count the number of payments made since the subscription started.
  */
 export function countPaymentsMade(sub: Subscription, now: Date = new Date()): number {
@@ -359,28 +381,9 @@ export function countPaymentsMade(sub: Subscription, now: Date = new Date()): nu
       count = today.getDate() >= anchor.getDate() ? months + 1 : months;
       break;
     }
-    case 'Quarterly': {
-      const months =
-        (today.getFullYear() - anchor.getFullYear()) * 12 + (today.getMonth() - anchor.getMonth());
-      const periodMonths = 3;
-      const fullPeriods = Math.floor(months / periodMonths);
-      // Compute the last anniversary date
-      const lastAnniversary = new Date(anchor);
-      lastAnniversary.setMonth(anchor.getMonth() + fullPeriods * periodMonths);
-      // Check if today >= last anniversary
-      count = today >= lastAnniversary ? fullPeriods + 1 : fullPeriods;
-      break;
-    }
+    case 'Quarterly':
     case 'Semiannual': {
-      const months =
-        (today.getFullYear() - anchor.getFullYear()) * 12 + (today.getMonth() - anchor.getMonth());
-      const periodMonths = 6;
-      const fullPeriods = Math.floor(months / periodMonths);
-      // Compute the last anniversary date
-      const lastAnniversary = new Date(anchor);
-      lastAnniversary.setMonth(anchor.getMonth() + fullPeriods * periodMonths);
-      // Check if today >= last anniversary
-      count = today >= lastAnniversary ? fullPeriods + 1 : fullPeriods;
+      count = countMultiMonthPayments(anchor, today, sub.billingCycle === 'Quarterly' ? 3 : 6);
       break;
     }
     case 'Yearly': {

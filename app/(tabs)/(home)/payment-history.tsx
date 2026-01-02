@@ -99,7 +99,7 @@ export default function PaymentHistoryScreen() {
         </View>
       );
     },
-    [colors, formatDate, formatMoney]
+    [colors, formatDate]
   );
 
   const keyExtractor = useCallback(

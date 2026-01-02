@@ -161,19 +161,16 @@ export default function SubscriptionDetailsScreen() {
     if (!subscription) return null;
 
     const now = new Date();
-    const anchor = subscription.startDate
+    const startDate = subscription.startDate
       ? new Date(subscription.startDate)
       : new Date(subscription.createdAt);
 
-    const nextPayment = nextBillingDate(now, subscription.billingCycle, anchor);
+    const nextPayment = nextBillingDate(now, subscription.billingCycle, startDate);
     const daysUntil = diffDays(now, nextPayment);
     const totalSpent = calculateTotalSpent(subscription, now);
     const paymentCount = countPaymentsMade(subscription, now);
     const duration = calculateSubscriptionDuration(subscription, now);
     const lastPayment = getLastPaymentDate(subscription, now);
-    const startDate = subscription.startDate
-      ? new Date(subscription.startDate)
-      : new Date(subscription.createdAt);
 
     return {
       nextPayment,
