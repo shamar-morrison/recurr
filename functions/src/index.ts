@@ -297,10 +297,12 @@ export const validateAndroidPurchase = functions.https.onRequest(
         message: 'Failed to validate purchase',
       };
 
-      // Include debug details only in non-production environments
-      // Uses functions.config() for consistency with other config in this file
-      const isProduction = functions.config().environment?.mode === 'production';
-      if (!isProduction) {
+      // Include debug details only in explicit development mode or emulator
+      // Secure default: treat missing/unknown environment config as production
+      const envMode = functions.config().environment?.mode;
+      const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
+
+      if (envMode === 'development' || isEmulator) {
         errorResponse.debug = {
           googleApiError: googleError?.message,
           googleApiCode: googleError?.code,
