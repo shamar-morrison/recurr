@@ -269,10 +269,32 @@ export const validateAndroidPurchase = functions.https.onRequest(
         message: 'Purchase validated successfully',
       } as ValidatePurchaseResponse);
     } catch (error) {
-      console.error('[validateAndroidPurchase] Error:', error);
+      // Extract detailed error information for debugging
+      const err = error as {
+        response?: {
+          status?: number;
+          data?: { error?: { message?: string; code?: number; status?: string } };
+        };
+        message?: string;
+      };
+      const googleError = err.response?.data?.error;
+
+      console.error('[validateAndroidPurchase] Error:', {
+        message: err.message,
+        googleApiStatus: err.response?.status,
+        googleApiError: googleError?.message,
+        googleApiCode: googleError?.code,
+        googleApiStatusText: googleError?.status,
+      });
+
       res.status(500).json({
         valid: false,
         message: 'Failed to validate purchase',
+        // Include error details in dev for debugging (remove in production)
+        debug: {
+          googleApiError: googleError?.message,
+          googleApiCode: googleError?.code,
+        },
       } as ValidatePurchaseResponse);
     }
   }

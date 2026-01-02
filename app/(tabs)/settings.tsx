@@ -24,8 +24,10 @@ import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { ThemeMode, useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { exportData, ExportFormat } from '@/src/features/export/exportService';
+import { consumePurchaseForTesting } from '@/src/features/monetization/iapService';
 import { useSubscriptionsQuery } from '@/src/features/subscriptions/subscriptionsHooks';
 import {
+  ArrowCounterClockwiseIcon,
   CalendarIcon,
   CaretRightIcon,
   ChatCircleDotsIcon,
@@ -109,14 +111,23 @@ function SettingRow({
 }
 
 export default function SettingsScreen() {
-  const { user, isPremium, signOutUser, settings, setReminderDays, setCurrency, setDateFormat } =
-    useAuth();
+  const {
+    user,
+    isPremium,
+    signOutUser,
+    settings,
+    setReminderDays,
+    setCurrency,
+    setDateFormat,
+    setPremiumMock,
+  } = useAuth();
 
   const { themeMode, setThemeMode, colors } = useTheme();
 
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [dateFormatModalVisible, setDateFormatModalVisible] = useState(false);
   const [themeModalVisible, setThemeModalVisible] = useState(false);
+  const [isResettingPurchase, setIsResettingPurchase] = useState(false);
 
   const { data: subscriptions, isLoading: isLoadingSubscriptions } = useSubscriptionsQuery();
 
@@ -222,6 +233,40 @@ export default function SettingsScreen() {
         },
       },
     ]);
+  };
+
+  // [DEV ONLY] Reset purchase for testing
+  const handleResetPurchase = () => {
+    if (!__DEV__) return;
+
+    Alert.alert(
+      'Reset Purchase (DEV)',
+      'This will consume your premium purchase (allowing re-purchase) and reset your premium status. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            setIsResettingPurchase(true);
+            try {
+              // 1. Consume the purchase so it can be bought again
+              await consumePurchaseForTesting();
+
+              // 2. Reset premium status in Firestore
+              await setPremiumMock(false);
+
+              Alert.alert('Success', 'Purchase reset. You can now test the purchase flow again.');
+            } catch (error) {
+              console.error('Failed to reset purchase:', error);
+              Alert.alert('Error', (error as Error).message || 'Failed to reset purchase.');
+            } finally {
+              setIsResettingPurchase(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleExportData = () => {
@@ -341,6 +386,21 @@ export default function SettingsScreen() {
                   iconBg="#FEF3C7"
                   label="Upgrade to Premium"
                   onPress={() => router.push('/paywall')}
+                />
+              </>
+            )}
+
+            {/* DEV ONLY: Reset purchase for testing */}
+            {__DEV__ && isPremium && (
+              <>
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                <SettingRow
+                  colors={colors}
+                  icon={<ArrowCounterClockwiseIcon />}
+                  iconColor="#EF4444"
+                  iconBg="#FEE2E2"
+                  label={isResettingPurchase ? 'Resetting...' : 'Reset Purchase (DEV)'}
+                  onPress={handleResetPurchase}
                 />
               </>
             )}
