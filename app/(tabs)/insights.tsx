@@ -318,18 +318,6 @@ export default function InsightsScreen() {
           colors={colors}
           formatMoney={formatMoney}
         />
-
-        {!isPremium ? (
-          <View style={styles.locked} testID="insightsLocked">
-            <Text style={[styles.lockedTitle, { color: colors.text }]}>
-              Premium unlocks deeper insights
-            </Text>
-            <Text style={[styles.lockedText, { color: colors.secondaryText }]}>
-              Next: trends over time, spend alerts, and smarter reminders.
-            </Text>
-          </View>
-        ) : null}
-
         <View style={styles.footerSpace} />
       </ScrollView>
     </SafeAreaView>
