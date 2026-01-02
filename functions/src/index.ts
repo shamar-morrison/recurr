@@ -50,6 +50,10 @@ interface ValidatePurchaseRequest {
 interface ValidatePurchaseResponse {
   valid: boolean;
   message?: string;
+  debug?: {
+    googleApiError?: string;
+    googleApiCode?: number;
+  };
 }
 
 /**
@@ -288,13 +292,15 @@ export const validateAndroidPurchase = functions.https.onRequest(
       });
 
       // Build base error response
-      const errorResponse: ValidatePurchaseResponse & { debug?: { googleApiError?: string; googleApiCode?: number } } = {
+      const errorResponse: ValidatePurchaseResponse = {
         valid: false,
         message: 'Failed to validate purchase',
       };
 
-      // Include debug details only in development
-      if (process.env.NODE_ENV !== 'production') {
+      // Include debug details only in non-production environments
+      // Uses functions.config() for consistency with other config in this file
+      const isProduction = functions.config().environment?.mode === 'production';
+      if (!isProduction) {
         errorResponse.debug = {
           googleApiError: googleError?.message,
           googleApiCode: googleError?.code,
