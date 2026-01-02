@@ -175,7 +175,10 @@ export default function PaymentHistoryScreen() {
     );
   }
 
-  const combinedPayments = [...pastPayments, ...futurePayments];
+  const combinedPayments = useMemo(
+    () => [...pastPayments, ...futurePayments],
+    [pastPayments, futurePayments]
+  );
 
   return (
     <>

@@ -377,8 +377,11 @@ export function countPaymentsMade(sub: Subscription, now: Date = new Date()): nu
     case 'Monthly': {
       const months =
         (today.getFullYear() - anchor.getFullYear()) * 12 + (today.getMonth() - anchor.getMonth());
-      // Check if we've passed this month's billing day
-      count = today.getDate() >= anchor.getDate() ? months + 1 : months;
+      // Clamp anchor day to valid day in current month (e.g., Jan 31 -> Feb 28)
+      const daysInCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      const clampedAnchorDay = Math.min(anchor.getDate(), daysInCurrentMonth);
+      // Check if we've passed this month's (clamped) billing day
+      count = today.getDate() >= clampedAnchorDay ? months + 1 : months;
       break;
     }
     case 'Quarterly':
@@ -388,13 +391,21 @@ export function countPaymentsMade(sub: Subscription, now: Date = new Date()): nu
     }
     case 'Yearly': {
       const years = today.getFullYear() - anchor.getFullYear();
-      // Check if we've passed the anniversary this year
-      const monthDiff = today.getMonth() - anchor.getMonth();
-      if (monthDiff > 0 || (monthDiff === 0 && today.getDate() >= anchor.getDate())) {
-        count = years + 1;
-      } else {
-        count = years;
-      }
+      // Compute the anniversary date for this year with day clamping (e.g., Feb 29 -> Feb 28 in non-leap years)
+      const anniversaryMonth = anchor.getMonth();
+      const daysInAnniversaryMonth = new Date(
+        today.getFullYear(),
+        anniversaryMonth + 1,
+        0
+      ).getDate();
+      const clampedAnniversaryDay = Math.min(anchor.getDate(), daysInAnniversaryMonth);
+      const anniversaryThisYear = new Date(
+        today.getFullYear(),
+        anniversaryMonth,
+        clampedAnniversaryDay
+      );
+      // Check if we've passed the (clamped) anniversary this year
+      count = today >= anniversaryThisYear ? years + 1 : years;
       break;
     }
     default:

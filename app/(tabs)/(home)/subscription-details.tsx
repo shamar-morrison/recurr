@@ -357,7 +357,7 @@ export default function SubscriptionDetailsScreen() {
                   ? '—'
                   : derivedData.daysUntil === 0
                     ? 'Today'
-                    : `${derivedData.daysUntil} days`
+                    : `${derivedData.daysUntil} ${derivedData.daysUntil === 1 ? 'day' : 'days'}`
               }
             />
 
