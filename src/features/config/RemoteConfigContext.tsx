@@ -1,6 +1,5 @@
-import { remoteConfig } from '@/src/lib/firebase';
-import { fetchAndActivate, getNumber } from 'firebase/remote-config';
 import React, { createContext, ReactNode, useEffect, useMemo, useState } from 'react';
+import { fetchRemoteConfig } from './remoteConfigService';
 
 export interface RemoteConfigState {
   freeTierLimit: number;
@@ -15,20 +14,21 @@ interface RemoteConfigProviderProps {
 }
 
 export function RemoteConfigProvider({ children }: RemoteConfigProviderProps) {
-  const [freeTierLimit, setFreeTierLimit] = useState(getNumber(remoteConfig, 'FREE_TIER_LIMIT'));
+  const [freeTierLimit, setFreeTierLimit] = useState(5); // Default fallback
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Fetch and activate to ensure we have the latest values from the server
-    fetchAndActivate(remoteConfig)
-      .then(() => {
-        setFreeTierLimit(getNumber(remoteConfig, 'FREE_TIER_LIMIT'));
+    console.log('[RemoteConfigProvider] Fetching via REST API...');
+
+    fetchRemoteConfig()
+      .then((config) => {
+        console.log('[RemoteConfigProvider] Got config:', config);
+        setFreeTierLimit(config.FREE_TIER_LIMIT);
       })
       .catch((e) => {
         console.log('[RemoteConfigProvider] fetch failed', e);
         setError(e instanceof Error ? e : new Error(String(e)));
-        // Fallback or stick with existing default
       })
       .finally(() => {
         setLoading(false);

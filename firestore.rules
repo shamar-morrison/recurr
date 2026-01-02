@@ -23,5 +23,10 @@ service cloud.firestore {
     match /purchase_tokens/{tokenId} {
       allow read, write: if false;
     }
+    
+    // App config - readable by anyone (public settings like FREE_TIER_LIMIT)
+    match /config/app {
+      allow read: if true;
+    }
   }
 }

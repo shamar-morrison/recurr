@@ -38,8 +38,7 @@ const IAP_ACK_RETRY_TASK = 'IAP_ACK_RETRY_TASK';
  */
 export async function initIAP(): Promise<boolean> {
   try {
-    const result = await initConnection();
-    console.log('[IAP] Connection initialized:', result);
+    await initConnection();
     return true;
   } catch (error) {
     console.error('[IAP] Failed to initialize connection:', error);
@@ -54,7 +53,6 @@ export async function initIAP(): Promise<boolean> {
 export async function endIAP(): Promise<void> {
   try {
     await endConnection();
-    console.log('[IAP] Connection ended');
   } catch (error) {
     console.error('[IAP] Failed to end connection:', error);
   }
@@ -69,7 +67,6 @@ export async function fetchProductDetails(): Promise<Product[]> {
       skus: [PREMIUM_PRODUCT_ID],
       type: 'in-app',
     });
-    console.log('[IAP] Products fetched:', products);
     // Filter to only in-app products and cast
     return (products ?? []).filter((p): p is Product => p.type === 'in-app');
   } catch (error) {
@@ -83,7 +80,6 @@ export async function fetchProductDetails(): Promise<Product[]> {
  */
 export async function purchasePremium(): Promise<void> {
   try {
-    console.log('[IAP] Requesting purchase for:', PREMIUM_PRODUCT_ID);
     await requestPurchase({
       type: 'in-app',
       request: {
@@ -115,9 +111,7 @@ export async function purchasePremium(): Promise<void> {
  */
 export async function restorePurchases(): Promise<Purchase[]> {
   try {
-    console.log('[IAP] Restoring purchases...');
     const purchases = await getAvailablePurchases();
-    console.log('[IAP] Available purchases:', purchases);
 
     // Filter for our premium product
     const premiumPurchases = purchases.filter(
@@ -145,8 +139,6 @@ export async function validatePurchaseOnServer(
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    console.log('[IAP] Validating purchase on server...');
-
     const response = await fetch(VALIDATE_PURCHASE_URL, {
       method: 'POST',
       headers: {
