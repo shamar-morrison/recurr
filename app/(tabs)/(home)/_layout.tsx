@@ -15,12 +15,21 @@ function HomeHeader({ options }: NativeStackHeaderProps) {
   );
 }
 
-function EditorHeader({ options, navigation }: NativeStackHeaderProps) {
-  const title = typeof options.title === 'string' ? options.title : 'Subscription';
-  const headerLeft = options.headerLeft?.({ canGoBack: navigation.canGoBack() });
+/**
+ * Factory to create a simple header component with a configurable default title.
+ */
+function createSimpleHeader(defaultTitle: string) {
+  return function SimpleHeader({ options, navigation }: NativeStackHeaderProps) {
+    const title = typeof options.title === 'string' ? options.title : defaultTitle;
+    const headerLeft = options.headerLeft?.({ canGoBack: navigation.canGoBack() });
 
-  return <StackHeader title={title} headerLeft={headerLeft} />;
+    return <StackHeader title={title} headerLeft={headerLeft} />;
+  };
 }
+
+const EditorHeader = createSimpleHeader('Subscription');
+const DetailsHeader = createSimpleHeader('Details');
+const HistoryHeader = createSimpleHeader('Payment History');
 
 export default function HomeStackLayout() {
   const { colors } = useTheme();
@@ -42,9 +51,21 @@ export default function HomeStackLayout() {
         }}
       />
       <Stack.Screen
+        name="subscription-details"
+        options={{
+          header: (props) => <DetailsHeader {...props} />,
+        }}
+      />
+      <Stack.Screen
         name="subscription-editor"
         options={{
           header: (props) => <EditorHeader {...props} />,
+        }}
+      />
+      <Stack.Screen
+        name="payment-history"
+        options={{
+          header: (props) => <HistoryHeader {...props} />,
         }}
       />
     </Stack>

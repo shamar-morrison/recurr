@@ -75,6 +75,39 @@ export function monthlyEquivalent(amount: number, cycle: BillingCycle): number {
   }
 }
 
+/**
+ * Advance a date by one billing cycle period.
+ * Shared helper used by both nextBillingDate and advanceByBillingCycle.
+ *
+ * @param date - The date to advance. **Note:** This date is mutated in place.
+ * @param cycle - The billing cycle period to advance by.
+ */
+function applyBillingCycleStep(date: Date, cycle: BillingCycle): void {
+  switch (cycle) {
+    case 'Weekly':
+      date.setDate(date.getDate() + 7);
+      break;
+    case 'Bi-weekly':
+      date.setDate(date.getDate() + 14);
+      break;
+    case 'Monthly':
+      date.setMonth(date.getMonth() + 1);
+      break;
+    case 'Quarterly':
+      date.setMonth(date.getMonth() + 3);
+      break;
+    case 'Semiannual':
+      date.setMonth(date.getMonth() + 6);
+      break;
+    case 'Yearly':
+      date.setFullYear(date.getFullYear() + 1);
+      break;
+    case 'One-Time':
+      // No advancement for one-time
+      break;
+  }
+}
+
 export function nextBillingDate(from: Date, cycle: BillingCycle, anchor: Date): Date {
   // One-Time subscriptions don't recur
   if (cycle === 'One-Time') {
@@ -128,29 +161,7 @@ export function nextBillingDate(from: Date, cycle: BillingCycle, anchor: Date): 
 
   // Iterate forward until we find a date >= today
   while (candidate.getTime() < today.getTime()) {
-    switch (cycle) {
-      case 'Weekly':
-        candidate.setDate(candidate.getDate() + 7);
-        break;
-      case 'Bi-weekly':
-        candidate.setDate(candidate.getDate() + 14);
-        break;
-      case 'Monthly':
-        candidate.setMonth(candidate.getMonth() + 1);
-        break;
-      case 'Quarterly':
-        candidate.setMonth(candidate.getMonth() + 3);
-        break;
-      case 'Semiannual':
-        candidate.setMonth(candidate.getMonth() + 6);
-        break;
-      case 'Yearly':
-        candidate.setFullYear(candidate.getFullYear() + 1);
-        break;
-      default:
-        // Should not happen for valid recurring cycles
-        return candidate;
-    }
+    applyBillingCycleStep(candidate, cycle);
   }
 
   return candidate;
@@ -213,4 +224,284 @@ export function toListItem(sub: Subscription, now: Date = new Date()): Subscript
     nextBillingInDays: diffDays(now, next),
     status,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Payment History Utilities
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface PaymentHistoryEntry {
+  date: Date;
+  amount: number;
+  currency: string;
+  isPast: boolean;
+}
+
+/**
+ * Advance a date by one billing cycle.
+ */
+function advanceByBillingCycle(date: Date, cycle: BillingCycle): Date {
+  const next = new Date(date);
+  applyBillingCycleStep(next, cycle);
+  return next;
+}
+
+/**
+ * Generate payment history entries for a subscription.
+ * Returns past payments (from startDate to now) and optionally future payments.
+ *
+ * @param sub - The subscription to generate history for
+ * @param options - Configuration options
+ * @param options.now - Reference date for "today" (defaults to current date)
+ * @param options.futureCount - Number of future payments to include (default: 6)
+ * @param options.maxPastCount - Maximum past payments to include (default: 100)
+ */
+export function generatePaymentHistory(
+  sub: Subscription,
+  options: {
+    now?: Date;
+    futureCount?: number;
+    maxPastCount?: number;
+  } = {}
+): PaymentHistoryEntry[] {
+  const { now = new Date(), futureCount = 6, maxPastCount = 100 } = options;
+
+  const anchor = sub.startDate ? new Date(sub.startDate) : new Date(sub.createdAt);
+  anchor.setHours(0, 0, 0, 0);
+
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  const entries: PaymentHistoryEntry[] = [];
+
+  // One-Time subscriptions have only one payment
+  if (sub.billingCycle === 'One-Time') {
+    entries.push({
+      date: new Date(anchor),
+      amount: sub.amount,
+      currency: sub.currency,
+      isPast: anchor.getTime() <= today.getTime(),
+    });
+    return entries;
+  }
+
+  // Generate past payments
+  let current = new Date(anchor);
+  while (current.getTime() <= today.getTime() && entries.length < maxPastCount) {
+    entries.push({
+      date: new Date(current),
+      amount: sub.amount,
+      currency: sub.currency,
+      isPast: true,
+    });
+    current = advanceByBillingCycle(current, sub.billingCycle);
+  }
+
+  // Generate future payments
+  let futureAdded = 0;
+  while (futureAdded < futureCount) {
+    entries.push({
+      date: new Date(current),
+      amount: sub.amount,
+      currency: sub.currency,
+      isPast: false,
+    });
+    current = advanceByBillingCycle(current, sub.billingCycle);
+    futureAdded++;
+  }
+
+  return entries;
+}
+
+/**
+ * Calculate the total amount spent on a subscription since start date.
+ */
+export function calculateTotalSpent(sub: Subscription, now: Date = new Date()): number {
+  const payments = countPaymentsMade(sub, now);
+  return payments * sub.amount;
+}
+
+/**
+ * Helper for counting payments in multi-month billing cycles (Quarterly, Semiannual).
+ * Computes the last anniversary date with month-end day clamping to handle edge cases
+ * like Jan 31 + 3 months → April 30 (not May 1).
+ */
+function countMultiMonthPayments(anchor: Date, today: Date, periodMonths: number): number {
+  const months =
+    (today.getFullYear() - anchor.getFullYear()) * 12 + (today.getMonth() - anchor.getMonth());
+  const fullPeriods = Math.floor(months / periodMonths);
+
+  // Compute the last anniversary date with clamping to avoid month-end overflow
+  const targetYear =
+    anchor.getFullYear() + Math.floor((anchor.getMonth() + fullPeriods * periodMonths) / 12);
+  const targetMonth = (anchor.getMonth() + fullPeriods * periodMonths) % 12;
+  const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+  const clampedDay = Math.min(anchor.getDate(), daysInTargetMonth);
+  const lastAnniversary = new Date(targetYear, targetMonth, clampedDay);
+
+  // Check if today >= last anniversary
+  return today >= lastAnniversary ? fullPeriods + 1 : fullPeriods;
+}
+
+/**
+ * Count the number of payments made since the subscription started.
+ */
+export function countPaymentsMade(sub: Subscription, now: Date = new Date()): number {
+  const anchor = sub.startDate ? new Date(sub.startDate) : new Date(sub.createdAt);
+  anchor.setHours(0, 0, 0, 0);
+
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  // If start date is in the future, no payments made yet
+  if (anchor.getTime() > today.getTime()) {
+    return 0;
+  }
+
+  // One-Time has exactly one payment if the date has passed
+  if (sub.billingCycle === 'One-Time') {
+    return 1;
+  }
+
+  // Count payments by iterating
+  let count = 0;
+
+  // Optimization: calculate roughly for efficiency
+  const diffMs = today.getTime() - anchor.getTime();
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  switch (sub.billingCycle) {
+    case 'Weekly':
+      count = Math.floor(diffMs / (7 * DAY_MS)) + 1;
+      break;
+    case 'Bi-weekly':
+      count = Math.floor(diffMs / (14 * DAY_MS)) + 1;
+      break;
+    case 'Monthly': {
+      const months =
+        (today.getFullYear() - anchor.getFullYear()) * 12 + (today.getMonth() - anchor.getMonth());
+      // Clamp anchor day to valid day in current month (e.g., Jan 31 -> Feb 28)
+      const daysInCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      const clampedAnchorDay = Math.min(anchor.getDate(), daysInCurrentMonth);
+      // Check if we've passed this month's (clamped) billing day
+      count = today.getDate() >= clampedAnchorDay ? months + 1 : months;
+      break;
+    }
+    case 'Quarterly':
+    case 'Semiannual': {
+      count = countMultiMonthPayments(anchor, today, sub.billingCycle === 'Quarterly' ? 3 : 6);
+      break;
+    }
+    case 'Yearly': {
+      const years = today.getFullYear() - anchor.getFullYear();
+      // Compute the anniversary date for this year with day clamping (e.g., Feb 29 -> Feb 28 in non-leap years)
+      const anniversaryMonth = anchor.getMonth();
+      const daysInAnniversaryMonth = new Date(
+        today.getFullYear(),
+        anniversaryMonth + 1,
+        0
+      ).getDate();
+      const clampedAnniversaryDay = Math.min(anchor.getDate(), daysInAnniversaryMonth);
+      const anniversaryThisYear = new Date(
+        today.getFullYear(),
+        anniversaryMonth,
+        clampedAnniversaryDay
+      );
+      // Check if we've passed the (clamped) anniversary this year
+      count = today >= anniversaryThisYear ? years + 1 : years;
+      break;
+    }
+    default:
+      count = 1;
+  }
+
+  return Math.max(1, count); // At least 1 payment if started
+}
+
+/**
+ * Calculate how long the user has been subscribed.
+ * Returns an object with years, months, and days.
+ */
+export function calculateSubscriptionDuration(
+  sub: Subscription,
+  now: Date = new Date()
+): { years: number; months: number; days: number; formatted: string } {
+  const anchor = sub.startDate ? new Date(sub.startDate) : new Date(sub.createdAt);
+  anchor.setHours(0, 0, 0, 0);
+
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  // If start date is in the future
+  if (anchor.getTime() > today.getTime()) {
+    return { years: 0, months: 0, days: 0, formatted: 'Not started' };
+  }
+
+  let years = today.getFullYear() - anchor.getFullYear();
+  let months = today.getMonth() - anchor.getMonth();
+  let days = today.getDate() - anchor.getDate();
+
+  if (days < 0) {
+    months--;
+    // Get days in previous month
+    const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
+
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  // Format the duration string
+  const parts: string[] = [];
+  if (years > 0) parts.push(`${years} ${years === 1 ? 'year' : 'years'}`);
+  if (months > 0) parts.push(`${months} ${months === 1 ? 'month' : 'months'}`);
+  if (days > 0 || parts.length === 0) parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
+
+  return { years, months, days, formatted: parts.join(', ') };
+}
+
+/**
+ * Get the most recent payment date for a subscription.
+ * Returns null if no payments have been made yet.
+ */
+export function getLastPaymentDate(sub: Subscription, now: Date = new Date()): Date | null {
+  const anchor = sub.startDate ? new Date(sub.startDate) : new Date(sub.createdAt);
+  anchor.setHours(0, 0, 0, 0);
+
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  // If start date is in the future, no payment yet
+  if (anchor.getTime() > today.getTime()) {
+    return null;
+  }
+
+  // One-Time: the start date is the only payment
+  if (sub.billingCycle === 'One-Time') {
+    return new Date(anchor);
+  }
+
+  // Optimization: use countPaymentsMade to jump close to the last payment
+  // instead of iterating from anchor (could be hundreds of iterations for old subscriptions)
+  const paymentCount = countPaymentsMade(sub, now);
+  if (paymentCount <= 0) {
+    return null;
+  }
+
+  // Jump forward (paymentCount - 1) cycles from anchor to get near the last payment
+  let lastPayment = new Date(anchor);
+  for (let i = 1; i < paymentCount; i++) {
+    applyBillingCycleStep(lastPayment, sub.billingCycle);
+  }
+
+  // Fine-tune: iterate forward in case of any edge cases with date boundaries
+  let next = advanceByBillingCycle(lastPayment, sub.billingCycle);
+  while (next.getTime() <= today.getTime()) {
+    lastPayment = new Date(next);
+    next = advanceByBillingCycle(next, sub.billingCycle);
+  }
+
+  return lastPayment;
 }
