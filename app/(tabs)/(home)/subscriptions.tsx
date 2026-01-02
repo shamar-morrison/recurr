@@ -71,17 +71,23 @@ export default function SubscriptionsHomeScreen() {
 
   // Load saved view mode on mount
   useEffect(() => {
-    AsyncStorage.getItem(VIEW_MODE_STORAGE_KEY).then((saved) => {
-      if (saved === 'list' || saved === 'grid') {
-        setViewMode(saved);
-      }
-    });
+    AsyncStorage.getItem(VIEW_MODE_STORAGE_KEY)
+      .then((saved) => {
+        if (saved === 'list' || saved === 'grid') {
+          setViewMode(saved);
+        }
+      })
+      .catch((err) => {
+        console.warn('[subscriptions] Failed to load view mode preference:', err);
+      });
   }, []);
 
   const toggleViewMode = useCallback(() => {
     const newMode = viewMode === 'list' ? 'grid' : 'list';
     setViewMode(newMode);
-    AsyncStorage.setItem(VIEW_MODE_STORAGE_KEY, newMode);
+    AsyncStorage.setItem(VIEW_MODE_STORAGE_KEY, newMode).catch((err) => {
+      console.warn('[subscriptions] Failed to save view mode preference:', err);
+    });
   }, [viewMode]);
 
   const filteredItems = useMemo(() => {
@@ -161,19 +167,18 @@ export default function SubscriptionsHomeScreen() {
     );
   }, [handleAdd, colors]);
 
+  const getBillingText = useCallback((isPaused: boolean, daysUntilBilling: number): string => {
+    if (isPaused) return 'Paused';
+    if (daysUntilBilling === 0) return 'Today';
+    if (daysUntilBilling === 1) return 'Tomorrow';
+    return `in ${daysUntilBilling} days`;
+  }, []);
+
   const renderListItem = useCallback(
     ({ item }: { item: (typeof filteredItems)[number] }) => {
       const daysUntilBilling = Math.max(0, item.nextBillingInDays);
-
       const isPaused = item.status === 'Paused';
-
-      const billingText = isPaused
-        ? 'Paused'
-        : daysUntilBilling === 0
-          ? 'Today'
-          : daysUntilBilling === 1
-            ? 'Tomorrow'
-            : `in ${daysUntilBilling} days`;
+      const billingText = getBillingText(isPaused, daysUntilBilling);
 
       return (
         <Pressable
@@ -222,16 +227,8 @@ export default function SubscriptionsHomeScreen() {
   const renderGridItem = useCallback(
     ({ item }: { item: (typeof filteredItems)[number] }) => {
       const daysUntilBilling = Math.max(0, item.nextBillingInDays);
-
       const isPaused = item.status === 'Paused';
-
-      const billingText = isPaused
-        ? 'Paused'
-        : daysUntilBilling === 0
-          ? 'Today'
-          : daysUntilBilling === 1
-            ? 'Tomorrow'
-            : `in ${daysUntilBilling} days`;
+      const billingText = getBillingText(isPaused, daysUntilBilling);
 
       return (
         <Pressable
@@ -996,6 +993,7 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     flex: 1,
+    maxWidth: '50%',
     alignItems: 'center',
     padding: SPACING.lg,
     borderRadius: BORDER_RADIUS.xxxl,
