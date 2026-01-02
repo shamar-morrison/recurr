@@ -18,6 +18,8 @@ import {
 } from '@/src/features/subscriptions/subscriptionsUtils';
 import { formatMoney } from '@/src/utils/formatMoney';
 
+const Separator = () => <View style={styles.separator} />;
+
 type RouteParams = {
   id: string;
 };
@@ -173,8 +175,6 @@ export default function PaymentHistoryScreen() {
     );
   }
 
-  // Combine payments with future first (reversed so past appears at bottom)
-  // Actually, let's show past payments first (most recent at top), then future
   const combinedPayments = [...pastPayments, ...futurePayments];
 
   return (
@@ -188,7 +188,7 @@ export default function PaymentHistoryScreen() {
         ListHeaderComponent={ListHeader}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
         style={[styles.container, { backgroundColor: colors.background }]}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={Separator}
         showsVerticalScrollIndicator={false}
         testID="paymentHistoryList"
       />
