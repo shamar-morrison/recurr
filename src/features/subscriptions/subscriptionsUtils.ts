@@ -376,13 +376,25 @@ export function countPaymentsMade(sub: Subscription, now: Date = new Date()): nu
     case 'Quarterly': {
       const months =
         (today.getFullYear() - anchor.getFullYear()) * 12 + (today.getMonth() - anchor.getMonth());
-      count = Math.floor(months / 3) + (today.getDate() >= anchor.getDate() ? 1 : 0);
+      const periodMonths = 3;
+      const fullPeriods = Math.floor(months / periodMonths);
+      // Compute the last anniversary date
+      const lastAnniversary = new Date(anchor);
+      lastAnniversary.setMonth(anchor.getMonth() + fullPeriods * periodMonths);
+      // Check if today >= last anniversary
+      count = today >= lastAnniversary ? fullPeriods + 1 : fullPeriods;
       break;
     }
     case 'Semiannual': {
       const months =
         (today.getFullYear() - anchor.getFullYear()) * 12 + (today.getMonth() - anchor.getMonth());
-      count = Math.floor(months / 6) + (today.getDate() >= anchor.getDate() ? 1 : 0);
+      const periodMonths = 6;
+      const fullPeriods = Math.floor(months / periodMonths);
+      // Compute the last anniversary date
+      const lastAnniversary = new Date(anchor);
+      lastAnniversary.setMonth(anchor.getMonth() + fullPeriods * periodMonths);
+      // Check if today >= last anniversary
+      count = today >= lastAnniversary ? fullPeriods + 1 : fullPeriods;
       break;
     }
     case 'Yearly': {
