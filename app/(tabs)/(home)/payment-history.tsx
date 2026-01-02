@@ -16,6 +16,7 @@ import {
   generatePaymentHistory,
   PaymentHistoryEntry,
 } from '@/src/features/subscriptions/subscriptionsUtils';
+import { formatMoney } from '@/src/utils/formatMoney';
 
 type RouteParams = {
   id: string;
@@ -35,19 +36,6 @@ export default function PaymentHistoryScreen() {
     (date: Date) => formatDateUtil(date, settings.dateFormat),
     [settings.dateFormat]
   );
-
-  const formatMoney = useCallback((amount: number, currency: string): string => {
-    try {
-      return new Intl.NumberFormat(undefined, {
-        style: 'currency',
-        currency: currency || 'USD',
-        maximumFractionDigits: 2,
-      }).format(Number.isFinite(amount) ? amount : 0);
-    } catch {
-      const safe = Number.isFinite(amount) ? amount : 0;
-      return `${safe.toFixed(2)} ${currency || 'USD'}`;
-    }
-  }, []);
 
   // Generate payment history
   const payments = useMemo(() => {

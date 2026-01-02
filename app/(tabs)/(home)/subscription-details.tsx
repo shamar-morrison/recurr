@@ -49,6 +49,8 @@ import {
   getLastPaymentDate,
   nextBillingDate,
 } from '@/src/features/subscriptions/subscriptionsUtils';
+import { getBillingCycleLabel } from '@/src/utils/billingCycle';
+import { formatMoney } from '@/src/utils/formatMoney';
 
 type RouteParams = {
   id: string;
@@ -136,19 +138,6 @@ export default function SubscriptionDetailsScreen() {
     (date: Date) => formatDateUtil(date, settings.dateFormat),
     [settings.dateFormat]
   );
-
-  const formatMoney = useCallback((amount: number, currency: string): string => {
-    try {
-      return new Intl.NumberFormat(undefined, {
-        style: 'currency',
-        currency: currency || 'USD',
-        maximumFractionDigits: 2,
-      }).format(Number.isFinite(amount) ? amount : 0);
-    } catch {
-      const safe = Number.isFinite(amount) ? amount : 0;
-      return `${safe.toFixed(2)} ${currency || 'USD'}`;
-    }
-  }, []);
 
   // Get website URL from service domain or custom service
   const websiteUrl = useMemo(() => {
@@ -298,10 +287,7 @@ export default function SubscriptionDetailsScreen() {
   const isPaused = subscription.status === 'Paused';
   const statusColor = isPaused ? colors.warning : colors.positive;
 
-  const billingCycleLabel =
-    subscription.billingCycle === 'One-Time'
-      ? 'One-Time'
-      : `Every 1 ${subscription.billingCycle.replace('ly', '').toLowerCase()}`;
+  const billingCycleLabel = getBillingCycleLabel(subscription.billingCycle);
 
   return (
     <>

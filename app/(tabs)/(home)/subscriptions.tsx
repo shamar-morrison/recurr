@@ -42,6 +42,7 @@ import {
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { formatMoney } from '@/src/utils/formatMoney';
 
 type FilterChip = SubscriptionCategory | 'All';
 type SortOption = 'Date' | 'CostAsc' | 'CostDesc' | 'Name';
@@ -520,20 +521,6 @@ export default function SubscriptionsHomeScreen() {
       </View>
     </>
   );
-}
-
-function formatMoney(amount: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: currency || 'USD',
-      maximumFractionDigits: 2,
-    }).format(Number.isFinite(amount) ? amount : 0);
-  } catch (e) {
-    console.log('[subscriptions] formatMoney failed', e);
-    const safe = Number.isFinite(amount) ? amount : 0;
-    return `${safe.toFixed(2)} ${currency || 'USD'}`;
-  }
 }
 
 function formatShortDate(iso: string): string {
