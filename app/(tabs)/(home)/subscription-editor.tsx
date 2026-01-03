@@ -621,6 +621,7 @@ export default function SubscriptionEditorScreen() {
                 formatDate={formatDate}
                 normalizeToMidnight={form.normalizeToMidnight}
                 disabled={isProcessing}
+                dateError={form.dateError}
               />
 
               {/* Reminders */}
