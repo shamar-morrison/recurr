@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
 
@@ -17,27 +17,30 @@ const CHART_PADDING = SPACING.lg * 2;
 
 export function SpendingBarChart({ data, currency }: SpendingBarChartProps) {
   const { colors } = useTheme();
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  const handleBarPress = useCallback((index: number) => {
+    setSelectedIndex((prev) => (prev === index ? null : index));
+  }, []);
 
   const chartData = useMemo(() => {
     if (data.length === 0) return [];
 
-    return data.map((point) => ({
+    return data.map((point, index) => ({
       value: point.amount,
       label: point.month,
-      frontColor: colors.primary,
-      topLabelComponent: () => (
-        <Text style={[styles.barLabel, { color: colors.secondaryText }]}>
-          {formatMoney(point.amount, currency, true)}
-        </Text>
-      ),
+      frontColor: selectedIndex === index ? colors.tint : colors.primary,
+      onPress: () => handleBarPress(index),
     }));
-  }, [data, colors, currency]);
+  }, [data, colors, selectedIndex, handleBarPress]);
 
   const maxValue = useMemo(() => {
     if (data.length === 0) return 100;
     const max = Math.max(...data.map((d) => d.amount));
     return max > 0 ? max * 1.2 : 100; // Add 20% headroom
   }, [data]);
+
+  const selectedData = selectedIndex !== null ? data[selectedIndex] : null;
 
   if (data.length === 0) {
     return (
@@ -53,6 +56,20 @@ export function SpendingBarChart({ data, currency }: SpendingBarChartProps) {
   return (
     <View style={[styles.container, { backgroundColor: colors.card }]}>
       <Text style={[styles.title, { color: colors.text }]}>Monthly Spending</Text>
+
+      {/* Selected value display or hint */}
+      <View style={styles.selectedValueContainer}>
+        {selectedData ? (
+          <Text style={[styles.selectedValue, { color: colors.text }]}>
+            {selectedData.month}: {formatMoney(selectedData.amount, currency)}
+          </Text>
+        ) : (
+          <Text style={[styles.hintText, { color: colors.secondaryText }]}>
+            Tap a bar to see its value
+          </Text>
+        )}
+      </View>
+
       <View style={styles.chartWrapper}>
         <BarChart
           data={chartData}
@@ -91,22 +108,29 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: BORDER_RADIUS.xxxl,
     padding: SPACING.xl,
-    gap: SPACING.lg,
+    gap: SPACING.md,
   },
   title: {
     fontSize: FONT_SIZE.xl,
     fontWeight: '800',
     letterSpacing: -0.3,
   },
+  selectedValueContainer: {
+    minHeight: 24,
+    justifyContent: 'center',
+  },
+  selectedValue: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  hintText: {
+    fontSize: FONT_SIZE.sm,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
   chartWrapper: {
     marginLeft: -SPACING.md,
-  },
-  barLabel: {
-    fontSize: 9,
-    fontWeight: '600',
-    marginBottom: 4,
-    textAlign: 'center',
-    minWidth: 50,
   },
   emptyText: {
     fontSize: FONT_SIZE.md,
