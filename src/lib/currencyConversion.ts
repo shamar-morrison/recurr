@@ -321,6 +321,54 @@ export function convertFromUSD(amountUSD: number, targetCurrency: string): numbe
 }
 
 /**
+ * Convert an amount from a source currency to USD.
+ * Returns the converted amount, or the original if rate is unknown.
+ *
+ * @param amount - Amount in source currency
+ * @param sourceCurrency - Source currency code (e.g., 'EUR', 'GBP')
+ * @returns Converted amount in USD
+ */
+export function convertToUSD(amount: number, sourceCurrency: string): number {
+  const rate = getRate(sourceCurrency);
+
+  if (rate === undefined || rate === 0) {
+    console.warn(
+      `[convertToUSD] Unknown currency or zero rate for "${sourceCurrency}"; assuming 1:1 parity, returning original amount as USD`
+    );
+    return amount;
+  }
+
+  // rate = 1 USD -> X source currency, so source -> USD = amount / rate
+  const converted = amount / rate;
+
+  // Always round to 2 decimal places for USD output.
+  // Unlike convertFromUSD which uses conditional rounding for high-value currencies
+  // (JPY, KRW, etc.) that lack fractional units, USD always has cents.
+  return Math.round(converted * 100) / 100;
+}
+
+/**
+ * Convert an amount from one currency to another.
+ * Converts source -> USD -> target.
+ *
+ * @param amount - Amount in source currency
+ * @param sourceCurrency - Source currency code (e.g., 'EUR')
+ * @param targetCurrency - Target currency code (e.g., 'GBP')
+ * @returns Converted amount in target currency
+ */
+export function convertCurrency(
+  amount: number,
+  sourceCurrency: string,
+  targetCurrency: string
+): number {
+  if (sourceCurrency.toUpperCase() === targetCurrency.toUpperCase()) {
+    return amount;
+  }
+  const amountInUSD = convertToUSD(amount, sourceCurrency);
+  return convertFromUSD(amountInUSD, targetCurrency);
+}
+
+/**
  * Get the default price for a service in the user's currency.
  *
  * @param priceUSD - Default price in USD
@@ -338,5 +386,15 @@ export function getDefaultPriceInCurrency(
   return convertFromUSD(priceUSD, userCurrency);
 }
 
-// Re-export static rates for backwards compatibility (if needed elsewhere)
+/**
+ * Static exchange rates for backwards compatibility.
+ *
+ * @deprecated Prefer using `convertFromUSD()`, `convertToUSD()`, or `convertCurrency()`
+ * which automatically use live/cached rates when available.
+ *
+ * @remarks
+ * This export provides **static fallback rates only**. It will NOT reflect
+ * live or cached rates loaded by `initCurrencyRates()`, even when available.
+ * Use the conversion functions instead for accurate, up-to-date conversions.
+ */
 export const EXCHANGE_RATES_FROM_USD = STATIC_RATES_FROM_USD;

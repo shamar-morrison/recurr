@@ -1,7 +1,14 @@
 import { Motion } from '@legendapp/motion';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, Stack } from 'expo-router';
-import { Bell, Crown, Export, Lightning, Sparkle } from 'phosphor-react-native';
+import {
+  BellIcon,
+  ChartBarIcon,
+  CrownIcon,
+  ExportIcon,
+  LightningIcon,
+  SparkleIcon,
+} from 'phosphor-react-native';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -17,31 +24,42 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppColors, GRADIENTS } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
 import { FeatureItem } from '@/src/features/monetization/FeatureItem';
 import { useIAP } from '@/src/features/monetization/IAPProvider';
 
 // Premium features configuration - easily extensible for future features
-const PREMIUM_FEATURES = [
-  {
-    title: 'Unlimited Subscriptions',
-    description: 'Track all your subscriptions without limits. Free users can only track 3.',
-    icon: Lightning,
-  },
-  {
-    title: 'Export Your Data',
-    description: 'Export to CSV or Markdown anytime. Keep your data portable and backed up.',
-    icon: Export,
-  },
-  {
-    title: 'Unlimited Reminders',
-    description: 'Never miss a payment. Set as many reminders as you need.',
-    icon: Bell,
-  },
-] as const;
 
 export default function PaywallScreen() {
   const { isPremium, user } = useAuth();
   const { isLoading, purchase, restore } = useIAP();
+  const { freeTierLimit, loading: configLoading, error: configError } = useRemoteConfig();
+
+  const premiumFeatures = React.useMemo(
+    () => [
+      {
+        title: 'Unlimited Subscriptions',
+        description: `Track all your subscriptions without limits. Free users can only track ${freeTierLimit}.`,
+        icon: LightningIcon,
+      },
+      {
+        title: 'Export Your Data',
+        description: 'Export to CSV or Markdown anytime. Keep your data portable and backed up.',
+        icon: ExportIcon,
+      },
+      {
+        title: 'Unlimited Reminders',
+        description: 'Never miss a payment. Set as many reminders as you need.',
+        icon: BellIcon,
+      },
+      {
+        title: 'Detailed Reports',
+        description: 'Access charts, trends and analytics to understand your spending patterns.',
+        icon: ChartBarIcon,
+      },
+    ],
+    [freeTierLimit]
+  );
 
   const canPurchase = Boolean(user);
 
@@ -54,6 +72,28 @@ export default function PaywallScreen() {
     await purchase();
     // Navigation to success screen is handled by IAPProvider after validation
   };
+
+  if (configLoading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color={AppColors.tint} />
+      </View>
+    );
+  }
+
+  if (configError) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.errorText}>Unable to load configuration.</Text>
+        <Text style={styles.errorSubtext}>
+          Please check your internet connection and try again.
+        </Text>
+        <Pressable onPress={() => router.back()} style={styles.errorButton}>
+          <Text style={styles.errorButtonText}>Go Back</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   const handleRestore = async () => {
     if (!canPurchase) {
@@ -86,7 +126,7 @@ export default function PaywallScreen() {
                 transition={{ type: 'spring', damping: 12 }}
                 style={styles.crownContainerLarge}
               >
-                <Crown size={64} color="#FFD700" weight="fill" />
+                <CrownIcon size={64} color="#FFD700" weight="fill" />
               </Motion.View>
 
               <Text style={styles.premiumActiveTitle}>You're Premium!</Text>
@@ -132,7 +172,7 @@ export default function PaywallScreen() {
                 style={styles.crownContainer}
               >
                 <View style={styles.crownGlow} />
-                <Crown size={48} color="#FFD700" weight="fill" />
+                <CrownIcon size={48} color="#FFD700" weight="fill" />
               </Motion.View>
 
               <Motion.View
@@ -157,7 +197,7 @@ export default function PaywallScreen() {
               style={styles.pricingCard}
             >
               <View style={styles.pricingHeader}>
-                <Sparkle size={20} color={AppColors.tint} weight="fill" />
+                <SparkleIcon size={20} color={AppColors.tint} weight="fill" />
                 <Text style={styles.pricingLabel}>LIFETIME ACCESS</Text>
               </View>
 
@@ -178,7 +218,7 @@ export default function PaywallScreen() {
               <Text style={styles.sectionTitle}>What you get</Text>
 
               <View style={styles.featuresList}>
-                {PREMIUM_FEATURES.map((feature, index) => (
+                {premiumFeatures.map((feature, index) => (
                   <FeatureItem
                     key={feature.title}
                     title={feature.title}
@@ -201,7 +241,7 @@ export default function PaywallScreen() {
                 <View style={styles.comparisonBadgeFree}>
                   <Text style={styles.comparisonBadgeText}>FREE</Text>
                 </View>
-                <Text style={styles.comparisonText}>Up to 3 subscriptions</Text>
+                <Text style={styles.comparisonText}>Up to {freeTierLimit} subscriptions</Text>
               </View>
               <View style={styles.comparisonDivider} />
               <View style={styles.comparisonRow}>
@@ -225,7 +265,7 @@ export default function PaywallScreen() {
                 <ActivityIndicator color={AppColors.tint} />
               ) : (
                 <>
-                  <Crown size={20} color={AppColors.tint} weight="fill" />
+                  <CrownIcon size={20} color={AppColors.tint} weight="fill" />
                   <Text style={styles.purchaseButtonText}>Unlock Premium • $5</Text>
                 </>
               )}
@@ -484,5 +524,37 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.lg,
     fontWeight: '800',
     color: AppColors.tint,
+  },
+
+  centerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: SPACING.xl,
+    backgroundColor: '#fff',
+    gap: SPACING.md,
+  },
+  errorText: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '700',
+    color: AppColors.text,
+    textAlign: 'center',
+  },
+  errorSubtext: {
+    fontSize: FONT_SIZE.md,
+    color: AppColors.secondaryText,
+    textAlign: 'center',
+  },
+  errorButton: {
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.xl,
+    backgroundColor: AppColors.tint,
+    borderRadius: BORDER_RADIUS.full,
+    marginTop: SPACING.md,
+  },
+  errorButtonText: {
+    color: '#fff',
+    fontSize: FONT_SIZE.md,
+    fontWeight: '700',
   },
 });

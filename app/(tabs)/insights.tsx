@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,10 +18,15 @@ import {
   CalendarCheckIcon,
   CalendarIcon,
   CaretDownIcon,
+  CaretRightIcon,
   CaretUpIcon,
+  ChartBarIcon,
   ChartLineUpIcon,
   CrownIcon,
+  LockSimple,
 } from 'phosphor-react-native';
+
+import { PremiumBadge } from '@/src/components/ui/PremiumBadge';
 
 const INITIAL_CATEGORIES_SHOWN = 5;
 
@@ -318,6 +324,46 @@ export default function InsightsScreen() {
           colors={colors}
           formatMoney={formatMoney}
         />
+
+        {/* View Detailed Report Button - Premium Feature */}
+        <Pressable
+          style={[
+            styles.detailedReportButton,
+            { backgroundColor: colors.card },
+            !isPremium && styles.detailedReportLocked,
+          ]}
+          onPress={() => {
+            if (isPremium) {
+              router.push('/(tabs)/(home)/spending-history');
+            } else {
+              router.push('/paywall');
+            }
+          }}
+          testID="viewDetailedReportButton"
+        >
+          <View style={styles.detailedReportLeft}>
+            <View style={[styles.detailedReportIcon, { backgroundColor: colors.badgeBackground }]}>
+              <ChartBarIcon color={colors.primary} size={24} weight="fill" />
+            </View>
+            <View>
+              <View style={styles.detailedReportTitleRow}>
+                <Text style={[styles.detailedReportTitle, { color: colors.text }]}>
+                  View Detailed Report
+                </Text>
+                {!isPremium && <PremiumBadge size="sm" />}
+              </View>
+              <Text style={[styles.detailedReportSubtitle, { color: colors.secondaryText }]}>
+                Charts, trends & analytics
+              </Text>
+            </View>
+          </View>
+          {isPremium ? (
+            <CaretRightIcon color={colors.secondaryText} size={20} />
+          ) : (
+            <LockSimple color={colors.secondaryText} size={20} weight="fill" />
+          )}
+        </Pressable>
+
         <View style={styles.footerSpace} />
       </ScrollView>
     </SafeAreaView>
@@ -609,5 +655,42 @@ const styles = StyleSheet.create({
   expandButtonText: {
     fontSize: FONT_SIZE.md,
     fontWeight: '600',
+  },
+  detailedReportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xxxl,
+    gap: SPACING.md,
+  },
+  detailedReportLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  detailedReportIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: BORDER_RADIUS.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailedReportTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '700',
+  },
+  detailedReportSubtitle: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  detailedReportTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  detailedReportLocked: {
+    opacity: 0.6,
   },
 });
