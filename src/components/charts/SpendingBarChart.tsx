@@ -78,6 +78,7 @@ export function SpendingBarChart({ data, currency }: SpendingBarChartProps) {
             Math.max(16, (SCREEN_WIDTH - CHART_PADDING - 60) / data.length - 12)
           )}
           spacing={8}
+          initialSpacing={10}
           roundedTop
           roundedBottom
           hideRules
@@ -87,8 +88,7 @@ export function SpendingBarChart({ data, currency }: SpendingBarChartProps) {
           yAxisTextStyle={{ color: colors.secondaryText, fontSize: 10 }}
           noOfSections={4}
           maxValue={maxValue}
-          isAnimated
-          animationDuration={500}
+          isAnimated={false}
           barBorderRadius={4}
           frontColor={colors.primary}
           xAxisLabelTextStyle={{
