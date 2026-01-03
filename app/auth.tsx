@@ -5,7 +5,7 @@ import { Image, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/src/components/ui/Button';
-import { FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 
@@ -58,6 +58,11 @@ export default function AuthScreen() {
         <SafeAreaView style={styles.container}>
           <View style={styles.content}>
             <View style={styles.header}>
+              <Image
+                source={require('@/assets/images/react-logo.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
               <Text style={[styles.title, { color: colors.text }]}>Welcome to Recurr</Text>
               <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
                 Sign in to keep your subscriptions synced across all your devices.
@@ -107,6 +112,12 @@ const styles = StyleSheet.create({
   header: {
     gap: SPACING.md,
     alignItems: 'center',
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    borderRadius: BORDER_RADIUS.xl,
+    marginBottom: SPACING.sm,
   },
   title: {
     fontSize: FONT_SIZE.hero,
