@@ -124,11 +124,52 @@ export function useSubscriptionForm({ editingId }: UseSubscriptionFormOptions = 
 
   // Date validation error
   const dateError = useMemo(() => {
-    if (startDate && endDate && endDate < startDate) {
+    if (!startDate || !endDate) return null;
+
+    if (endDate < startDate) {
       return 'End date cannot be before start date.';
     }
+
+    // Check that end date is at least one billing cycle after start date
+    const minEndDate = new Date(startDate);
+    let cycleName = '';
+
+    switch (billingCycle) {
+      case 'Weekly':
+        minEndDate.setDate(minEndDate.getDate() + 7);
+        cycleName = 'one week';
+        break;
+      case 'Bi-weekly':
+        minEndDate.setDate(minEndDate.getDate() + 14);
+        cycleName = 'two weeks';
+        break;
+      case 'Monthly':
+        minEndDate.setMonth(minEndDate.getMonth() + 1);
+        cycleName = 'one month';
+        break;
+      case 'Quarterly':
+        minEndDate.setMonth(minEndDate.getMonth() + 3);
+        cycleName = 'three months';
+        break;
+      case 'Semiannual':
+        minEndDate.setMonth(minEndDate.getMonth() + 6);
+        cycleName = 'six months';
+        break;
+      case 'Yearly':
+        minEndDate.setFullYear(minEndDate.getFullYear() + 1);
+        cycleName = 'one year';
+        break;
+      case 'One-Time':
+        // No minimum duration for one-time payments
+        return null;
+    }
+
+    if (endDate < minEndDate) {
+      return `End date must be at least ${cycleName} after start date.`;
+    }
+
     return null;
-  }, [startDate, endDate]);
+  }, [startDate, endDate, billingCycle]);
 
   // Form validation
   const validate = useCallback((): string | null => {

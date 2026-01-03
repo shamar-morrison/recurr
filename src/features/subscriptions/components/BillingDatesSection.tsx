@@ -19,6 +19,7 @@ interface BillingDatesSectionProps {
   formatDate: (date: Date) => string;
   normalizeToMidnight: (date: Date) => Date;
   disabled?: boolean;
+  dateError?: string | null;
 }
 
 /**
@@ -37,6 +38,7 @@ export function BillingDatesSection({
   formatDate,
   normalizeToMidnight,
   disabled = false,
+  dateError,
 }: BillingDatesSectionProps) {
   const { colors } = useTheme();
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -188,6 +190,7 @@ export function BillingDatesSection({
             onChange={handleEndDateChange}
           />
         )}
+        {dateError && <Text style={styles.errorText}>{dateError}</Text>}
       </View>
     </>
   );

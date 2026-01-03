@@ -272,6 +272,10 @@ export function generatePaymentHistory(
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
 
+  // Calculate end date limit if subscription has an end date
+  const endLimit = sub.endDate ? new Date(sub.endDate) : null;
+  if (endLimit) endLimit.setHours(23, 59, 59, 999);
+
   const entries: PaymentHistoryEntry[] = [];
 
   // One-Time subscriptions have only one payment
@@ -287,7 +291,11 @@ export function generatePaymentHistory(
 
   // Generate past payments
   let current = new Date(anchor);
-  while (current.getTime() <= today.getTime() && entries.length < maxPastCount) {
+  while (
+    current.getTime() <= today.getTime() &&
+    entries.length < maxPastCount &&
+    (!endLimit || current.getTime() <= endLimit.getTime())
+  ) {
     entries.push({
       date: new Date(current),
       amount: sub.amount,
@@ -297,9 +305,9 @@ export function generatePaymentHistory(
     current = advanceByBillingCycle(current, sub.billingCycle);
   }
 
-  // Generate future payments
+  // Generate future payments (only if within end date limit)
   let futureAdded = 0;
-  while (futureAdded < futureCount) {
+  while (futureAdded < futureCount && (!endLimit || current.getTime() <= endLimit.getTime())) {
     entries.push({
       date: new Date(current),
       amount: sub.amount,

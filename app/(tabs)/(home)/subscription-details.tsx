@@ -422,6 +422,20 @@ export default function SubscriptionDetailsScreen() {
               value={formatDate(derivedData.startDate)}
             />
 
+            {subscription.endDate && (
+              <>
+                <Divider colors={colors} />
+                <SettingRow
+                  colors={colors}
+                  icon={<CalendarIcon />}
+                  iconColor="#EF4444"
+                  iconBg="#FEE2E2"
+                  label="End date"
+                  value={formatDate(new Date(subscription.endDate))}
+                />
+              </>
+            )}
+
             <Divider colors={colors} />
 
             <SettingRow
