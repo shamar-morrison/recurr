@@ -321,6 +321,48 @@ export function convertFromUSD(amountUSD: number, targetCurrency: string): numbe
 }
 
 /**
+ * Convert an amount from a source currency to USD.
+ * Returns the converted amount, or the original if rate is unknown.
+ *
+ * @param amount - Amount in source currency
+ * @param sourceCurrency - Source currency code (e.g., 'EUR', 'GBP')
+ * @returns Converted amount in USD
+ */
+export function convertToUSD(amount: number, sourceCurrency: string): number {
+  const rate = getRate(sourceCurrency);
+
+  if (rate === undefined || rate === 0) {
+    console.warn(`[convertToUSD] Unknown currency: ${sourceCurrency}, using original value`);
+    return amount;
+  }
+
+  // rate = 1 USD -> X source currency, so source -> USD = amount / rate
+  const converted = amount / rate;
+  return Math.round(converted * 100) / 100;
+}
+
+/**
+ * Convert an amount from one currency to another.
+ * Converts source -> USD -> target.
+ *
+ * @param amount - Amount in source currency
+ * @param sourceCurrency - Source currency code (e.g., 'EUR')
+ * @param targetCurrency - Target currency code (e.g., 'GBP')
+ * @returns Converted amount in target currency
+ */
+export function convertCurrency(
+  amount: number,
+  sourceCurrency: string,
+  targetCurrency: string
+): number {
+  if (sourceCurrency.toUpperCase() === targetCurrency.toUpperCase()) {
+    return amount;
+  }
+  const amountInUSD = convertToUSD(amount, sourceCurrency);
+  return convertFromUSD(amountInUSD, targetCurrency);
+}
+
+/**
  * Get the default price for a service in the user's currency.
  *
  * @param priceUSD - Default price in USD

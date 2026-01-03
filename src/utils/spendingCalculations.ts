@@ -1,5 +1,6 @@
 import { generatePaymentHistory } from '@/src/features/subscriptions/subscriptionsUtils';
 import { Subscription, SubscriptionCategory } from '@/src/features/subscriptions/types';
+import { convertCurrency } from '@/src/lib/currencyConversion';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -117,14 +118,16 @@ const MONTH_FULL_NAMES = [
 
 /**
  * Calculate spending history for a given date range, grouped by month.
+ * When subscriptions use mixed currencies, amounts are converted to the
+ * primaryCurrency before being summed.
  */
 export function calculateSpendingByMonth(
   subscriptions: Subscription[],
   startDate: Date,
   endDate: Date,
-  options: { includePaused?: boolean } = {}
+  options: { includePaused?: boolean; primaryCurrency?: string } = {}
 ): SpendingDataPoint[] {
-  const { includePaused = false } = options;
+  const { includePaused = false, primaryCurrency } = options;
 
   // Filter subscriptions based on status
   const filteredSubs = subscriptions.filter((sub) => {
@@ -132,6 +135,10 @@ export function calculateSpendingByMonth(
     if (sub.status === 'Paused' && !includePaused) return false;
     return true;
   });
+
+  // Detect mixed currencies and determine target currency
+  const currencyInfo = detectMixedCurrencies(filteredSubs);
+  const targetCurrency = primaryCurrency ?? currencyInfo.primaryCurrency;
 
   // Build month buckets
   const monthBuckets = new Map<
@@ -153,7 +160,7 @@ export function calculateSpendingByMonth(
     current.setMonth(current.getMonth() + 1);
   }
 
-  // Aggregate payments by month
+  // Aggregate payments by month, converting to target currency if needed
   for (const sub of filteredSubs) {
     const payments = generatePaymentHistory(sub, {
       now: endDate,
@@ -168,7 +175,12 @@ export function calculateSpendingByMonth(
       const key = `${payment.date.getFullYear()}-${payment.date.getMonth()}`;
       const bucket = monthBuckets.get(key);
       if (bucket) {
-        bucket.amount += payment.amount;
+        // Convert payment amount to target currency if currencies differ
+        const convertedAmount =
+          payment.currency.toUpperCase() === targetCurrency.toUpperCase()
+            ? payment.amount
+            : convertCurrency(payment.amount, payment.currency, targetCurrency);
+        bucket.amount += convertedAmount;
       }
     }
   }
@@ -182,6 +194,8 @@ export function calculateSpendingByMonth(
 
 /**
  * Calculate spending aggregated by category.
+ * When subscriptions use mixed currencies, amounts are converted to the
+ * primaryCurrency before being summed.
  */
 export function calculateSpendingByCategory(
   subscriptions: Subscription[],
@@ -190,9 +204,10 @@ export function calculateSpendingByCategory(
   options: {
     includePaused?: boolean;
     customCategories?: Array<{ name: string; color?: string }>;
+    primaryCurrency?: string;
   } = {}
 ): CategorySpending[] {
-  const { includePaused = false, customCategories = [] } = options;
+  const { includePaused = false, customCategories = [], primaryCurrency } = options;
 
   // Filter subscriptions
   const filteredSubs = subscriptions.filter((sub) => {
@@ -200,6 +215,10 @@ export function calculateSpendingByCategory(
     if (sub.status === 'Paused' && !includePaused) return false;
     return true;
   });
+
+  // Detect mixed currencies and determine target currency
+  const currencyInfo = detectMixedCurrencies(filteredSubs);
+  const targetCurrency = primaryCurrency ?? currencyInfo.primaryCurrency;
 
   // Aggregate by category
   const categoryTotals = new Map<SubscriptionCategory, number>();
@@ -215,7 +234,12 @@ export function calculateSpendingByCategory(
     for (const payment of payments) {
       if (!payment.isPast) continue;
       if (payment.date < startDate || payment.date > endDate) continue;
-      subTotal += payment.amount;
+      // Convert payment amount to target currency if currencies differ
+      const convertedAmount =
+        payment.currency.toUpperCase() === targetCurrency.toUpperCase()
+          ? payment.amount
+          : convertCurrency(payment.amount, payment.currency, targetCurrency);
+      subTotal += convertedAmount;
     }
 
     const current = categoryTotals.get(sub.category) ?? 0;
