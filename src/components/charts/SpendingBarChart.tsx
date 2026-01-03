@@ -16,14 +16,10 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 const CHART_PADDING = SPACING.lg * 2;
 
 export function SpendingBarChart({ data, currency }: SpendingBarChartProps) {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   const chartData = useMemo(() => {
     if (data.length === 0) return [];
-
-    // Calculate bar width based on data length
-    const availableWidth = SCREEN_WIDTH - CHART_PADDING - 60;
-    const barWidth = Math.min(32, Math.max(16, availableWidth / data.length - 12));
 
     return data.map((point) => ({
       value: point.amount,

@@ -23,7 +23,6 @@ import { formatMoney } from '@/src/utils/formatMoney';
 import {
   calculateSpendingByCategory,
   calculateSpendingByMonth,
-  calculateTotalSpending,
   DateRangeType,
   detectMixedCurrencies,
   getDateRange,
@@ -69,11 +68,9 @@ export default function SpendingHistoryScreen() {
   }, [subscriptions, dateRange, includePaused, customCategories]);
 
   const totalSpending = useMemo(() => {
-    if (!subscriptions) return 0;
-    return calculateTotalSpending(subscriptions, dateRange.startDate, dateRange.endDate, {
-      includePaused,
-    });
-  }, [subscriptions, dateRange, includePaused]);
+    if (!monthlyData || monthlyData.length === 0) return 0;
+    return monthlyData.reduce((sum, month) => sum + month.amount, 0);
+  }, [monthlyData]);
 
   const headerLeft = useCallback(
     () => (
