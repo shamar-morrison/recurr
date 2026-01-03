@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
 import { CaretLeftIcon, WarningCircleIcon } from 'phosphor-react-native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -34,6 +34,25 @@ const DATE_RANGE_OPTIONS: { value: DateRangeType; label: string }[] = [
   { value: 'year', label: 'Year' },
   { value: 'alltime', label: 'All' },
 ];
+
+// Extracted outside component to avoid recreating on every render
+const HeaderBackButton = React.memo(function HeaderBackButton({
+  backgroundColor,
+  iconColor,
+}: {
+  backgroundColor: string;
+  iconColor: string;
+}) {
+  return (
+    <Pressable
+      onPress={() => router.back()}
+      style={[styles.headerButton, { backgroundColor }]}
+      testID="spendingHistoryBack"
+    >
+      <CaretLeftIcon color={iconColor} size={22} />
+    </Pressable>
+  );
+});
 
 export default function SpendingHistoryScreen() {
   const { colors } = useTheme();
@@ -72,17 +91,11 @@ export default function SpendingHistoryScreen() {
     return monthlyData.reduce((sum, month) => sum + month.amount, 0);
   }, [monthlyData]);
 
-  const headerLeft = useCallback(
-    () => (
-      <Pressable
-        onPress={() => router.back()}
-        style={[styles.headerButton, { backgroundColor: colors.tertiaryBackground }]}
-        testID="spendingHistoryBack"
-      >
-        <CaretLeftIcon color={colors.text} size={22} />
-      </Pressable>
+  const headerLeft = useMemo(
+    () => () => (
+      <HeaderBackButton backgroundColor={colors.tertiaryBackground} iconColor={colors.text} />
     ),
-    [colors]
+    [colors.tertiaryBackground, colors.text]
   );
 
   if (isLoading) {

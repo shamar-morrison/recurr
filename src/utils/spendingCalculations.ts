@@ -84,6 +84,25 @@ export function getDateRange(rangeType: DateRangeType, now: Date = new Date()): 
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Subscription Filtering
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Filter subscriptions to exclude Archived and optionally Paused subscriptions.
+ */
+function filterActiveSubscriptions(
+  subscriptions: Subscription[],
+  options: { includePaused?: boolean } = {}
+): Subscription[] {
+  const { includePaused = false } = options;
+  return subscriptions.filter((sub) => {
+    if (sub.status === 'Archived') return false;
+    if (sub.status === 'Paused' && !includePaused) return false;
+    return true;
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Spending Calculations
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -130,11 +149,7 @@ export function calculateSpendingByMonth(
   const { includePaused = false, primaryCurrency } = options;
 
   // Filter subscriptions based on status
-  const filteredSubs = subscriptions.filter((sub) => {
-    if (sub.status === 'Archived') return false;
-    if (sub.status === 'Paused' && !includePaused) return false;
-    return true;
-  });
+  const filteredSubs = filterActiveSubscriptions(subscriptions, { includePaused });
 
   // Detect mixed currencies and determine target currency
   const currencyInfo = detectMixedCurrencies(filteredSubs);
@@ -210,11 +225,7 @@ export function calculateSpendingByCategory(
   const { includePaused = false, customCategories = [], primaryCurrency } = options;
 
   // Filter subscriptions
-  const filteredSubs = subscriptions.filter((sub) => {
-    if (sub.status === 'Archived') return false;
-    if (sub.status === 'Paused' && !includePaused) return false;
-    return true;
-  });
+  const filteredSubs = filterActiveSubscriptions(subscriptions, { includePaused });
 
   // Detect mixed currencies and determine target currency
   const currencyInfo = detectMixedCurrencies(filteredSubs);
