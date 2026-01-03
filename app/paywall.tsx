@@ -1,7 +1,14 @@
 import { Motion } from '@legendapp/motion';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, Stack } from 'expo-router';
-import { Bell, ChartBar, Crown, Export, Lightning, Sparkle } from 'phosphor-react-native';
+import {
+  BellIcon,
+  ChartBarIcon,
+  CrownIcon,
+  ExportIcon,
+  LightningIcon,
+  SparkleIcon,
+} from 'phosphor-react-native';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -17,6 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppColors, GRADIENTS } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
 import { FeatureItem } from '@/src/features/monetization/FeatureItem';
 import { useIAP } from '@/src/features/monetization/IAPProvider';
 
@@ -25,28 +33,29 @@ const PREMIUM_FEATURES = [
   {
     title: 'Unlimited Subscriptions',
     description: 'Track all your subscriptions without limits. Free users can only track 3.',
-    icon: Lightning,
+    icon: LightningIcon,
   },
   {
     title: 'Export Your Data',
     description: 'Export to CSV or Markdown anytime. Keep your data portable and backed up.',
-    icon: Export,
+    icon: ExportIcon,
   },
   {
     title: 'Unlimited Reminders',
     description: 'Never miss a payment. Set as many reminders as you need.',
-    icon: Bell,
+    icon: BellIcon,
   },
   {
     title: 'Detailed Reports',
     description: 'Access charts, trends and analytics to understand your spending patterns.',
-    icon: ChartBar,
+    icon: ChartBarIcon,
   },
 ] as const;
 
 export default function PaywallScreen() {
   const { isPremium, user } = useAuth();
   const { isLoading, purchase, restore } = useIAP();
+  const { freeTierLimit } = useRemoteConfig();
 
   const canPurchase = Boolean(user);
 
@@ -91,7 +100,7 @@ export default function PaywallScreen() {
                 transition={{ type: 'spring', damping: 12 }}
                 style={styles.crownContainerLarge}
               >
-                <Crown size={64} color="#FFD700" weight="fill" />
+                <CrownIcon size={64} color="#FFD700" weight="fill" />
               </Motion.View>
 
               <Text style={styles.premiumActiveTitle}>You're Premium!</Text>
@@ -137,7 +146,7 @@ export default function PaywallScreen() {
                 style={styles.crownContainer}
               >
                 <View style={styles.crownGlow} />
-                <Crown size={48} color="#FFD700" weight="fill" />
+                <CrownIcon size={48} color="#FFD700" weight="fill" />
               </Motion.View>
 
               <Motion.View
@@ -162,7 +171,7 @@ export default function PaywallScreen() {
               style={styles.pricingCard}
             >
               <View style={styles.pricingHeader}>
-                <Sparkle size={20} color={AppColors.tint} weight="fill" />
+                <SparkleIcon size={20} color={AppColors.tint} weight="fill" />
                 <Text style={styles.pricingLabel}>LIFETIME ACCESS</Text>
               </View>
 
@@ -206,7 +215,7 @@ export default function PaywallScreen() {
                 <View style={styles.comparisonBadgeFree}>
                   <Text style={styles.comparisonBadgeText}>FREE</Text>
                 </View>
-                <Text style={styles.comparisonText}>Up to 3 subscriptions</Text>
+                <Text style={styles.comparisonText}>Up to {freeTierLimit} subscriptions</Text>
               </View>
               <View style={styles.comparisonDivider} />
               <View style={styles.comparisonRow}>
@@ -230,7 +239,7 @@ export default function PaywallScreen() {
                 <ActivityIndicator color={AppColors.tint} />
               ) : (
                 <>
-                  <Crown size={20} color={AppColors.tint} weight="fill" />
+                  <CrownIcon size={20} color={AppColors.tint} weight="fill" />
                   <Text style={styles.purchaseButtonText}>Unlock Premium • $5</Text>
                 </>
               )}
