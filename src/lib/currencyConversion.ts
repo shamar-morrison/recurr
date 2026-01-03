@@ -332,12 +332,18 @@ export function convertToUSD(amount: number, sourceCurrency: string): number {
   const rate = getRate(sourceCurrency);
 
   if (rate === undefined || rate === 0) {
-    console.warn(`[convertToUSD] Unknown currency: ${sourceCurrency}, using original value`);
+    console.warn(
+      `[convertToUSD] Unknown currency or zero rate for "${sourceCurrency}"; assuming 1:1 parity, returning original amount as USD`
+    );
     return amount;
   }
 
   // rate = 1 USD -> X source currency, so source -> USD = amount / rate
   const converted = amount / rate;
+
+  // Always round to 2 decimal places for USD output.
+  // Unlike convertFromUSD which uses conditional rounding for high-value currencies
+  // (JPY, KRW, etc.) that lack fractional units, USD always has cents.
   return Math.round(converted * 100) / 100;
 }
 
