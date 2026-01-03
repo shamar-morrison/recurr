@@ -30,6 +30,7 @@ function createSimpleHeader(defaultTitle: string) {
 const EditorHeader = createSimpleHeader('Subscription');
 const DetailsHeader = createSimpleHeader('Details');
 const HistoryHeader = createSimpleHeader('Payment History');
+const SpendingHistoryHeader = createSimpleHeader('Spending History');
 
 export default function HomeStackLayout() {
   const { colors } = useTheme();
@@ -66,6 +67,12 @@ export default function HomeStackLayout() {
         name="payment-history"
         options={{
           header: (props) => <HistoryHeader {...props} />,
+        }}
+      />
+      <Stack.Screen
+        name="spending-history"
+        options={{
+          header: (props) => <SpendingHistoryHeader {...props} />,
         }}
       />
     </Stack>

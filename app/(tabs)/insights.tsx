@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,7 +18,9 @@ import {
   CalendarCheckIcon,
   CalendarIcon,
   CaretDownIcon,
+  CaretRightIcon,
   CaretUpIcon,
+  ChartBarIcon,
   ChartLineUpIcon,
   CrownIcon,
 } from 'phosphor-react-native';
@@ -318,6 +321,29 @@ export default function InsightsScreen() {
           colors={colors}
           formatMoney={formatMoney}
         />
+
+        {/* View Detailed Report Button */}
+        <Pressable
+          style={[styles.detailedReportButton, { backgroundColor: colors.card }]}
+          onPress={() => router.push('/(tabs)/(home)/spending-history')}
+          testID="viewDetailedReportButton"
+        >
+          <View style={styles.detailedReportLeft}>
+            <View style={[styles.detailedReportIcon, { backgroundColor: colors.badgeBackground }]}>
+              <ChartBarIcon color={colors.primary} size={20} weight="fill" />
+            </View>
+            <View>
+              <Text style={[styles.detailedReportTitle, { color: colors.text }]}>
+                View Detailed Report
+              </Text>
+              <Text style={[styles.detailedReportSubtitle, { color: colors.secondaryText }]}>
+                Charts, trends & analytics
+              </Text>
+            </View>
+          </View>
+          <CaretRightIcon color={colors.secondaryText} size={20} />
+        </Pressable>
+
         <View style={styles.footerSpace} />
       </ScrollView>
     </SafeAreaView>
@@ -609,5 +635,34 @@ const styles = StyleSheet.create({
   expandButtonText: {
     fontSize: FONT_SIZE.md,
     fontWeight: '600',
+  },
+  detailedReportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xxxl,
+    gap: SPACING.md,
+  },
+  detailedReportLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  detailedReportIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: BORDER_RADIUS.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailedReportTitle: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '700',
+  },
+  detailedReportSubtitle: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '500',
+    marginTop: 2,
   },
 });

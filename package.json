@@ -48,6 +48,7 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-gesture-handler": "~2.28.0",
+    "react-native-gifted-charts": "^1.4.70",
     "react-native-google-auth": "^1.2.0",
     "react-native-iap": "^14.7.0",
     "react-native-keyboard-controller": "^1.20.2",
