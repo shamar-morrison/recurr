@@ -105,6 +105,8 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '600',
     marginBottom: 4,
+    textAlign: 'center',
+    minWidth: 50,
   },
   emptyText: {
     fontSize: FONT_SIZE.md,

@@ -386,5 +386,15 @@ export function getDefaultPriceInCurrency(
   return convertFromUSD(priceUSD, userCurrency);
 }
 
-// Re-export static rates for backwards compatibility (if needed elsewhere)
+/**
+ * Static exchange rates for backwards compatibility.
+ *
+ * @deprecated Prefer using `convertFromUSD()`, `convertToUSD()`, or `convertCurrency()`
+ * which automatically use live/cached rates when available.
+ *
+ * @remarks
+ * This export provides **static fallback rates only**. It will NOT reflect
+ * live or cached rates loaded by `initCurrencyRates()`, even when available.
+ * Use the conversion functions instead for accurate, up-to-date conversions.
+ */
 export const EXCHANGE_RATES_FROM_USD = STATIC_RATES_FROM_USD;
