@@ -23,7 +23,6 @@ import {
   ChartBarIcon,
   ChartLineUpIcon,
   CrownIcon,
-  LockSimple,
 } from 'phosphor-react-native';
 
 import { PremiumBadge } from '@/src/components/ui/PremiumBadge';
@@ -357,11 +356,7 @@ export default function InsightsScreen() {
               </Text>
             </View>
           </View>
-          {isPremium ? (
-            <CaretRightIcon color={colors.secondaryText} size={20} />
-          ) : (
-            <LockSimple color={colors.secondaryText} size={20} weight="fill" />
-          )}
+          {isPremium && <CaretRightIcon color={colors.secondaryText} size={20} />}
         </Pressable>
 
         <View style={styles.footerSpace} />
@@ -668,6 +663,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
+    flex: 1,
+    minWidth: 0,
   },
   detailedReportIcon: {
     width: 44,
