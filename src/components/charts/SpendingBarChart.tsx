@@ -14,6 +14,8 @@ interface SpendingBarChartProps {
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CHART_PADDING = SPACING.lg * 2;
+const Y_AXIS_WIDTH = 60; // Estimated width for Y-axis labels
+const BAR_SPACING = 12; // Space between bars
 
 export function SpendingBarChart({ data, currency }: SpendingBarChartProps) {
   const { colors } = useTheme();
@@ -75,7 +77,7 @@ export function SpendingBarChart({ data, currency }: SpendingBarChartProps) {
           data={chartData}
           barWidth={Math.min(
             32,
-            Math.max(16, (SCREEN_WIDTH - CHART_PADDING - 60) / data.length - 12)
+            Math.max(16, (SCREEN_WIDTH - CHART_PADDING - Y_AXIS_WIDTH) / data.length - BAR_SPACING)
           )}
           spacing={8}
           initialSpacing={10}
@@ -90,7 +92,6 @@ export function SpendingBarChart({ data, currency }: SpendingBarChartProps) {
           maxValue={maxValue}
           isAnimated={false}
           barBorderRadius={4}
-          frontColor={colors.primary}
           xAxisLabelTextStyle={{
             color: colors.secondaryText,
             fontSize: 10,
