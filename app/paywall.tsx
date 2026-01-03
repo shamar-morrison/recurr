@@ -1,7 +1,7 @@
 import { Motion } from '@legendapp/motion';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, Stack } from 'expo-router';
-import { Bell, Crown, Export, Lightning, Sparkle } from 'phosphor-react-native';
+import { Bell, ChartBar, Crown, Export, Lightning, Sparkle } from 'phosphor-react-native';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -36,6 +36,11 @@ const PREMIUM_FEATURES = [
     title: 'Unlimited Reminders',
     description: 'Never miss a payment. Set as many reminders as you need.',
     icon: Bell,
+  },
+  {
+    title: 'Detailed Reports',
+    description: 'Access charts, trends and analytics to understand your spending patterns.',
+    icon: ChartBar,
   },
 ] as const;
 

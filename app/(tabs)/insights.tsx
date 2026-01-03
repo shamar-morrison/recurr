@@ -23,7 +23,10 @@ import {
   ChartBarIcon,
   ChartLineUpIcon,
   CrownIcon,
+  LockSimple,
 } from 'phosphor-react-native';
+
+import { PremiumBadge } from '@/src/components/ui/PremiumBadge';
 
 const INITIAL_CATEGORIES_SHOWN = 5;
 
@@ -322,26 +325,43 @@ export default function InsightsScreen() {
           formatMoney={formatMoney}
         />
 
-        {/* View Detailed Report Button */}
+        {/* View Detailed Report Button - Premium Feature */}
         <Pressable
-          style={[styles.detailedReportButton, { backgroundColor: colors.card }]}
-          onPress={() => router.push('/(tabs)/(home)/spending-history')}
+          style={[
+            styles.detailedReportButton,
+            { backgroundColor: colors.card },
+            !isPremium && styles.detailedReportLocked,
+          ]}
+          onPress={() => {
+            if (isPremium) {
+              router.push('/(tabs)/(home)/spending-history');
+            } else {
+              router.push('/paywall');
+            }
+          }}
           testID="viewDetailedReportButton"
         >
           <View style={styles.detailedReportLeft}>
             <View style={[styles.detailedReportIcon, { backgroundColor: colors.badgeBackground }]}>
-              <ChartBarIcon color={colors.primary} size={20} weight="fill" />
+              <ChartBarIcon color={colors.primary} size={24} weight="fill" />
             </View>
             <View>
-              <Text style={[styles.detailedReportTitle, { color: colors.text }]}>
-                View Detailed Report
-              </Text>
+              <View style={styles.detailedReportTitleRow}>
+                <Text style={[styles.detailedReportTitle, { color: colors.text }]}>
+                  View Detailed Report
+                </Text>
+                {!isPremium && <PremiumBadge size="sm" />}
+              </View>
               <Text style={[styles.detailedReportSubtitle, { color: colors.secondaryText }]}>
                 Charts, trends & analytics
               </Text>
             </View>
           </View>
-          <CaretRightIcon color={colors.secondaryText} size={20} />
+          {isPremium ? (
+            <CaretRightIcon color={colors.secondaryText} size={20} />
+          ) : (
+            <LockSimple color={colors.secondaryText} size={20} weight="fill" />
+          )}
         </Pressable>
 
         <View style={styles.footerSpace} />
@@ -657,12 +677,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   detailedReportTitle: {
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '700',
   },
   detailedReportSubtitle: {
-    fontSize: FONT_SIZE.sm,
+    fontSize: FONT_SIZE.md,
     fontWeight: '500',
     marginTop: 2,
+  },
+  detailedReportTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  detailedReportLocked: {
+    opacity: 0.6,
   },
 });
