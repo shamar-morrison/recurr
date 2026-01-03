@@ -75,9 +75,11 @@ export function SpendingTrendChart({ data, currency }: SpendingTrendChartProps) 
       <View style={styles.chartWrapper}>
         <LineChart
           data={chartData}
-          width={SCREEN_WIDTH - CHART_PADDING - 40}
+          width={SCREEN_WIDTH - CHART_PADDING - 60}
           height={160}
-          spacing={(SCREEN_WIDTH - CHART_PADDING - 80) / Math.max(1, data.length - 1)}
+          spacing={(SCREEN_WIDTH - CHART_PADDING - 100) / Math.max(1, data.length - 1)}
+          initialSpacing={10}
+          endSpacing={0}
           color={colors.primary}
           thickness={3}
           startFillColor={colors.primary}
