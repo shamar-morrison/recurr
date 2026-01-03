@@ -1,14 +1,7 @@
 import { Motion } from '@legendapp/motion';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, Stack } from 'expo-router';
-import {
-  BellIcon,
-  ChartBarIcon,
-  CrownIcon,
-  ExportIcon,
-  LightningIcon,
-  SparkleIcon,
-} from 'phosphor-react-native';
+import { CrownIcon, SparkleIcon } from 'phosphor-react-native';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -28,8 +21,7 @@ import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
 import { FeatureItem } from '@/src/features/monetization/FeatureItem';
 import { useIAP } from '@/src/features/monetization/IAPProvider';
 import { PREMIUM_PRODUCT_ID } from '@/src/features/monetization/iapService';
-
-// Premium features configuration - easily extensible for future features
+import { getPremiumFeatures } from '@/src/features/monetization/premiumFeatures';
 
 export default function PaywallScreen() {
   const { isPremium, user } = useAuth();
@@ -39,31 +31,7 @@ export default function PaywallScreen() {
   const premiumProduct = products?.find((p) => p.id === PREMIUM_PRODUCT_ID);
   const formattedPrice = premiumProduct?.displayPrice ?? '$5';
 
-  const premiumFeatures = React.useMemo(
-    () => [
-      {
-        title: 'Unlimited Subscriptions',
-        description: `Track all your subscriptions without limits. Free users can only track ${freeTierLimit}.`,
-        icon: LightningIcon,
-      },
-      {
-        title: 'Export Your Data',
-        description: 'Export to CSV or Markdown anytime. Keep your data portable and backed up.',
-        icon: ExportIcon,
-      },
-      {
-        title: 'Unlimited Reminders',
-        description: 'Never miss a payment. Set as many reminders as you need.',
-        icon: BellIcon,
-      },
-      {
-        title: 'Detailed Reports',
-        description: 'Access charts, trends and analytics to understand your spending patterns.',
-        icon: ChartBarIcon,
-      },
-    ],
-    [freeTierLimit]
-  );
+  const premiumFeatures = React.useMemo(() => getPremiumFeatures(freeTierLimit), [freeTierLimit]);
 
   const canPurchase = Boolean(user);
 

@@ -8,13 +8,21 @@
 import { Motion } from '@legendapp/motion';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, Stack } from 'expo-router';
-import { CheckCircle, Crown, Sparkle } from 'phosphor-react-native';
+import {
+  CheckCircle,
+  CheckCircleIcon,
+  Crown,
+  CrownIcon,
+  Sparkle,
+  SparkleIcon,
+} from 'phosphor-react-native';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors, GRADIENTS } from '@/constants/colors';
 import { BORDER_RADIUS, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
+import { getPremiumFeatures } from '@/src/features/monetization/premiumFeatures';
 
 export default function PaymentSuccessScreen() {
   const handleGoHome = () => {
@@ -41,7 +49,7 @@ export default function PaymentSuccessScreen() {
               style={styles.iconContainer}
             >
               <View style={styles.successCircle}>
-                <CheckCircle size={64} color="#22C55E" weight="fill" />
+                <CheckCircleIcon size={64} color="#22C55E" weight="fill" />
               </View>
               <Motion.View
                 initial={{ scale: 0 }}
@@ -49,7 +57,7 @@ export default function PaymentSuccessScreen() {
                 transition={{ type: 'spring', delay: 200 }}
                 style={styles.crownBadge}
               >
-                <Crown size={24} color="#FFD700" weight="fill" />
+                <CrownIcon size={24} color="#FFD700" weight="fill" />
               </Motion.View>
             </Motion.View>
 
@@ -73,19 +81,19 @@ export default function PaymentSuccessScreen() {
               transition={{ type: 'timing', duration: 800, delay: 500 }}
               style={styles.sparklesContainer}
             >
-              <Sparkle
+              <SparkleIcon
                 size={24}
                 color="rgba(255, 215, 0, 0.8)"
                 weight="fill"
                 style={styles.sparkle1}
               />
-              <Sparkle
+              <SparkleIcon
                 size={16}
                 color="rgba(255, 215, 0, 0.6)"
                 weight="fill"
                 style={styles.sparkle2}
               />
-              <Sparkle
+              <SparkleIcon
                 size={20}
                 color="rgba(255, 215, 0, 0.7)"
                 weight="fill"
@@ -101,18 +109,12 @@ export default function PaymentSuccessScreen() {
               style={styles.featuresCard}
             >
               <Text style={styles.featuresTitle}>What's unlocked:</Text>
-              <View style={styles.featureRow}>
-                <CheckCircle size={18} color="#22C55E" weight="fill" />
-                <Text style={styles.featureText}>Unlimited subscriptions</Text>
-              </View>
-              <View style={styles.featureRow}>
-                <CheckCircle size={18} color="#22C55E" weight="fill" />
-                <Text style={styles.featureText}>Export to CSV & Markdown</Text>
-              </View>
-              <View style={styles.featureRow}>
-                <CheckCircle size={18} color="#22C55E" weight="fill" />
-                <Text style={styles.featureText}>Unlimited reminders</Text>
-              </View>
+              {getPremiumFeatures(0).map((feature) => (
+                <View key={feature.id} style={styles.featureRow}>
+                  <CheckCircleIcon size={18} color="#22C55E" weight="fill" />
+                  <Text style={styles.featureText}>{feature.shortTitle}</Text>
+                </View>
+              ))}
             </Motion.View>
           </View>
 
