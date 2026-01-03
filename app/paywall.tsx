@@ -27,13 +27,17 @@ import { useAuth } from '@/src/features/auth/AuthProvider';
 import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
 import { FeatureItem } from '@/src/features/monetization/FeatureItem';
 import { useIAP } from '@/src/features/monetization/IAPProvider';
+import { PREMIUM_PRODUCT_ID } from '@/src/features/monetization/iapService';
 
 // Premium features configuration - easily extensible for future features
 
 export default function PaywallScreen() {
   const { isPremium, user } = useAuth();
-  const { isLoading, purchase, restore } = useIAP();
+  const { isLoading, purchase, restore, products } = useIAP();
   const { freeTierLimit, loading: configLoading, error: configError } = useRemoteConfig();
+
+  const premiumProduct = products.find((p) => p.id === PREMIUM_PRODUCT_ID);
+  const formattedPrice = premiumProduct?.displayPrice ?? '$5';
 
   const premiumFeatures = React.useMemo(
     () => [
@@ -202,8 +206,7 @@ export default function PaywallScreen() {
               </View>
 
               <View style={styles.priceRow}>
-                <Text style={styles.priceCurrency}>$</Text>
-                <Text style={styles.priceAmount}>5</Text>
+                <Text style={styles.priceAmount}>{formattedPrice}</Text>
               </View>
               <Text style={styles.priceNote}>One-time payment • No subscription</Text>
             </Motion.View>
@@ -266,7 +269,7 @@ export default function PaywallScreen() {
               ) : (
                 <>
                   <CrownIcon size={20} color={AppColors.tint} weight="fill" />
-                  <Text style={styles.purchaseButtonText}>Unlock Premium • $5</Text>
+                  <Text style={styles.purchaseButtonText}>Unlock Premium • {formattedPrice}</Text>
                 </>
               )}
             </Pressable>

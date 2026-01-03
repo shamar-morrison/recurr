@@ -5,7 +5,7 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { PaywallSheet } from '@/src/features/monetization/PaywallSheet';
 
 export default function ModalScreen() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   return (
     <Modal transparent animationType="fade" visible>
