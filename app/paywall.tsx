@@ -36,7 +36,7 @@ export default function PaywallScreen() {
   const { isLoading, purchase, restore, products } = useIAP();
   const { freeTierLimit, loading: configLoading, error: configError } = useRemoteConfig();
 
-  const premiumProduct = products.find((p) => p.id === PREMIUM_PRODUCT_ID);
+  const premiumProduct = products?.find((p) => p.id === PREMIUM_PRODUCT_ID);
   const formattedPrice = premiumProduct?.displayPrice ?? '$5';
 
   const premiumFeatures = React.useMemo(
