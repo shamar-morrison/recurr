@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Linking, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/src/components/ui/Button';
@@ -90,7 +90,25 @@ export default function AuthScreen() {
           </View>
 
           <Text style={[styles.footer, { color: colors.secondaryText }]}>
-            By continuing, you agree to our Terms of Service and Privacy Policy.
+            By continuing, you agree to our{' '}
+            <Text
+              style={{ textDecorationLine: 'underline' }}
+              onPress={() =>
+                Linking.openURL('https://privacy-policies-psi.vercel.app/recurr/terms')
+              }
+            >
+              Terms of Service
+            </Text>{' '}
+            and{' '}
+            <Text
+              style={{ textDecorationLine: 'underline' }}
+              onPress={() =>
+                Linking.openURL('https://privacy-policies-psi.vercel.app/recurr/privacy')
+              }
+            >
+              Privacy Policy
+            </Text>
+            .
           </Text>
         </SafeAreaView>
       </View>
