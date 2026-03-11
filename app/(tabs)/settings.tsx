@@ -130,6 +130,8 @@ export default function SettingsScreen() {
   const [isResettingPurchase, setIsResettingPurchase] = useState(false);
 
   const { data: subscriptions, isLoading: isLoadingSubscriptions } = useSubscriptionsQuery();
+  const profileName = user?.displayName?.trim() || user?.email || 'User';
+  const profileInitial = profileName[0]?.toUpperCase() || 'U';
 
   const getThemeLabel = (mode: ThemeMode): string => {
     switch (mode) {
@@ -362,12 +364,12 @@ export default function SettingsScreen() {
                   <Image source={{ uri: user.photoURL }} style={styles.avatar} />
                 ) : (
                   <View style={styles.avatarPlaceholder}>
-                    <Text style={styles.avatarInitial}>{user?.displayName?.[0] || 'U'}</Text>
+                    <Text style={styles.avatarInitial}>{profileInitial}</Text>
                   </View>
                 )}
                 <View>
                   <Text style={[styles.profileName, { color: colors.text }]}>
-                    {user?.displayName || 'User'}
+                    {profileName}
                   </Text>
                   <Text style={[styles.profilePlan, { color: colors.secondaryText }]}>
                     {isPremium ? 'Premium Account' : 'Personal Account'}
