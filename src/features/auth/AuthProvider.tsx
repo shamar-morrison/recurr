@@ -1,11 +1,15 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
+  createUserWithEmailAndPassword,
   GoogleAuthProvider,
   onAuthStateChanged,
+  PasswordValidationStatus,
+  signInWithEmailAndPassword,
   signInWithCredential,
   signOut,
   User,
+  validatePassword,
 } from 'firebase/auth';
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -45,6 +49,7 @@ export type AuthState = {
   settings: UserSettings;
   signOutUser: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmailPassword: (email: string, password: string) => Promise<void>;
   setReminderDays: (days: number) => Promise<void>;
   setCurrency: (currency: string) => Promise<void>;
   setDateFormat: (format: DateFormatId) => Promise<void>;
@@ -62,6 +67,86 @@ const DEFAULT_SETTINGS: UserSettings = {
 };
 
 const ONBOARDING_KEY = 'onboardingComplete:v1';
+const NETWORK_ERROR_CODES = new Set(['auth/network-request-failed', 'unavailable']);
+const GENERIC_AUTH_ERROR_TITLE = 'Sign-in Error';
+
+type SupportedAuthProvider = 'google' | 'email' | 'apple' | 'anonymous' | 'unknown';
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function getAuthErrorCode(error: unknown): string | null {
+  const code = (error as { code?: unknown })?.code;
+  return typeof code === 'string' ? code : null;
+}
+
+function isNetworkError(error: unknown): boolean {
+  const code = getAuthErrorCode(error);
+  if (code && NETWORK_ERROR_CODES.has(code)) {
+    return true;
+  }
+
+  const message = (error as { message?: unknown })?.message;
+  return typeof message === 'string' && message.toLowerCase().includes('network');
+}
+
+function formatPasswordPolicyMessage(status: PasswordValidationStatus): string | null {
+  const requirements: string[] = [];
+  const strengthOptions = status.passwordPolicy.customStrengthOptions;
+
+  if (status.meetsMinPasswordLength === false && strengthOptions.minPasswordLength) {
+    requirements.push(`Be at least ${strengthOptions.minPasswordLength} characters long`);
+  }
+
+  if (status.meetsMaxPasswordLength === false && strengthOptions.maxPasswordLength) {
+    requirements.push(`Be no more than ${strengthOptions.maxPasswordLength} characters long`);
+  }
+
+  if (status.containsLowercaseLetter === false && strengthOptions.containsLowercaseLetter) {
+    requirements.push('Include a lowercase letter');
+  }
+
+  if (status.containsUppercaseLetter === false && strengthOptions.containsUppercaseLetter) {
+    requirements.push('Include an uppercase letter');
+  }
+
+  if (status.containsNumericCharacter === false && strengthOptions.containsNumericCharacter) {
+    requirements.push('Include a number');
+  }
+
+  if (
+    status.containsNonAlphanumericCharacter === false &&
+    strengthOptions.containsNonAlphanumericCharacter
+  ) {
+    requirements.push('Include a special character');
+  }
+
+  if (requirements.length === 0) {
+    return null;
+  }
+
+  return `Your password must:\n• ${requirements.join('\n• ')}`;
+}
+
+function getAuthProviderFromData(
+  providerData: User['providerData'],
+  isAnonymous: boolean
+): SupportedAuthProvider {
+  if (providerData.some((provider) => provider.providerId === 'google.com')) {
+    return 'google';
+  }
+  if (providerData.some((provider) => provider.providerId === 'password')) {
+    return 'email';
+  }
+  if (providerData.some((provider) => provider.providerId === 'apple.com')) {
+    return 'apple';
+  }
+  if (isAnonymous) {
+    return 'anonymous';
+  }
+  return 'unknown';
+}
 
 export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
   const [user, setUser] = useState<User | null>(null);
@@ -124,15 +209,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       try {
         const snap = await getDoc(userRef);
         if (!snap.exists()) {
-          // Determine auth provider from user's providerData
-          const authProvider =
-            u.providerData[0]?.providerId === 'google.com'
-              ? 'google'
-              : u.providerData[0]?.providerId === 'apple.com'
-                ? 'apple'
-                : u.isAnonymous
-                  ? 'anonymous'
-                  : 'unknown';
+          const authProvider = getAuthProviderFromData(u.providerData, u.isAnonymous);
 
           await setDoc(userRef, {
             createdAt: serverTimestamp(),
@@ -295,6 +372,128 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
     }
   }, [isFirebaseReady]);
 
+  const signInWithEmailPassword = useCallback(
+    async (email: string, password: string) => {
+      if (!isFirebaseReady) throw new Error('Firebase is not configured');
+
+      const normalizedEmail = normalizeEmail(email);
+      const auth = getFirebaseAuth();
+
+      const getPasswordPolicyMessage = async () => {
+        try {
+          const validationStatus = await validatePassword(auth, password);
+          if (validationStatus.isValid) {
+            return null;
+          }
+
+          return formatPasswordPolicyMessage(validationStatus);
+        } catch (validationError) {
+          console.log('[auth] validatePassword failed', validationError);
+          return null;
+        }
+      };
+
+      const confirmCreateAccount = () =>
+        new Promise<boolean>((resolve) => {
+          Alert.alert(
+            'Create account?',
+            'No account was found for this email and password. Do you want to create one now?',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => resolve(false),
+              },
+              {
+                text: 'Create account',
+                onPress: () => resolve(true),
+              },
+            ],
+            { cancelable: false }
+          );
+        });
+
+      const createAccount = async () => {
+        const passwordPolicyMessage = await getPasswordPolicyMessage();
+        if (passwordPolicyMessage) {
+          Alert.alert(GENERIC_AUTH_ERROR_TITLE, passwordPolicyMessage);
+          return;
+        }
+
+        try {
+          await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+        } catch (createError: unknown) {
+          const createErrorCode = getAuthErrorCode(createError);
+          const passwordPolicyMessage = await getPasswordPolicyMessage();
+
+          if (createErrorCode === 'auth/email-already-in-use') {
+            Alert.alert(
+              'Account exists',
+              'An account already exists for this email. Use the correct password, or continue with Google if that is how you originally signed in.'
+            );
+          } else if (createErrorCode === 'auth/invalid-email') {
+            Alert.alert(GENERIC_AUTH_ERROR_TITLE, 'Please enter a valid email address.');
+          } else if (createErrorCode === 'auth/weak-password' && passwordPolicyMessage) {
+            Alert.alert(GENERIC_AUTH_ERROR_TITLE, passwordPolicyMessage);
+          } else if (createErrorCode === 'auth/too-many-requests') {
+            Alert.alert(
+              GENERIC_AUTH_ERROR_TITLE,
+              'Too many attempts. Please wait a moment and try again.'
+            );
+          } else if (isNetworkError(createError)) {
+            Alert.alert(
+              GENERIC_AUTH_ERROR_TITLE,
+              'Network error. Please check your connection and try again.'
+            );
+          } else if (passwordPolicyMessage) {
+            Alert.alert(GENERIC_AUTH_ERROR_TITLE, passwordPolicyMessage);
+          } else {
+            Alert.alert(GENERIC_AUTH_ERROR_TITLE, 'Failed to continue with email. Please try again.');
+          }
+
+          throw createError;
+        }
+      };
+
+      try {
+        await signInWithEmailAndPassword(auth, normalizedEmail, password);
+      } catch (error: unknown) {
+        const errorCode = getAuthErrorCode(error);
+
+        if (errorCode === 'auth/user-not-found' || errorCode === 'auth/invalid-credential') {
+          const shouldCreateAccount = await confirmCreateAccount();
+          if (!shouldCreateAccount) {
+            return;
+          }
+
+          await createAccount();
+          return;
+        }
+
+        if (errorCode === 'auth/wrong-password') {
+          Alert.alert(GENERIC_AUTH_ERROR_TITLE, 'Incorrect email or password.');
+        } else if (errorCode === 'auth/invalid-email') {
+          Alert.alert(GENERIC_AUTH_ERROR_TITLE, 'Please enter a valid email address.');
+        } else if (errorCode === 'auth/too-many-requests') {
+          Alert.alert(
+            GENERIC_AUTH_ERROR_TITLE,
+            'Too many attempts. Please wait a moment and try again.'
+          );
+        } else if (isNetworkError(error)) {
+          Alert.alert(
+            GENERIC_AUTH_ERROR_TITLE,
+            'Network error. Please check your connection and try again.'
+          );
+        } else {
+          Alert.alert(GENERIC_AUTH_ERROR_TITLE, 'Failed to continue with email. Please try again.');
+        }
+
+        throw error;
+      }
+    },
+    [isFirebaseReady]
+  );
+
   const signOutUser = useCallback(async () => {
     console.log('[auth] signOutUser');
     if (!isFirebaseReady) {
@@ -454,6 +653,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       settings,
       signOutUser,
       signInWithGoogle,
+      signInWithEmailPassword,
       setReminderDays,
       setCurrency,
       setDateFormat,
@@ -470,6 +670,7 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       settings,
       signOutUser,
       signInWithGoogle,
+      signInWithEmailPassword,
       setReminderDays,
       setCurrency,
       setDateFormat,
