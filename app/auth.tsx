@@ -1,7 +1,18 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, Linking, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Linking,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/src/components/ui/Button';
@@ -9,10 +20,15 @@ import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function AuthScreen() {
   const router = useRouter();
-  const { signInWithGoogle, user, isReady } = useAuth();
+  const { signInWithEmailPassword, signInWithGoogle, user, isReady } = useAuth();
   const { colors, isDark } = useTheme();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [workingMethod, setWorkingMethod] = useState<'email' | 'google' | null>(null);
 
   // Redirect to home when user successfully logs in
   useEffect(() => {
@@ -21,10 +37,8 @@ export default function AuthScreen() {
     }
   }, [isReady, user, router]);
 
-  const [isWorking, setIsWorking] = useState<boolean>(false);
-
   const handleGoogleSignIn = async () => {
-    setIsWorking(true);
+    setWorkingMethod('google');
 
     // Allow React to render the loading spinner before the native Google
     // sign-in sheet blocks the JS thread
@@ -36,7 +50,34 @@ export default function AuthScreen() {
       // Error handling is done in signInWithGoogle - just log here
       console.log('[auth screen] Google sign-in error:', e);
     } finally {
-      setIsWorking(false);
+      setWorkingMethod(null);
+    }
+  };
+
+  const handleEmailSignIn = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const hasPassword = password.trim().length > 0;
+
+    if (!normalizedEmail || !hasPassword) {
+      Alert.alert('Missing information', 'Enter your email and password to continue.');
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      Alert.alert('Invalid email', 'Please enter a valid email address.');
+      return;
+    }
+
+    setWorkingMethod('email');
+
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    try {
+      await signInWithEmailPassword(normalizedEmail, password);
+    } catch (e) {
+      console.log('[auth screen] Email sign-in error:', e);
+    } finally {
+      setWorkingMethod(null);
     }
   };
 
@@ -55,70 +96,156 @@ export default function AuthScreen() {
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-        <SafeAreaView style={styles.container}>
-          <View style={styles.content}>
-            <View style={styles.header}>
-              <Image
-                source={require('@/assets/images/react-logo.png')}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-              <Text style={[styles.title, { color: colors.text }]}>Welcome to Recurr</Text>
-              <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
-                Sign in to keep your subscriptions synced across all your devices.
-              </Text>
-            </View>
-
-            <Button
-              title="Continue with Google"
-              onPress={handleGoogleSignIn}
-              loading={isWorking}
-              variant="secondary"
-              size="lg"
-              icon={
-                <Image
-                  source={require('@/assets/images/google-icon.png')}
-                  style={styles.googleIcon}
-                />
-              }
-              style={[
-                styles.googleButton,
-                { backgroundColor: colors.card, borderColor: colors.border },
-              ]}
-              textStyle={[styles.googleButtonText, { color: colors.text }]}
-            />
-          </View>
-
-          <Text style={[styles.footer, { color: colors.secondaryText }]}>
-            By continuing, you agree to our{' '}
-            <Text
-              style={{ textDecorationLine: 'underline' }}
-              onPress={() =>
-                Linking.openURL('https://privacy-policies-psi.vercel.app/recurr/terms')
-              }
+        <KeyboardAvoidingView
+          style={styles.keyboardContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <SafeAreaView style={styles.safeArea}>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
             >
-              Terms of Service
-            </Text>{' '}
-            and{' '}
-            <Text
-              style={{ textDecorationLine: 'underline' }}
-              onPress={() =>
-                Linking.openURL('https://privacy-policies-psi.vercel.app/recurr/privacy')
-              }
-            >
-              Privacy Policy
-            </Text>
-            .
-          </Text>
-        </SafeAreaView>
+              <View style={styles.container}>
+                <View style={styles.content}>
+                  <View style={styles.header}>
+                    <Image
+                      source={require('@/assets/images/react-logo.png')}
+                      style={styles.logo}
+                      resizeMode="contain"
+                    />
+                    <Text style={[styles.title, { color: colors.text }]}>Welcome to Recurr</Text>
+                    <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
+                      Sign in to keep your subscriptions synced across all your devices.
+                    </Text>
+                  </View>
+
+                  <View style={styles.authSection}>
+                    <TextInput
+                      value={email}
+                      onChangeText={setEmail}
+                      placeholder="Email"
+                      placeholderTextColor={colors.secondaryText}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoComplete="email"
+                      textContentType="emailAddress"
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: colors.card,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        },
+                      ]}
+                      editable={!workingMethod}
+                      returnKeyType="next"
+                    />
+                    <TextInput
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder="Password"
+                      placeholderTextColor={colors.secondaryText}
+                      secureTextEntry
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoComplete="password"
+                      textContentType="password"
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: colors.card,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        },
+                      ]}
+                      editable={!workingMethod}
+                      returnKeyType="done"
+                      onSubmitEditing={() => {
+                        void handleEmailSignIn();
+                      }}
+                    />
+
+                    <Button
+                      title="Continue with Email"
+                      onPress={handleEmailSignIn}
+                      loading={workingMethod === 'email'}
+                      disabled={Boolean(workingMethod)}
+                      variant="primary"
+                      size="lg"
+                    />
+
+                    <View style={styles.dividerRow}>
+                      <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                      <Text style={[styles.dividerText, { color: colors.secondaryText }]}>or</Text>
+                      <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                    </View>
+
+                    <Button
+                      title="Continue with Google"
+                      onPress={handleGoogleSignIn}
+                      loading={workingMethod === 'google'}
+                      disabled={Boolean(workingMethod)}
+                      variant="secondary"
+                      size="lg"
+                      icon={
+                        <Image
+                          source={require('@/assets/images/google-icon.png')}
+                          style={styles.googleIcon}
+                        />
+                      }
+                      style={[
+                        styles.googleButton,
+                        { backgroundColor: colors.card, borderColor: colors.border },
+                      ]}
+                      textStyle={[styles.googleButtonText, { color: colors.text }]}
+                    />
+                  </View>
+                </View>
+
+                <Text style={[styles.footer, { color: colors.secondaryText }]}>
+                  By continuing, you agree to our{' '}
+                  <Text
+                    style={{ textDecorationLine: 'underline' }}
+                    onPress={() =>
+                      Linking.openURL('https://privacy-policies-psi.vercel.app/recurr/terms')
+                    }
+                  >
+                    Terms of Service
+                  </Text>{' '}
+                  and{' '}
+                  <Text
+                    style={{ textDecorationLine: 'underline' }}
+                    onPress={() =>
+                      Linking.openURL('https://privacy-policies-psi.vercel.app/recurr/privacy')
+                    }
+                  >
+                    Privacy Policy
+                  </Text>
+                  .
+                </Text>
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+        </KeyboardAvoidingView>
       </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  keyboardContainer: {
     flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  container: {
+    flexGrow: 1,
     justifyContent: 'space-between',
     padding: SPACING.xxl,
   },
@@ -126,6 +253,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     gap: 40,
+  },
+  authSection: {
+    gap: SPACING.md,
   },
   header: {
     gap: SPACING.md,
@@ -148,6 +278,31 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     textAlign: 'center',
     maxWidth: 300,
+  },
+  input: {
+    minHeight: 56,
+    borderRadius: BORDER_RADIUS.full,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.lg,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '500',
+    borderWidth: 1,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    marginVertical: SPACING.xs,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
   googleButton: {
     borderWidth: 1,
