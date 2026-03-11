@@ -1,5 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
+import { EyeIcon, EyeSlashIcon } from 'phosphor-react-native';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -7,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Linking,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -28,6 +30,7 @@ export default function AuthScreen() {
   const { colors, isDark } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [workingMethod, setWorkingMethod] = useState<'email' | 'google' | null>(null);
 
   // Redirect to home when user successfully logs in
@@ -142,30 +145,47 @@ export default function AuthScreen() {
                       editable={!workingMethod}
                       returnKeyType="next"
                     />
-                    <TextInput
-                      value={password}
-                      onChangeText={setPassword}
-                      placeholder="Password"
-                      placeholderTextColor={colors.secondaryText}
-                      secureTextEntry
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      autoComplete="password"
-                      textContentType="password"
+                    <View
                       style={[
-                        styles.input,
+                        styles.passwordInputWrapper,
                         {
                           backgroundColor: colors.card,
                           borderColor: colors.border,
-                          color: colors.text,
                         },
                       ]}
-                      editable={!workingMethod}
-                      returnKeyType="done"
-                      onSubmitEditing={() => {
-                        void handleEmailSignIn();
-                      }}
-                    />
+                    >
+                      <TextInput
+                        value={password}
+                        onChangeText={setPassword}
+                        placeholder="Password"
+                        placeholderTextColor={colors.secondaryText}
+                        secureTextEntry={!isPasswordVisible}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        autoComplete="password"
+                        textContentType="password"
+                        style={[styles.passwordInput, { color: colors.text }]}
+                        editable={!workingMethod}
+                        returnKeyType="done"
+                        onSubmitEditing={() => {
+                          void handleEmailSignIn();
+                        }}
+                      />
+                      <Pressable
+                        onPress={() => setIsPasswordVisible((prev) => !prev)}
+                        disabled={Boolean(workingMethod)}
+                        accessibilityRole="button"
+                        accessibilityLabel={isPasswordVisible ? 'Hide password' : 'Show password'}
+                        hitSlop={8}
+                        style={styles.passwordToggle}
+                      >
+                        {isPasswordVisible ? (
+                          <EyeSlashIcon color={colors.secondaryText} size={20} />
+                        ) : (
+                          <EyeIcon color={colors.secondaryText} size={20} />
+                        )}
+                      </Pressable>
+                    </View>
 
                     <Button
                       title="Continue with Email"
@@ -287,6 +307,27 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.lg,
     fontWeight: '500',
     borderWidth: 1,
+  },
+  passwordInputWrapper: {
+    minHeight: 56,
+    borderRadius: BORDER_RADIUS.full,
+    paddingLeft: SPACING.lg,
+    paddingRight: SPACING.sm,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passwordInput: {
+    flex: 1,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '500',
+    paddingVertical: SPACING.lg,
+  },
+  passwordToggle: {
+    minWidth: 40,
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   dividerRow: {
     flexDirection: 'row',
