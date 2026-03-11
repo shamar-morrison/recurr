@@ -3,8 +3,6 @@
  * ISO 4217 currency codes with display names and symbols.
  */
 
-console.log('foo');
-
 export interface Currency {
   code: string; // ISO 4217 code (e.g., "USD")
   name: string; // Full name (e.g., "US Dollar")
