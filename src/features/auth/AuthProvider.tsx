@@ -4,10 +4,12 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   onAuthStateChanged,
+  PasswordValidationStatus,
   signInWithEmailAndPassword,
   signInWithCredential,
   signOut,
   User,
+  validatePassword,
 } from 'firebase/auth';
 import { doc, getDoc, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -87,6 +89,44 @@ function isNetworkError(error: unknown): boolean {
 
   const message = (error as { message?: unknown })?.message;
   return typeof message === 'string' && message.toLowerCase().includes('network');
+}
+
+function formatPasswordPolicyMessage(status: PasswordValidationStatus): string | null {
+  const requirements: string[] = [];
+  const strengthOptions = status.passwordPolicy.customStrengthOptions;
+
+  if (status.meetsMinPasswordLength === false && strengthOptions.minPasswordLength) {
+    requirements.push(`Be at least ${strengthOptions.minPasswordLength} characters long`);
+  }
+
+  if (status.meetsMaxPasswordLength === false && strengthOptions.maxPasswordLength) {
+    requirements.push(`Be no more than ${strengthOptions.maxPasswordLength} characters long`);
+  }
+
+  if (status.containsLowercaseLetter === false && strengthOptions.containsLowercaseLetter) {
+    requirements.push('Include a lowercase letter');
+  }
+
+  if (status.containsUppercaseLetter === false && strengthOptions.containsUppercaseLetter) {
+    requirements.push('Include an uppercase letter');
+  }
+
+  if (status.containsNumericCharacter === false && strengthOptions.containsNumericCharacter) {
+    requirements.push('Include a number');
+  }
+
+  if (
+    status.containsNonAlphanumericCharacter === false &&
+    strengthOptions.containsNonAlphanumericCharacter
+  ) {
+    requirements.push('Include a special character');
+  }
+
+  if (requirements.length === 0) {
+    return null;
+  }
+
+  return `Your password must:\n• ${requirements.join('\n• ')}`;
 }
 
 function getAuthProviderFromData(
@@ -339,11 +379,52 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       const normalizedEmail = normalizeEmail(email);
       const auth = getFirebaseAuth();
 
+      const getPasswordPolicyMessage = async () => {
+        try {
+          const validationStatus = await validatePassword(auth, password);
+          if (validationStatus.isValid) {
+            return null;
+          }
+
+          return formatPasswordPolicyMessage(validationStatus);
+        } catch (validationError) {
+          console.log('[auth] validatePassword failed', validationError);
+          return null;
+        }
+      };
+
+      const confirmCreateAccount = () =>
+        new Promise<boolean>((resolve) => {
+          Alert.alert(
+            'Create account?',
+            'No account was found for this email and password. Do you want to create one now?',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => resolve(false),
+              },
+              {
+                text: 'Create account',
+                onPress: () => resolve(true),
+              },
+            ],
+            { cancelable: false }
+          );
+        });
+
       const createAccount = async () => {
+        const passwordPolicyMessage = await getPasswordPolicyMessage();
+        if (passwordPolicyMessage) {
+          Alert.alert(GENERIC_AUTH_ERROR_TITLE, passwordPolicyMessage);
+          return;
+        }
+
         try {
           await createUserWithEmailAndPassword(auth, normalizedEmail, password);
         } catch (createError: unknown) {
           const createErrorCode = getAuthErrorCode(createError);
+          const passwordPolicyMessage = await getPasswordPolicyMessage();
 
           if (createErrorCode === 'auth/email-already-in-use') {
             Alert.alert(
@@ -352,11 +433,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
             );
           } else if (createErrorCode === 'auth/invalid-email') {
             Alert.alert(GENERIC_AUTH_ERROR_TITLE, 'Please enter a valid email address.');
-          } else if (createErrorCode === 'auth/weak-password') {
-            Alert.alert(
-              GENERIC_AUTH_ERROR_TITLE,
-              'Password must be at least 6 characters long.'
-            );
+          } else if (createErrorCode === 'auth/weak-password' && passwordPolicyMessage) {
+            Alert.alert(GENERIC_AUTH_ERROR_TITLE, passwordPolicyMessage);
           } else if (createErrorCode === 'auth/too-many-requests') {
             Alert.alert(
               GENERIC_AUTH_ERROR_TITLE,
@@ -367,6 +445,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
               GENERIC_AUTH_ERROR_TITLE,
               'Network error. Please check your connection and try again.'
             );
+          } else if (passwordPolicyMessage) {
+            Alert.alert(GENERIC_AUTH_ERROR_TITLE, passwordPolicyMessage);
           } else {
             Alert.alert(GENERIC_AUTH_ERROR_TITLE, 'Failed to continue with email. Please try again.');
           }
@@ -381,6 +461,11 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
         const errorCode = getAuthErrorCode(error);
 
         if (errorCode === 'auth/user-not-found' || errorCode === 'auth/invalid-credential') {
+          const shouldCreateAccount = await confirmCreateAccount();
+          if (!shouldCreateAccount) {
+            return;
+          }
+
           await createAccount();
           return;
         }
