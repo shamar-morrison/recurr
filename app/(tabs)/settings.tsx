@@ -190,8 +190,8 @@ export default function SettingsScreen() {
   };
 
   const handleOtherApps = async () => {
-    const developerUrl = 'market://dev?id=The+Avg+Coder';
-    const webUrl = 'https://play.google.com/store/apps/developer?id=The+Avg+Coder&hl=en';
+    const developerUrl = 'market://dev?id=HorizonHuntxr';
+    const webUrl = 'https://play.google.com/store/apps/developer?id=HorizonHuntxr&hl=en';
     try {
       const supported = await Linking.canOpenURL(developerUrl);
       if (supported) {
