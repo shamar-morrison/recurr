@@ -25,6 +25,7 @@ import {
 } from '@/src/constants/dateFormats';
 import { firestore, getFirebaseAuth, isFirebaseConfigured } from '@/src/lib/firebase';
 import { getFirestoreErrorMessage } from '@/src/lib/firestore';
+import { getNotificationChoice } from '@/src/features/notifications/notificationService';
 
 // Web Client ID from google-services.json (client_type: 3)
 const WEB_CLIENT_ID = '845079285876-u5aeaifg6nsqa3jkjtit099tfarmdvps.apps.googleusercontent.com';
@@ -162,8 +163,17 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
 
     const loadLocal = async () => {
       try {
-        const onboarding = await AsyncStorage.getItem(ONBOARDING_KEY);
-        if (!cancelled) setHasCompletedOnboarding(onboarding === '1');
+        const [onboarding, notificationChoice] = await Promise.all([
+          AsyncStorage.getItem(ONBOARDING_KEY),
+          getNotificationChoice(),
+        ]);
+        if (cancelled) return;
+        setHasCompletedOnboarding(onboarding === '1');
+        // Apply the onboarding notification choice (if any) to pre-auth settings
+        // so reminders stay consistent until the Firestore user doc loads.
+        if (notificationChoice !== null) {
+          setSettings((prev) => ({ ...prev, pushNotificationsEnabled: notificationChoice }));
+        }
       } catch (e) {
         console.log('[auth] loadLocal failed', e);
       }
@@ -210,6 +220,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
         const snap = await getDoc(userRef);
         if (!snap.exists()) {
           const authProvider = getAuthProviderFromData(u.providerData, u.isAnonymous);
+          // Honor the onboarding notification choice for new users.
+          const notificationChoice = await getNotificationChoice();
 
           await setDoc(userRef, {
             createdAt: serverTimestamp(),
@@ -221,6 +233,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
               remindDaysBeforeBilling: DEFAULT_SETTINGS.remindDaysBeforeBilling,
               currency: DEFAULT_SETTINGS.currency,
               dateFormat: DEFAULT_SETTINGS.dateFormat,
+              pushNotificationsEnabled:
+                notificationChoice ?? DEFAULT_SETTINGS.pushNotificationsEnabled,
             },
             authProvider,
           });

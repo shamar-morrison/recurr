@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.horizon.recurr"
+      "bundleIdentifier": "com.horizon.recurr",
+      "infoPlist": {
+        "NSUserNotificationsUsageDescription": "Recurr sends reminders before your subscriptions renew so you never miss a payment."
+      }
     },
     "android": {
       "adaptiveIcon": {

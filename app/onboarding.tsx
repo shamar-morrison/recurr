@@ -1,5 +1,5 @@
 import { router, Stack } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
@@ -8,6 +8,10 @@ import { AppColors } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import {
+  requestAndPersistNotificationPermission,
+  saveNotificationChoice,
+} from '@/src/features/notifications/notificationService';
 import {
   BellRingingIcon,
   CaretRightIcon,
@@ -44,6 +48,13 @@ const PAGES: OnboardingPage[] = [
     accent: '#FCD34D',
   },
   {
+    key: 'notifications',
+    title: 'Never miss\na payment',
+    description: 'Enable notifications and we’ll remind you before each subscription renews.',
+    color: '#EF4444', // Red
+    accent: '#FCA5A5',
+  },
+  {
     key: 'insights',
     title: 'Know where your\nmoney goes',
     description: 'Spot rising costs and unused services. Take back control of your monthly spend.',
@@ -59,18 +70,42 @@ const PAGES: OnboardingPage[] = [
   },
 ];
 
+const NOTIFICATIONS_INDEX = PAGES.findIndex((p) => p.key === 'notifications');
+
 export default function OnboardingScreen() {
-  const { markOnboardingComplete } = useAuth();
+  const { markOnboardingComplete, setPushNotificationsEnabled } = useAuth();
   const scrollX = useRef(new Animated.Value(0)).current;
   const listRef = useRef<Animated.FlatList<OnboardingPage> | null>(null);
   const [pageIndex, setPageIndex] = useState<number>(0);
+  const [isRequestingNotifications, setIsRequestingNotifications] = useState<boolean>(false);
+  const hasChosenNotificationsRef = useRef<boolean>(false);
 
   const finish = async () => {
     await markOnboardingComplete();
     router.replace('/auth');
   };
 
+  // Persist the onboarding notification choice locally (pre-auth) and to
+  // in-memory settings. The stored choice is applied to Firestore when the
+  // user doc is created (see AuthProvider). Never blocks navigation.
+  const persistNotificationChoice = useCallback(
+    async (granted: boolean) => {
+      hasChosenNotificationsRef.current = true;
+      await saveNotificationChoice(granted);
+      try {
+        await setPushNotificationsEnabled(granted);
+      } catch (e) {
+        console.log('[onboarding] setPushNotificationsEnabled failed', e);
+      }
+    },
+    [setPushNotificationsEnabled]
+  );
+
   const next = () => {
+    // Tapping Next on the notifications page without enabling counts as skip.
+    if (pageIndex === NOTIFICATIONS_INDEX && !hasChosenNotificationsRef.current) {
+      void persistNotificationChoice(false);
+    }
     const nextIndex = Math.min(PAGES.length - 1, pageIndex + 1);
     if (nextIndex === pageIndex) {
       if (pageIndex === PAGES.length - 1) finish();
@@ -82,6 +117,51 @@ export default function OnboardingScreen() {
   const skip = async () => {
     finish();
   };
+
+  // Swiping past the notifications page without enabling counts as skip,
+  // so a later sign-up doesn't default to reminders the user never saw.
+  useEffect(() => {
+    if (
+      NOTIFICATIONS_INDEX >= 0 &&
+      pageIndex > NOTIFICATIONS_INDEX &&
+      !hasChosenNotificationsRef.current
+    ) {
+      void persistNotificationChoice(false);
+    }
+  }, [pageIndex, persistNotificationChoice]);
+
+  // Like ShowSeek's NotificationPermissionStep: request the OS permission,
+  // then always advance regardless of the result.
+  const handleEnableNotifications = useCallback(async () => {
+    if (isRequestingNotifications) return;
+    setIsRequestingNotifications(true);
+    try {
+      const granted = await requestAndPersistNotificationPermission();
+      hasChosenNotificationsRef.current = true;
+      try {
+        await setPushNotificationsEnabled(granted);
+      } catch (e) {
+        console.log('[onboarding] setPushNotificationsEnabled failed', e);
+      }
+    } catch (error) {
+      console.error('[onboarding] notification permission request failed:', error);
+    } finally {
+      setIsRequestingNotifications(false);
+      next();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    isRequestingNotifications,
+    pageIndex,
+    persistNotificationChoice,
+    setPushNotificationsEnabled,
+  ]);
+
+  const handleDeclineNotifications = useCallback(async () => {
+    await persistNotificationChoice(false);
+    next();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageIndex, persistNotificationChoice]);
 
   // Background Color Animation
   const backgroundColor = scrollX.interpolate({
@@ -129,7 +209,14 @@ export default function OnboardingScreen() {
             })}
             scrollEventThrottle={16}
             renderItem={({ item, index }) => (
-              <OnboardingPageContent item={item} index={index} scrollX={scrollX} />
+              <OnboardingPageContent
+                item={item}
+                index={index}
+                scrollX={scrollX}
+                onEnableNotifications={handleEnableNotifications}
+                onDeclineNotifications={handleDeclineNotifications}
+                isRequestingNotifications={isRequestingNotifications}
+              />
             )}
           />
 
@@ -209,10 +296,16 @@ function OnboardingPageContent({
   item,
   index,
   scrollX,
+  onEnableNotifications,
+  onDeclineNotifications,
+  isRequestingNotifications,
 }: {
   item: OnboardingPage;
   index: number;
   scrollX: Animated.Value;
+  onEnableNotifications?: () => void;
+  onDeclineNotifications?: () => void;
+  isRequestingNotifications?: boolean;
 }) {
   const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
 
@@ -239,6 +332,7 @@ function OnboardingPageContent({
       <Animated.View style={[styles.visualContainer, { transform: [{ scale }], opacity }]}>
         {item.key === 'track' && <VisualTrack />}
         {item.key === 'alerts' && <VisualAlerts />}
+        {item.key === 'notifications' && <VisualNotifications />}
         {item.key === 'insights' && <VisualInsights />}
         {item.key === 'start' && <VisualStart />}
       </Animated.View>
@@ -248,6 +342,29 @@ function OnboardingPageContent({
       >
         <Text style={[styles.title, { color: item.color }]}>{item.title}</Text>
         <Text style={styles.description}>{item.description}</Text>
+        {item.key === 'notifications' && (
+          <View style={styles.notifyCta}>
+            <Button
+              title={isRequestingNotifications ? 'Requesting…' : 'Enable Notifications'}
+              onPress={onEnableNotifications}
+              disabled={isRequestingNotifications}
+              loading={isRequestingNotifications}
+              variant="primary"
+              size="md"
+              style={[styles.notifyButton, { backgroundColor: item.color }]}
+              icon={<BellRingingIcon color="#fff" size={20} />}
+              testID="onboardingEnableNotifications"
+            />
+            <Button
+              title="Maybe later"
+              onPress={onDeclineNotifications}
+              variant="ghost"
+              size="sm"
+              style={{ shadowOpacity: 0, elevation: 0 }}
+              testID="onboardingMaybeLater"
+            />
+          </View>
+        )}
       </Animated.View>
     </View>
   );
@@ -305,6 +422,42 @@ function VisualAlerts() {
         </View>
       </View>
       <View style={[styles.alertCard, styles.alertCardBack]}></View>
+    </View>
+  );
+}
+
+function VisualNotifications() {
+  return (
+    <View style={styles.visualCard}>
+      <View style={[styles.iconCircle, { backgroundColor: '#FEE2E2' }]}>
+        <BellRingingIcon size={32} color="#DC2626" weight="fill" />
+      </View>
+      <View style={styles.notifyList}>
+        <View style={styles.notifyRow}>
+          <View style={[styles.iconBox, { backgroundColor: '#1DB954', width: 40, height: 40 }]}>
+            <Text style={styles.iconText}>S</Text>
+          </View>
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>Spotify Duo</Text>
+            <Text style={styles.rowSubtitle}>Renews in 3 days • $14.99</Text>
+          </View>
+          <View style={styles.notifyPill}>
+            <Text style={styles.notifyPillText}>3d</Text>
+          </View>
+        </View>
+        <View style={styles.notifyRow}>
+          <View style={[styles.iconBox, { backgroundColor: '#E50914', width: 40, height: 40 }]}>
+            <Text style={styles.iconText}>N</Text>
+          </View>
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>Netflix Premium</Text>
+            <Text style={styles.rowSubtitle}>Renews in 6 days • $22.99</Text>
+          </View>
+          <View style={styles.notifyPill}>
+            <Text style={styles.notifyPillText}>6d</Text>
+          </View>
+        </View>
+      </View>
     </View>
   );
 }
@@ -585,6 +738,46 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontWeight: 'bold',
     fontSize: FONT_SIZE.xl,
+  },
+
+  // Visual Notifications Styles
+  notifyCta: {
+    alignItems: 'center',
+    marginTop: SPACING.md,
+    width: '100%',
+  },
+  notifyButton: {
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 4,
+  },
+  notifyList: {
+    width: '100%',
+    gap: SPACING.sm,
+    marginTop: SPACING.xl,
+  },
+  notifyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    width: '100%',
+    backgroundColor: '#F9FAFB',
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.xxl,
+  },
+  notifyPill: {
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
+  },
+  notifyPillText: {
+    color: '#DC2626',
+    fontWeight: 'bold',
+    fontSize: FONT_SIZE.md,
   },
 
   // Visual Insights Styles
