@@ -24,6 +24,7 @@ import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { ThemeMode, useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { exportData, ExportFormat } from '@/src/features/export/exportService';
+import { useNotificationStatus } from '@/src/features/notifications/useNotificationStatus';
 import { consumePurchaseForTesting } from '@/src/features/monetization/iapService';
 import { useSubscriptionsQuery } from '@/src/features/subscriptions/subscriptionsHooks';
 import {
@@ -44,6 +45,7 @@ import {
   StarIcon,
   TagIcon,
 } from 'phosphor-react-native';
+import { WarningDot } from '@/src/components/ui/WarningDot';
 
 interface SettingRowProps {
   icon: React.ReactNode;
@@ -56,6 +58,7 @@ interface SettingRowProps {
   onSwitchChange?: (val: boolean) => void;
   onPress?: () => void;
   showChevron?: boolean;
+  showWarning?: boolean;
   colors: ReturnType<typeof useTheme>['colors'];
 }
 
@@ -70,6 +73,7 @@ function SettingRow({
   onSwitchChange,
   onPress,
   showChevron = true,
+  showWarning = false,
   colors,
 }: SettingRowProps) {
   return (
@@ -98,6 +102,11 @@ function SettingRow({
         />
       ) : (
         <View style={styles.rowRight}>
+          {showWarning && (
+            <View style={styles.warningDot}>
+              <WarningDot testID={`${label}Warning`} />
+            </View>
+          )}
           {value && (
             <Text style={[styles.rowValue, { color: colors.secondaryText }]} numberOfLines={1}>
               {value}
@@ -130,6 +139,8 @@ export default function SettingsScreen() {
   const [isResettingPurchase, setIsResettingPurchase] = useState(false);
 
   const { data: subscriptions, isLoading: isLoadingSubscriptions } = useSubscriptionsQuery();
+  const notificationsEnabled = useNotificationStatus();
+  const showNotificationWarning = notificationsEnabled === false;
   const profileName = user?.displayName?.trim() || user?.email || 'User';
   const profileInitial = profileName[0]?.toUpperCase() || 'U';
 
@@ -419,6 +430,7 @@ export default function SettingsScreen() {
               iconColor="#A855F7"
               iconBg="#F3E8FF"
               label="Billing Reminders"
+              showWarning={showNotificationWarning}
               onPress={() => router.push('/reminders')}
             />
           </View>
@@ -668,6 +680,9 @@ const styles = StyleSheet.create({
     color: AppColors.secondaryText,
     marginRight: 6,
     maxWidth: 160,
+  },
+  warningDot: {
+    marginRight: 6,
   },
   divider: {
     height: StyleSheet.hairlineWidth,

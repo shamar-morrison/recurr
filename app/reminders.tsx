@@ -24,7 +24,11 @@ import { StackHeader } from '@/src/components/ui/StackHeader';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
-import { cancelNotification } from '@/src/features/notifications/notificationService';
+import {
+  cancelNotification,
+  openAppNotificationSettings,
+} from '@/src/features/notifications/notificationService';
+import { useNotificationStatus } from '@/src/features/notifications/useNotificationStatus';
 import { useCategories } from '@/src/features/subscriptions/hooks';
 import {
   useSubscriptionsQuery,
@@ -49,6 +53,9 @@ export default function RemindersScreen() {
   const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('All');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [isClearingAll, setIsClearingAll] = useState(false);
+  // null = still checking; the disabled banner stays hidden until we know
+  // the OS status. Refreshes on focus + app foreground (see hook).
+  const notificationsEnabled = useNotificationStatus();
 
   // Filter to only subscriptions with reminders set
   const subscriptionsWithReminders = useMemo(() => {
@@ -338,6 +345,31 @@ export default function RemindersScreen() {
           }
           testID="remindersList"
         />
+
+        {notificationsEnabled === false && (
+          <View style={styles.disabledBanner} testID="notificationsDisabledBanner">
+            <View style={styles.disabledBannerRow}>
+              <BellSlashIcon color={colors.negative} size={24} />
+              <View style={styles.disabledBannerText}>
+                <Text style={[styles.disabledBannerTitle, { color: colors.text }]}>
+                  Notifications are disabled
+                </Text>
+                <Text style={[styles.disabledBannerDesc, { color: colors.secondaryText }]}>
+                  You won&apos;t receive billing reminders until you turn them back on.
+                </Text>
+              </View>
+            </View>
+            <Button
+              title="Tap here to enable notifications"
+              onPress={openAppNotificationSettings}
+              variant="primary"
+              size="md"
+              style={styles.disabledBannerButton}
+              icon={<BellIcon color="#fff" size={20} />}
+              testID="remindersEnableNotifications"
+            />
+          </View>
+        )}
       </View>
 
       {/* Category Filter Modal */}
@@ -481,6 +513,38 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRadius: BORDER_RADIUS.sm,
     backgroundColor: 'rgba(255,107,107,0.1)',
+  },
+
+  // Disabled-notifications sticky footer
+  disabledBanner: {
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.lg,
+    padding: SPACING.lg,
+    borderRadius: BORDER_RADIUS.xxl,
+    backgroundColor: 'rgba(255,107,107,0.1)',
+    gap: SPACING.md,
+  },
+  disabledBannerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: SPACING.md,
+  },
+  disabledBannerText: {
+    flex: 1,
+    gap: 2,
+  },
+  disabledBannerTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  disabledBannerDesc: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: '500',
+    lineHeight: 20,
+  },
+  disabledBannerButton: {
+    width: '100%',
   },
 
   // Filter button styles
