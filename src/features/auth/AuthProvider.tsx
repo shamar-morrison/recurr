@@ -25,7 +25,6 @@ import {
 } from '@/src/constants/dateFormats';
 import { firestore, getFirebaseAuth, isFirebaseConfigured } from '@/src/lib/firebase';
 import { getFirestoreErrorMessage } from '@/src/lib/firestore';
-import { getNotificationChoice } from '@/src/features/notifications/notificationService';
 
 // Web Client ID from google-services.json (client_type: 3)
 const WEB_CLIENT_ID = '845079285876-u5aeaifg6nsqa3jkjtit099tfarmdvps.apps.googleusercontent.com';
@@ -34,7 +33,6 @@ export type UserSettings = {
   remindDaysBeforeBilling: number;
   currency: string;
   dateFormat: DateFormatId;
-  pushNotificationsEnabled: boolean;
 };
 
 export type PlanStatus = {
@@ -54,7 +52,6 @@ export type AuthState = {
   setReminderDays: (days: number) => Promise<void>;
   setCurrency: (currency: string) => Promise<void>;
   setDateFormat: (format: DateFormatId) => Promise<void>;
-  setPushNotificationsEnabled: (enabled: boolean) => Promise<void>;
   setPremiumMock: (value: boolean) => Promise<void>;
   markOnboardingComplete: () => Promise<void>;
   hasCompletedOnboarding: boolean;
@@ -64,7 +61,6 @@ const DEFAULT_SETTINGS: UserSettings = {
   remindDaysBeforeBilling: 3,
   currency: 'USD',
   dateFormat: DEFAULT_DATE_FORMAT,
-  pushNotificationsEnabled: true,
 };
 
 const ONBOARDING_KEY = 'onboardingComplete:v1';
@@ -163,17 +159,8 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
 
     const loadLocal = async () => {
       try {
-        const [onboarding, notificationChoice] = await Promise.all([
-          AsyncStorage.getItem(ONBOARDING_KEY),
-          getNotificationChoice(),
-        ]);
-        if (cancelled) return;
-        setHasCompletedOnboarding(onboarding === '1');
-        // Apply the onboarding notification choice (if any) to pre-auth settings
-        // so reminders stay consistent until the Firestore user doc loads.
-        if (notificationChoice !== null) {
-          setSettings((prev) => ({ ...prev, pushNotificationsEnabled: notificationChoice }));
-        }
+        const onboarding = await AsyncStorage.getItem(ONBOARDING_KEY);
+        if (!cancelled) setHasCompletedOnboarding(onboarding === '1');
       } catch (e) {
         console.log('[auth] loadLocal failed', e);
       }
@@ -220,8 +207,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
         const snap = await getDoc(userRef);
         if (!snap.exists()) {
           const authProvider = getAuthProviderFromData(u.providerData, u.isAnonymous);
-          // Honor the onboarding notification choice for new users.
-          const notificationChoice = await getNotificationChoice();
 
           await setDoc(userRef, {
             createdAt: serverTimestamp(),
@@ -233,8 +218,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
               remindDaysBeforeBilling: DEFAULT_SETTINGS.remindDaysBeforeBilling,
               currency: DEFAULT_SETTINGS.currency,
               dateFormat: DEFAULT_SETTINGS.dateFormat,
-              pushNotificationsEnabled:
-                notificationChoice ?? DEFAULT_SETTINGS.pushNotificationsEnabled,
             },
             authProvider,
           });
@@ -297,8 +280,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
               data.settings?.remindDaysBeforeBilling ?? DEFAULT_SETTINGS.remindDaysBeforeBilling,
             currency: data.settings?.currency ?? DEFAULT_SETTINGS.currency,
             dateFormat: validatedDateFormat,
-            pushNotificationsEnabled:
-              data.settings?.pushNotificationsEnabled ?? DEFAULT_SETTINGS.pushNotificationsEnabled,
           });
 
           setIsReady(true);
@@ -612,24 +593,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
     [isFirebaseReady, user]
   );
 
-  const setPushNotificationsEnabled = useCallback(
-    async (enabled: boolean) => {
-      try {
-        setSettings((prev) => ({ ...prev, pushNotificationsEnabled: enabled }));
-
-        if (!isFirebaseReady || !user) return;
-
-        const userRef = doc(firestore, 'users', user.uid);
-        await updateDoc(userRef, {
-          'settings.pushNotificationsEnabled': enabled,
-        });
-      } catch (e) {
-        console.log('[auth] setPushNotificationsEnabled update failed', e);
-      }
-    },
-    [isFirebaseReady, user]
-  );
-
   const setPremiumMock = useCallback(
     async (value: boolean) => {
       console.log('[auth] setPremiumMock', { value });
@@ -671,7 +634,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       setReminderDays,
       setCurrency,
       setDateFormat,
-      setPushNotificationsEnabled,
       setPremiumMock,
       markOnboardingComplete,
       hasCompletedOnboarding,
@@ -688,7 +650,6 @@ export const [AuthProvider, useAuth] = createContextHook<AuthState>(() => {
       setReminderDays,
       setCurrency,
       setDateFormat,
-      setPushNotificationsEnabled,
       setPremiumMock,
       markOnboardingComplete,
       hasCompletedOnboarding,

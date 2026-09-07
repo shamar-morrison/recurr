@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
@@ -6,13 +5,6 @@ import { Alert, Linking, Platform } from 'react-native';
 
 import { nextBillingDate } from '@/src/features/subscriptions/subscriptionsUtils';
 import { Subscription } from '@/src/features/subscriptions/types';
-
-/**
- * Persisted onboarding choice for notification permission.
- * Stored pre-auth (onboarding runs before sign-in) and applied to the
- * Firestore user doc when it is created. '1' = granted, '0' = denied/skipped.
- */
-export const NOTIFICATION_CHOICE_KEY = 'notificationChoice:v1';
 
 // Configure notification handling behavior
 Notifications.setNotificationHandler({
@@ -24,6 +16,23 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 });
+
+/**
+ * Open the app's page in system Settings so the user can (re-)enable
+ * notifications. The OS permission is the single source of truth for
+ * whether reminders can be delivered.
+ */
+export function openAppNotificationSettings(): void {
+  try {
+    if (Platform.OS === 'ios') {
+      Linking.openURL('app-settings:');
+    } else {
+      Linking.openSettings();
+    }
+  } catch (error) {
+    console.error('[notifications] openAppNotificationSettings failed:', error);
+  }
+}
 
 /**
  * Request notification permissions from the user.
@@ -45,23 +54,14 @@ export async function requestNotificationPermissions(): Promise<boolean> {
     }
 
     // Permanently denied — the OS won't show a prompt, so offer Settings instead.
-    // Caller decides whether/how to advance; we don't block.
+    // Caller decides whether/how to proceed; we don't block.
     if (canAskAgain === false) {
       Alert.alert(
         'Notifications are off',
         'To get payment reminders, please enable notifications in Settings.',
         [
           { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Open Settings',
-            onPress: () => {
-              if (Platform.OS === 'ios') {
-                Linking.openURL('app-settings:');
-              } else {
-                Linking.openSettings();
-              }
-            },
-          },
+          { text: 'Open Settings', onPress: openAppNotificationSettings },
         ]
       );
       return false;
@@ -73,44 +73,6 @@ export async function requestNotificationPermissions(): Promise<boolean> {
     console.error('[notifications] requestNotificationPermissions failed:', error);
     return false;
   }
-}
-
-/**
- * Persist the user's onboarding notification choice locally.
- * Used pre-auth; applied to Firestore on user-doc creation (see AuthProvider).
- */
-export async function saveNotificationChoice(granted: boolean): Promise<void> {
-  try {
-    await AsyncStorage.setItem(NOTIFICATION_CHOICE_KEY, granted ? '1' : '0');
-  } catch (error) {
-    console.log('[notifications] saveNotificationChoice failed:', error);
-  }
-}
-
-/**
- * Read the persisted onboarding notification choice.
- * @returns true/false if the user made a choice, null if not yet asked
- */
-export async function getNotificationChoice(): Promise<boolean | null> {
-  try {
-    const value = await AsyncStorage.getItem(NOTIFICATION_CHOICE_KEY);
-    if (value === '1') return true;
-    if (value === '0') return false;
-    return null;
-  } catch (error) {
-    console.log('[notifications] getNotificationChoice failed:', error);
-    return null;
-  }
-}
-
-/**
- * Request OS permission and persist the result for onboarding.
- * Always resolves (never throws, never blocks onboarding advance).
- */
-export async function requestAndPersistNotificationPermission(): Promise<boolean> {
-  const granted = await requestNotificationPermissions();
-  await saveNotificationChoice(granted);
-  return granted;
 }
 
 /**

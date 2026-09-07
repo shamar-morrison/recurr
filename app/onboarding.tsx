@@ -1,5 +1,5 @@
 import { router, Stack } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
@@ -8,10 +8,7 @@ import { AppColors } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
-import {
-  requestAndPersistNotificationPermission,
-  saveNotificationChoice,
-} from '@/src/features/notifications/notificationService';
+import { requestNotificationPermissions } from '@/src/features/notifications/notificationService';
 import {
   BellRingingIcon,
   CaretRightIcon,
@@ -70,42 +67,19 @@ const PAGES: OnboardingPage[] = [
   },
 ];
 
-const NOTIFICATIONS_INDEX = PAGES.findIndex((p) => p.key === 'notifications');
-
 export default function OnboardingScreen() {
-  const { markOnboardingComplete, setPushNotificationsEnabled } = useAuth();
+  const { markOnboardingComplete } = useAuth();
   const scrollX = useRef(new Animated.Value(0)).current;
   const listRef = useRef<Animated.FlatList<OnboardingPage> | null>(null);
   const [pageIndex, setPageIndex] = useState<number>(0);
   const [isRequestingNotifications, setIsRequestingNotifications] = useState<boolean>(false);
-  const hasChosenNotificationsRef = useRef<boolean>(false);
 
   const finish = async () => {
     await markOnboardingComplete();
     router.replace('/auth');
   };
 
-  // Persist the onboarding notification choice locally (pre-auth) and to
-  // in-memory settings. The stored choice is applied to Firestore when the
-  // user doc is created (see AuthProvider). Never blocks navigation.
-  const persistNotificationChoice = useCallback(
-    async (granted: boolean) => {
-      hasChosenNotificationsRef.current = true;
-      await saveNotificationChoice(granted);
-      try {
-        await setPushNotificationsEnabled(granted);
-      } catch (e) {
-        console.log('[onboarding] setPushNotificationsEnabled failed', e);
-      }
-    },
-    [setPushNotificationsEnabled]
-  );
-
   const next = () => {
-    // Tapping Next on the notifications page without enabling counts as skip.
-    if (pageIndex === NOTIFICATIONS_INDEX && !hasChosenNotificationsRef.current) {
-      void persistNotificationChoice(false);
-    }
     const nextIndex = Math.min(PAGES.length - 1, pageIndex + 1);
     if (nextIndex === pageIndex) {
       if (pageIndex === PAGES.length - 1) finish();
@@ -118,50 +92,20 @@ export default function OnboardingScreen() {
     finish();
   };
 
-  // Swiping past the notifications page without enabling counts as skip,
-  // so a later sign-up doesn't default to reminders the user never saw.
-  useEffect(() => {
-    if (
-      NOTIFICATIONS_INDEX >= 0 &&
-      pageIndex > NOTIFICATIONS_INDEX &&
-      !hasChosenNotificationsRef.current
-    ) {
-      void persistNotificationChoice(false);
-    }
-  }, [pageIndex, persistNotificationChoice]);
-
   // Like ShowSeek's NotificationPermissionStep: request the OS permission,
   // then always advance regardless of the result.
-  const handleEnableNotifications = useCallback(async () => {
+  const handleEnableNotifications = async () => {
     if (isRequestingNotifications) return;
     setIsRequestingNotifications(true);
     try {
-      const granted = await requestAndPersistNotificationPermission();
-      hasChosenNotificationsRef.current = true;
-      try {
-        await setPushNotificationsEnabled(granted);
-      } catch (e) {
-        console.log('[onboarding] setPushNotificationsEnabled failed', e);
-      }
+      await requestNotificationPermissions();
     } catch (error) {
       console.error('[onboarding] notification permission request failed:', error);
     } finally {
       setIsRequestingNotifications(false);
       next();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    isRequestingNotifications,
-    pageIndex,
-    persistNotificationChoice,
-    setPushNotificationsEnabled,
-  ]);
-
-  const handleDeclineNotifications = useCallback(async () => {
-    await persistNotificationChoice(false);
-    next();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageIndex, persistNotificationChoice]);
+  };
 
   // Background Color Animation
   const backgroundColor = scrollX.interpolate({
@@ -214,7 +158,7 @@ export default function OnboardingScreen() {
                 index={index}
                 scrollX={scrollX}
                 onEnableNotifications={handleEnableNotifications}
-                onDeclineNotifications={handleDeclineNotifications}
+                onDeclineNotifications={next}
                 isRequestingNotifications={isRequestingNotifications}
               />
             )}

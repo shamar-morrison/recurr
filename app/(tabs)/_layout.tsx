@@ -1,11 +1,16 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
 
+import { WarningDot } from '@/src/components/ui/WarningDot';
 import { useTheme } from '@/src/context/ThemeContext';
+import { useNotificationStatus } from '@/src/features/notifications/useNotificationStatus';
 import { ChartBarIcon, CreditCardIcon, GearSixIcon } from 'phosphor-react-native';
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme();
+  const notificationsEnabled = useNotificationStatus();
+  const showNotificationWarning = notificationsEnabled === false;
 
   return (
     <Tabs
@@ -43,10 +48,28 @@ export default function TabLayout() {
         options={{
           title: 'Settings',
           tabBarIcon: ({ color, size, focused }) => (
-            <GearSixIcon color={color} size={size} weight={focused ? 'fill' : 'regular'} />
+            <View style={styles.iconWrapper}>
+              <GearSixIcon color={color} size={size} weight={focused ? 'fill' : 'regular'} />
+              {showNotificationWarning && (
+                <View style={styles.warningDot}>
+                  <WarningDot size={14} testID="settingsTabWarning" />
+                </View>
+              )}
+            </View>
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconWrapper: {
+    position: 'relative',
+  },
+  warningDot: {
+    position: 'absolute',
+    top: -2,
+    right: -8,
+  },
+});
