@@ -23,6 +23,8 @@ import { DateFormatId, getDateFormatLabel } from '@/src/constants/dateFormats';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { ThemeMode, useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
+import { accountDeletionService } from '@/src/features/auth/accountDeletionService';
+import { clearLocalAccountData } from '@/src/features/auth/clearLocalAccountData';
 import { exportData, ExportFormat } from '@/src/features/export/exportService';
 import { useNotificationStatus } from '@/src/features/notifications/useNotificationStatus';
 import { consumePurchaseForTesting } from '@/src/features/monetization/iapService';
@@ -44,8 +46,10 @@ import {
   SignOutIcon,
   StarIcon,
   TagIcon,
+  TrashIcon,
 } from 'phosphor-react-native';
 import { WarningDot } from '@/src/components/ui/WarningDot';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface SettingRowProps {
   icon: React.ReactNode;
@@ -137,6 +141,8 @@ export default function SettingsScreen() {
   const [dateFormatModalVisible, setDateFormatModalVisible] = useState(false);
   const [themeModalVisible, setThemeModalVisible] = useState(false);
   const [isResettingPurchase, setIsResettingPurchase] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: subscriptions, isLoading: isLoadingSubscriptions } = useSubscriptionsQuery();
   const notificationsEnabled = useNotificationStatus();
@@ -246,6 +252,92 @@ export default function SettingsScreen() {
         },
       },
     ]);
+  };
+
+  const executeDeleteAccount = async () => {
+    if (!user?.uid || isDeletingAccount) {
+      return;
+    }
+
+    setIsDeletingAccount(true);
+
+    try {
+      // 1. Remote wipe via callable function (Firestore tree + purchase_tokens + Auth user)
+      await accountDeletionService.deleteAccount();
+
+      // 2. Local wipe (best-effort: AsyncStorage caches + notifications)
+      try {
+        await clearLocalAccountData(user.uid);
+      } catch (cleanupError) {
+        console.warn(
+          '[settings] Failed to clear local account data after remote deletion:',
+          cleanupError
+        );
+      }
+
+      // 3. Drop in-memory query caches for the deleted account
+      try {
+        queryClient.clear();
+      } catch (cacheError) {
+        console.warn('[settings] Failed to clear query cache after account deletion:', cacheError);
+      }
+
+      // 4. Sign out (Auth user is already deleted server-side)
+      try {
+        await signOutUser();
+      } catch (signOutError) {
+        console.warn('[settings] Failed to sign out after account deletion:', signOutError);
+      }
+
+      router.replace('/auth');
+    } catch (error) {
+      console.error('[settings] Failed to delete account:', error);
+      Alert.alert(
+        'Delete Account Failed',
+        'Unable to delete your account. Please check your connection and try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    if (!user?.uid || isDeletingAccount) {
+      return;
+    }
+
+    const premiumWarning = isPremium
+      ? ' You will lose Premium access and it cannot be restored.'
+      : '';
+
+    Alert.alert(
+      'Delete your account?',
+      `This permanently deletes your Recurr account and all associated data (subscriptions, categories and services).${premiumWarning} This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Delete account permanently?',
+              'All of your data will be permanently removed from our servers.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete Account',
+                  style: 'destructive',
+                  onPress: () => {
+                    void executeDeleteAccount();
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
   };
 
   // [DEV ONLY] Reset purchase for testing
@@ -572,6 +664,23 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Danger Zone */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.secondaryText }]}>DANGER ZONE</Text>
+          <Pressable
+            onPress={handleDeleteAccount}
+            disabled={isDeletingAccount}
+            style={[styles.logoutCard, isDeletingAccount && styles.disabledCard]}
+          >
+            <View style={styles.logoutIconContainer}>
+              <TrashIcon size={20} color={AppColors.negative} />
+            </View>
+            <Text style={styles.logoutText}>
+              {isDeletingAccount ? 'Deleting Account...' : 'Delete Account'}
+            </Text>
+          </Pressable>
+        </View>
+
         {/* Sign Out */}
         <View style={styles.section}>
           <Pressable onPress={handleSignOut} style={styles.logoutCard}>
@@ -752,5 +861,8 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.lg,
     fontWeight: '600',
     color: AppColors.negative,
+  },
+  disabledCard: {
+    opacity: 0.6,
   },
 });
