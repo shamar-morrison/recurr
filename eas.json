@@ -5,10 +5,11 @@
   },
   "build": {
     "production": {
+      "environment": "production",
       "channel": "production",
       "android": {
         "buildType": "app-bundle",
-        "credentialsSource": "local"
+        "credentialsSource": "remote"
       },
       "autoIncrement": true
     },
