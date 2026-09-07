@@ -14,6 +14,7 @@ import {
   setLogLevel,
   Timestamp,
 } from 'firebase/firestore';
+import { Functions, getFunctions } from 'firebase/functions';
 import { Platform } from 'react-native';
 
 type FirebaseWebConfig = {
@@ -88,6 +89,15 @@ export function getFirebaseAuth(): Auth {
 }
 
 export const firestore: Firestore = getFirestore(firebaseApp);
+
+let _functions: Functions | null = null;
+
+export function getFirebaseFunctions(): Functions {
+  if (_functions) return _functions;
+  // Default region (us-central1) matches deployed Cloud Functions.
+  _functions = getFunctions(firebaseApp);
+  return _functions;
+}
 
 export function timestampToMillis(value: unknown): number {
   if (typeof value === 'number') return value;

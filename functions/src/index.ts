@@ -313,3 +313,7 @@ export const validateAndroidPurchase = functions.https.onRequest(
     }
   }
 );
+
+// Account deletion (V1 callable, see accountDeletion.ts).
+// Deletes users/{uid} tree + purchase_tokens + Auth user via Admin SDK.
+export { deleteAccount } from './accountDeletion';
