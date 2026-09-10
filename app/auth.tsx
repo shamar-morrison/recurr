@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
-import { ViewIcon, ViewOffIcon } from '@hugeicons/core-free-icons';
+import { LockPasswordIcon, Mail01Icon, ViewIcon, ViewOffIcon } from '@hugeicons/core-free-icons';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -125,27 +125,36 @@ export default function AuthScreen() {
                   </View>
 
                   <View style={styles.authSection}>
-                    <TextInput
-                      value={email}
-                      onChangeText={setEmail}
-                      placeholder="Email"
-                      placeholderTextColor={colors.secondaryText}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      autoComplete="email"
-                      textContentType="emailAddress"
+                    <View
                       style={[
-                        styles.input,
+                        styles.inputWrapper,
                         {
                           backgroundColor: colors.card,
                           borderColor: colors.border,
-                          color: colors.text,
                         },
                       ]}
-                      editable={!workingMethod}
-                      returnKeyType="next"
-                    />
+                    >
+                      <AppIcon icon={Mail01Icon} color={colors.secondaryText} size={20} />
+                      <TextInput
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="Email"
+                        placeholderTextColor={colors.secondaryText}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        autoComplete="email"
+                        textContentType="emailAddress"
+                        style={[
+                          styles.input,
+                          {
+                            color: colors.text,
+                          },
+                        ]}
+                        editable={!workingMethod}
+                        returnKeyType="next"
+                      />
+                    </View>
                     <View
                       style={[
                         styles.passwordInputWrapper,
@@ -155,6 +164,7 @@ export default function AuthScreen() {
                         },
                       ]}
                     >
+                      <AppIcon icon={LockPasswordIcon} color={colors.secondaryText} size={20} />
                       <TextInput
                         value={password}
                         onChangeText={setPassword}
@@ -301,13 +311,19 @@ const styles = StyleSheet.create({
     maxWidth: 300,
   },
   input: {
-    minHeight: 56,
-    borderRadius: BORDER_RADIUS.full,
-    paddingHorizontal: SPACING.lg,
+    flex: 1,
     paddingVertical: SPACING.lg,
     fontSize: FONT_SIZE.lg,
     fontFamily: FONT_FAMILY.medium,
+  },
+  inputWrapper: {
+    minHeight: 56,
+    borderRadius: BORDER_RADIUS.full,
+    paddingHorizontal: SPACING.lg,
     borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
   },
   passwordInputWrapper: {
     minHeight: 56,
@@ -317,6 +333,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: SPACING.md,
   },
   passwordInput: {
     flex: 1,

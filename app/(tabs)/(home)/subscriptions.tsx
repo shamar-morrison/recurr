@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
   activeSubsPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.md,
+    gap: SPACING.sm,
     backgroundColor: 'rgba(0,0,0,0.15)',
     borderRadius: BORDER_RADIUS.full,
     paddingVertical: SPACING.md,
@@ -725,7 +725,7 @@ const styles = StyleSheet.create({
   },
   activeSubsLabel: {
     color: '#fff',
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: FONT_FAMILY.semiBold,
   },
   premiumPill: {
