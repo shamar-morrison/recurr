@@ -164,7 +164,7 @@ export function BillingDatesSection({
               disabled={disabled}
               style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
             >
-              <Text style={{ color: colors.secondaryText, fontSize: FONT_SIZE.sm }}>Clear</Text>
+              <Text style={{ color: colors.secondaryText, fontSize: FONT_SIZE.sm - 1 }}>Clear</Text>
             </Pressable>
           )}
         </View>
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   },
   label: {
     textTransform: 'uppercase',
-    fontSize: FONT_SIZE.sm,
+    fontSize: FONT_SIZE.sm - 1,
     fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.4,
     marginLeft: SPACING.xs,
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.xxl,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.lg,
-    fontSize: FONT_SIZE.lg,
+    fontSize: FONT_SIZE.lg - 1,
     fontFamily: FONT_FAMILY.semiBold,
     borderWidth: 1,
     shadowColor: '#000',
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   dateText: {
-    fontSize: FONT_SIZE.lg,
+    fontSize: FONT_SIZE.lg - 1,
     fontFamily: FONT_FAMILY.semiBold,
   },
   row: {
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: AppColors.negative,
-    fontSize: FONT_SIZE.sm,
+    fontSize: FONT_SIZE.sm - 1,
     marginTop: -SPACING.xs,
     marginLeft: SPACING.xs,
   },

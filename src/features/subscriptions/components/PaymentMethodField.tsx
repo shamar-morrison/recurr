@@ -47,7 +47,7 @@ export function PaymentMethodField({
             disabled={disabled}
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
-            <Text style={{ color: colors.secondaryText, fontSize: 13 }}>Clear</Text>
+            <Text style={{ color: colors.secondaryText, fontSize: 12 }}>Clear</Text>
           </Pressable>
         )}
       </View>
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   },
   label: {
     textTransform: 'uppercase',
-    fontSize: FONT_SIZE.sm,
+    fontSize: FONT_SIZE.sm - 1,
     fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.4,
     marginLeft: SPACING.xs,
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   },
   dropdownText: {
     fontFamily: FONT_FAMILY.semiBold,
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.md - 1,
   },
   disabledInput: {
     opacity: 0.5,

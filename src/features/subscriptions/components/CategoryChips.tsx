@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   chipText: {
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.md - 1,
     fontFamily: FONT_FAMILY.bold,
   },
   disabledInput: {

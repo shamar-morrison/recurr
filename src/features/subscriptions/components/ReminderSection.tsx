@@ -55,17 +55,6 @@ export function ReminderSection({
   return (
     <>
       {/* Reminder Day */}
-      <Text
-        style={[
-          styles.sublabel,
-          {
-            color: colors.secondaryText,
-            marginTop: SPACING.xs,
-          },
-        ]}
-      >
-        When to remind me
-      </Text>
       <Pressable
         style={[
           styles.dropdownButton,
@@ -141,7 +130,7 @@ export function ReminderSection({
 const styles = StyleSheet.create({
   sublabel: {
     textTransform: 'uppercase',
-    fontSize: FONT_SIZE.xs,
+    fontSize: FONT_SIZE.xs - 1,
     fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.4,
     marginBottom: 4,
@@ -168,7 +157,7 @@ const styles = StyleSheet.create({
   },
   dropdownText: {
     fontFamily: FONT_FAMILY.semiBold,
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.md - 1,
   },
   disabledInput: {
     opacity: 0.5,

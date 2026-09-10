@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
   },
   deleteText: {
-    fontSize: FONT_SIZE.xl,
+    fontSize: FONT_SIZE.xl - 1,
     fontFamily: FONT_FAMILY.semiBold,
   },
 });

@@ -739,7 +739,7 @@ const styles = StyleSheet.create({
   },
   label: {
     textTransform: 'uppercase',
-    fontSize: FONT_SIZE.sm,
+    fontSize: FONT_SIZE.sm - 1,
     fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.4,
     marginLeft: SPACING.xs,
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.xxl,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.lg,
-    fontSize: FONT_SIZE.lg,
+    fontSize: FONT_SIZE.lg - 1,
     fontFamily: FONT_FAMILY.semiBold,
     borderWidth: 1,
     shadowColor: '#000',
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   inputText: {
-    fontSize: FONT_SIZE.lg,
+    fontSize: FONT_SIZE.lg - 1,
     fontFamily: FONT_FAMILY.semiBold,
   },
   serviceRow: {
@@ -796,7 +796,7 @@ const styles = StyleSheet.create({
   },
   dropdownText: {
     fontFamily: FONT_FAMILY.semiBold,
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.md - 1,
   },
   disabledInput: {
     opacity: 0.5,

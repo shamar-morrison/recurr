@@ -34,13 +34,13 @@ const styles = StyleSheet.create({
   },
   label: {
     textTransform: 'uppercase',
-    fontSize: FONT_SIZE.sm,
+    fontSize: FONT_SIZE.sm - 1,
     fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.4,
     marginLeft: SPACING.xs,
   },
   helper: {
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.md - 1,
     lineHeight: 18,
     marginLeft: SPACING.xs,
     marginBottom: SPACING.xs,
