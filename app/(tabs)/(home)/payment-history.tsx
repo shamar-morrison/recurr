@@ -1,5 +1,5 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft01Icon, CheckmarkCircle02Icon, Clock01Icon } from '@hugeicons/core-free-icons';
+import { ArrowLeft01Icon, Clock01Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import React, { useCallback, useMemo } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -85,7 +85,9 @@ export default function PaymentHistoryScreen() {
         >
           <View style={styles.paymentLeft}>
             {isPast ? (
-              <AppIcon icon={CheckmarkCircle02Icon} color={colors.positive} size={24} fill={colors.positive} />
+              <View style={[styles.paidBadge, { backgroundColor: colors.positive }]}>
+                <AppIcon icon={Tick02Icon} color="#fff" size={14} />
+              </View>
             ) : (
               <AppIcon icon={Clock01Icon} color={colors.warning} size={24} />
             )}
@@ -291,6 +293,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.md,
+  },
+  paidBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: BORDER_RADIUS.full,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   paymentInfo: {
     gap: 2,
