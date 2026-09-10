@@ -1,4 +1,9 @@
-import { Delete02Icon } from '@hugeicons/core-free-icons';
+import {
+  Delete02Icon,
+  PauseCircleIcon,
+  PlayCircle02Icon,
+  Tick02Icon,
+} from '@hugeicons/core-free-icons';
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -11,6 +16,7 @@ interface EditorActionButtonsProps {
   isEditing: boolean;
   isPaused: boolean;
   processingAction: 'save' | 'pause' | 'delete' | null;
+  isSaveDisabled?: boolean;
   onSave: () => void;
   onPauseResume: () => void;
   onDelete: () => void;
@@ -23,6 +29,7 @@ export function EditorActionButtons({
   isEditing,
   isPaused,
   processingAction,
+  isSaveDisabled = false,
   onSave,
   onPauseResume,
   onDelete,
@@ -38,8 +45,9 @@ export function EditorActionButtons({
           title={isEditing ? 'Update Subscription' : 'Save Subscription'}
           onPress={onSave}
           loading={processingAction === 'save'}
-          disabled={isProcessing}
+          disabled={isProcessing || isSaveDisabled}
           testID="subscriptionEditorSave"
+          icon={<AppIcon icon={Tick02Icon} color="#fff" size={20} />}
         />
       </View>
 
@@ -56,6 +64,13 @@ export function EditorActionButtons({
             textStyle={{ color: '#fff' }}
             loading={processingAction === 'pause'}
             disabled={isProcessing}
+            icon={
+              <AppIcon
+                icon={isPaused ? PlayCircle02Icon : PauseCircleIcon}
+                color="#fff"
+                size={20}
+              />
+            }
           />
 
           <Pressable

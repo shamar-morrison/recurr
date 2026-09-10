@@ -680,6 +680,7 @@ export default function SubscriptionEditorScreen() {
                 isEditing={Boolean(form.existing)}
                 isPaused={form.existing?.status === 'Paused'}
                 processingAction={processingAction}
+                isSaveDisabled={Boolean(form.existing) && !form.hasChanges}
                 onSave={handleSave}
                 onPauseResume={handlePauseResume}
                 onDelete={handleDelete}
