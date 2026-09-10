@@ -18,7 +18,7 @@ import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
 import { EmptyState } from '@/src/components/ui/EmptyState';
 import { StackHeader } from '@/src/components/ui/StackHeader';
 import { CustomService, CustomServiceInput } from '@/src/constants/customServices';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useCustomServices } from '@/src/features/services/useCustomServices';
 
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     letterSpacing: 0.5,
     marginLeft: SPACING.xs,
   },
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   },
   serviceName: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
 
   actionButtons: {
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '400',
+    fontFamily: FONT_FAMILY.regular,
     lineHeight: 20,
     textAlign: 'center',
   },

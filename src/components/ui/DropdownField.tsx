@@ -2,7 +2,7 @@ import { CaretDownIcon } from 'phosphor-react-native';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 
 interface DropdownFieldProps {
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dropdownText: {
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     fontSize: FONT_SIZE.md,
   },
   disabledInput: {

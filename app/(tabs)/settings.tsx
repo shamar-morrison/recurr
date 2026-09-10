@@ -20,7 +20,7 @@ import { DateFormatModal } from '@/src/components/DateFormatModal';
 import { ThemeSelectorModal } from '@/src/components/ThemeSelectorModal';
 import { getCurrencySymbol } from '@/src/constants/currencies';
 import { DateFormatId, getDateFormatLabel } from '@/src/constants/dateFormats';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { ThemeMode, useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { accountDeletionService } from '@/src/features/auth/accountDeletionService';
@@ -728,13 +728,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: FONT_SIZE.xxl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     color: AppColors.text,
     letterSpacing: -0.4,
   },
   headerSubtitle: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
     color: AppColors.secondaryText,
     marginTop: 2,
   },
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     color: AppColors.secondaryText,
     marginLeft: SPACING.xs,
     marginBottom: SPACING.sm,
@@ -776,7 +776,7 @@ const styles = StyleSheet.create({
   rowLabel: {
     flex: 1,
     fontSize: FONT_SIZE.lg,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
     color: AppColors.text,
   },
   rowRight: {
@@ -826,12 +826,12 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     fontSize: FONT_SIZE.xxl,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     color: AppColors.secondaryText,
   },
   profileName: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     color: AppColors.text,
   },
   profilePlan: {
@@ -859,7 +859,7 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     color: AppColors.negative,
   },
   disabledCard: {

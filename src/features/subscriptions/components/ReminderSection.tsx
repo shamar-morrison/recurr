@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ReminderSelectorModal } from '@/src/components/ReminderSelectorModal';
 import { ReminderTimeSelectorModal } from '@/src/components/ReminderTimeSelectorModal';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { REMINDER_OPTIONS, ReminderDays, ReminderHour } from '@/src/features/subscriptions/types';
 
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   sublabel: {
     textTransform: 'uppercase',
     fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.4,
     marginBottom: 4,
   },
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dropdownText: {
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     fontSize: FONT_SIZE.md,
   },
   disabledInput: {

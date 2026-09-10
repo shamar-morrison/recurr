@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
 
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { formatMoney } from '@/src/utils/formatMoney';
 import { SpendingDataPoint } from '@/src/utils/spendingCalculations';
@@ -95,7 +95,7 @@ export function SpendingBarChart({ data, currency }: SpendingBarChartProps) {
           xAxisLabelTextStyle={{
             color: colors.secondaryText,
             fontSize: 10,
-            fontWeight: '500',
+            fontFamily: FONT_FAMILY.medium,
           }}
           height={180}
           showValuesAsTopLabel={false}
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.3,
   },
   selectedValueContainer: {
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   },
   selectedValue: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     textAlign: 'center',
   },
   hintText: {

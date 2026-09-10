@@ -35,7 +35,7 @@ import { Button } from '@/src/components/ui/Button';
 import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
 import { EmptyState } from '@/src/components/ui/EmptyState';
 import { getServiceDomain } from '@/src/constants/services';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
   heroLabel: {
     color: '#fff',
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     letterSpacing: -0.1,
     opacity: 0.9,
   },
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
   },
   currencyBadgeText: {
     color: '#fff',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: FONT_SIZE.md,
     letterSpacing: 0.3,
   },
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   heroAmount: {
     color: '#fff',
     fontSize: 42,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -1.5,
   },
   activeSubsPill: {
@@ -721,12 +721,12 @@ const styles = StyleSheet.create({
   countCircleText: {
     color: AppColors.primary,
     fontSize: FONT_SIZE.md,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
   },
   activeSubsLabel: {
     color: '#fff',
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   premiumPill: {
     flexDirection: 'row',
@@ -739,7 +739,7 @@ const styles = StyleSheet.create({
   },
   premiumPillText: {
     color: '#fff',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: FONT_SIZE.sm,
     letterSpacing: 0.4,
   },
@@ -756,7 +756,7 @@ const styles = StyleSheet.create({
   limitText: {
     color: '#fff',
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   limitCta: {
     flexDirection: 'row',
@@ -768,7 +768,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   limitCtaText: {
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: FONT_SIZE.sm,
     color: AppColors.primary,
   },
@@ -836,7 +836,7 @@ const styles = StyleSheet.create({
   },
   sortMenuText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   filters: {
     gap: SPACING.md,
@@ -851,7 +851,7 @@ const styles = StyleSheet.create({
   filtersLabel: {
     color: AppColors.secondaryText,
     fontSize: FONT_SIZE.sm,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
@@ -875,7 +875,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     letterSpacing: -0.1,
   },
   loadingBox: {
@@ -887,7 +887,7 @@ const styles = StyleSheet.create({
   loadingText: {
     color: AppColors.secondaryText,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   errorBox: {
     borderRadius: BORDER_RADIUS.xxl,
@@ -899,7 +899,7 @@ const styles = StyleSheet.create({
   },
   errorTitle: {
     color: AppColors.text,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: FONT_SIZE.md,
   },
   errorText: {
@@ -915,7 +915,7 @@ const styles = StyleSheet.create({
   },
   primaryText: {
     color: '#fff',
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: FONT_SIZE.lg,
   },
   row: {
@@ -944,7 +944,7 @@ const styles = StyleSheet.create({
   },
   logoText: {
     color: AppColors.text,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: FONT_SIZE.xl,
   },
   rowMain: {
@@ -954,7 +954,7 @@ const styles = StyleSheet.create({
   rowTitle: {
     color: AppColors.text,
     fontSize: 17,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.3,
   },
 
@@ -965,13 +965,13 @@ const styles = StyleSheet.create({
   rowAmount: {
     color: AppColors.text,
     fontSize: FONT_SIZE.xxl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.5,
   },
   rowBillingDate: {
     color: AppColors.secondaryText,
     fontSize: FONT_SIZE.md,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
   },
   fab: {
     position: 'absolute',
@@ -1010,7 +1010,7 @@ const styles = StyleSheet.create({
   gridCardTitle: {
     color: AppColors.text,
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.2,
     textAlign: 'center',
     marginTop: SPACING.sm,
@@ -1018,13 +1018,13 @@ const styles = StyleSheet.create({
   gridCardPrice: {
     color: AppColors.text,
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.4,
     marginTop: SPACING.xs,
   },
   gridCardDate: {
     color: AppColors.secondaryText,
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
   },
 });

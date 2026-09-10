@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getCategoryColors } from '@/constants/colors';
 import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { useCategories } from '@/src/features/subscriptions/hooks';
@@ -435,12 +435,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: FONT_SIZE.xxl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.4,
   },
   headerSubtitle: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
     marginTop: 2,
   },
   content: {
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     color: '#fff',
     fontSize: FONT_SIZE.xl,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     letterSpacing: -0.1,
     opacity: 0.9,
   },
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
   },
   premiumPillText: {
     color: '#fff',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: FONT_SIZE.sm,
     letterSpacing: 0.4,
   },
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
   loadingText: {
     color: '#fff',
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   totals: {
     gap: SPACING.md,
@@ -520,13 +520,13 @@ const styles = StyleSheet.create({
   totalLabel: {
     color: '#fff',
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     opacity: 0.9,
   },
   totalValue: {
     color: '#fff',
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.3,
   },
   card: {
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.3,
   },
   subtitle: {
@@ -583,13 +583,13 @@ const styles = StyleSheet.create({
   },
   highlightLabel: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     letterSpacing: 0.3,
     textTransform: 'uppercase',
   },
   highlightValue: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.2,
   },
   bars: {
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
 
   barValue: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.1,
   },
   track: {
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
   },
   lockedTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.2,
   },
   lockedText: {
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
   },
   expandButtonText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   detailedReportButton: {
     flexDirection: 'row',
@@ -675,11 +675,11 @@ const styles = StyleSheet.create({
   },
   detailedReportTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
   },
   detailedReportSubtitle: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
     marginTop: 2,
   },
   detailedReportTitleRow: {

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppColors } from '@/constants/colors';
+import { FONT_FAMILY } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 
 type Props = {
@@ -136,13 +137,13 @@ const styles = StyleSheet.create({
   badgeText: {
     color: AppColors.badgeText,
     fontSize: 12,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.8,
   },
   tierTitle: {
     color: AppColors.text,
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.15,
   },
   divider: {
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: '#fff',
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: 14,
     letterSpacing: -0.1,
   },
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: AppColors.text,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: 14,
     letterSpacing: -0.1,
   },
@@ -197,6 +198,6 @@ const styles = StyleSheet.create({
   premiumTitle: {
     color: AppColors.positive,
     fontSize: 14,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
   },
 });

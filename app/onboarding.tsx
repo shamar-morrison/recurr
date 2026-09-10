@@ -6,7 +6,7 @@ import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 import { AppColors } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { requestNotificationPermissions } from '@/src/features/notifications/notificationService';
 import {
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 36,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     textAlign: 'center',
     lineHeight: 40,
     letterSpacing: -1,
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
   },
   iconText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: FONT_SIZE.xxl,
   },
   rowText: {
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     color: '#1F2937',
   },
   rowSubtitle: {
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
   },
   floatBadgeText: {
     color: '#fff',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: FONT_SIZE.md,
   },
 
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
   },
   alertTitle: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     color: '#1F2937',
     marginBottom: SPACING.sm,
   },
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
   },
   alertAmountText: {
     color: '#EF4444',
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: FONT_SIZE.xl,
   },
 
@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
   },
   notifyPillText: {
     color: '#DC2626',
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: FONT_SIZE.md,
   },
 
@@ -760,14 +760,14 @@ const styles = StyleSheet.create({
   },
   doughnutText: {
     fontSize: 32,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     color: '#1F2937',
     lineHeight: 32,
   },
   doughnutLabel: {
     fontSize: FONT_SIZE.md,
     color: '#6B7280',
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
 
   // Visual Start
@@ -791,7 +791,7 @@ const styles = StyleSheet.create({
   },
   bulletText: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     color: '#1F2937',
   },
 });

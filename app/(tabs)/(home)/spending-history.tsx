@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CategoryBreakdownChart } from '@/src/components/charts/CategoryBreakdownChart';
 import { SpendingBarChart } from '@/src/components/charts/SpendingBarChart';
 import { SpendingTrendChart } from '@/src/components/charts/SpendingTrendChart';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useCategories } from '@/src/features/subscriptions/hooks';
 import { useSubscriptionsQuery } from '@/src/features/subscriptions/subscriptionsHooks';
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
   },
   hero: {
     borderRadius: BORDER_RADIUS.xxxl,
@@ -255,20 +255,20 @@ const styles = StyleSheet.create({
   heroLabel: {
     color: 'rgba(255,255,255,0.8)',
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   heroValue: {
     color: '#fff',
     fontSize: 36,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -1,
   },
   heroPeriod: {
     color: 'rgba(255,255,255,0.7)',
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
   },
   warningBanner: {
     flexDirection: 'row',
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   warningText: {
     flex: 1,
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
     lineHeight: 20,
   },
   rangeSelector: {
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   },
   rangeOptionText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   emptyState: {
     borderRadius: BORDER_RADIUS.xxxl,
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
   },
   emptyText: {
     fontSize: FONT_SIZE.md,

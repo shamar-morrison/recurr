@@ -2,7 +2,7 @@ import { Crown } from 'phosphor-react-native';
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 
 export type PremiumBadgeSize = 'sm' | 'md' | 'lg';
 
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     backgroundColor: PREMIUM_COLORS.bg,
   },
   text: {
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.4,
     color: PREMIUM_COLORS.text,
   },

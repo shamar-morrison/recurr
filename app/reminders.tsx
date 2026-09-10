@@ -22,7 +22,7 @@ import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
 import { EmptyState } from '@/src/components/ui/EmptyState';
 import { StackHeader } from '@/src/components/ui/StackHeader';
 import { getServiceDomain } from '@/src/constants/services';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import {
   cancelNotification,
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
   },
   headerCount: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   clearAllButton: {
     paddingHorizontal: SPACING.md,
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
   },
   clearAllText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   row: {
     flexDirection: 'row',
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
   },
   rowTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.2,
   },
   rowDetails: {
@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
   },
   billingText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
   },
   reminderRow: {
     flexDirection: 'row',
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
   },
   reminderText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   rowRight: {
     alignItems: 'flex-end',
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   },
   rowAmount: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.3,
   },
   removeButton: {
@@ -535,12 +535,12 @@ const styles = StyleSheet.create({
   },
   disabledBannerTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.2,
   },
   disabledBannerDesc: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
     lineHeight: 20,
   },
   disabledBannerButton: {

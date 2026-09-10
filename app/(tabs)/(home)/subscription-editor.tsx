@@ -20,7 +20,7 @@ import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { FormSection } from '@/src/components/ui/FormSection';
 import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import {
@@ -739,7 +739,7 @@ const styles = StyleSheet.create({
   label: {
     textTransform: 'uppercase',
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.4,
     marginLeft: SPACING.xs,
   },
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.lg,
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     borderWidth: 1,
     shadowColor: '#000',
     shadowOpacity: 0.04,
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
   },
   inputText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   serviceRow: {
     flexDirection: 'row',
@@ -794,7 +794,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   dropdownText: {
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     fontSize: FONT_SIZE.md,
   },
   disabledInput: {

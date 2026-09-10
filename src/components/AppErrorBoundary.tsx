@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { LightColors } from '@/constants/colors';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 
 type Props = {
   children: React.ReactNode;
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FONT_SIZE.xxl,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.3,
     marginBottom: 6,
   },
@@ -114,6 +114,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
   },
 });

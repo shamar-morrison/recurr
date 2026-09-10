@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SERVICE_COLORS } from '@/src/constants/customServices';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { CustomCategory, CustomCategoryInput } from '@/src/features/subscriptions/categoriesRepo';
 
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.3,
   },
   inputContainer: {
@@ -258,12 +258,12 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.xxl,
     paddingHorizontal: SPACING.lg,
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     borderWidth: 1,
   },
   charCount: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     textAlign: 'right',
     marginRight: SPACING.sm,
   },
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   },
   colorLabel: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.5,
     marginLeft: SPACING.xs,
   },
@@ -312,6 +312,6 @@ const styles = StyleSheet.create({
   saveButton: {},
   buttonText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
   },
 });

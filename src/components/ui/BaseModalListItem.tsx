@@ -2,7 +2,7 @@ import { CheckIcon } from 'phosphor-react-native';
 import React, { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 
 type BaseModalListItemProps = {
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   sublabel: {
     fontSize: FONT_SIZE.md,

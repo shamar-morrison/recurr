@@ -8,7 +8,7 @@ import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { Button } from '@/src/components/ui/Button';
 import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
 import { getServiceDomain } from '@/src/constants/services';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { useSubscriptionQuery } from '@/src/features/subscriptions/subscriptionsHooks';
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   header: {
     gap: SPACING.lg,
@@ -238,12 +238,12 @@ const styles = StyleSheet.create({
   },
   serviceName: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
   },
   statsRow: {
     flexDirection: 'row',
@@ -258,12 +258,12 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.5,
   },
   statLabel: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: SPACING.sm,
@@ -296,15 +296,15 @@ const styles = StyleSheet.create({
   },
   paymentDate: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   paymentStatus: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
   },
   paymentAmount: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
   },
   separator: {
     height: SPACING.sm,

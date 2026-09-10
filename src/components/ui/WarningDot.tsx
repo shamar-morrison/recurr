@@ -1,6 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { FONT_FAMILY } from '@/src/constants/theme';
+
 interface WarningDotProps {
   size?: number;
   testID?: string;
@@ -31,6 +33,6 @@ const styles = StyleSheet.create({
   },
   glyph: {
     color: '#1F2937',
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
   },
 });

@@ -1,4 +1,4 @@
-import { BORDER_RADIUS } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useServiceLogo } from '@/src/features/services/useServiceLogo';
 import { Image, ImageErrorEventData } from 'expo-image';
@@ -108,6 +108,6 @@ const styles = StyleSheet.create({
   },
   fallback: {},
   initialText: {
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
   },
 });

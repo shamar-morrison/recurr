@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 import { getCategoryColors } from '@/constants/colors';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 
 export type CategoryBadgeSize = 'sm' | 'md' | 'lg';
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.xs,
   },
   text: {
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.4,
   },
 });

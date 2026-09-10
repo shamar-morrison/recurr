@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 
 /**
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   notFound: {
     borderRadius: BORDER_RADIUS.xxxl,
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   },
   notFoundTitle: {
     fontSize: FONT_SIZE.xxl,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
   },
   notFoundText: {
     fontSize: FONT_SIZE.md,
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   primaryText: {
     color: '#fff',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     fontSize: FONT_SIZE.lg,
   },
 });

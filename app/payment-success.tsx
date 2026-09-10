@@ -21,7 +21,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors, GRADIENTS } from '@/constants/colors';
-import { BORDER_RADIUS, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
 import { getPremiumFeatures } from '@/src/features/monetization/premiumFeatures';
 
 export default function PaymentSuccessScreen() {
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FONT_SIZE.hero,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     color: '#FFFFFF',
     textAlign: 'center',
     letterSpacing: -0.5,
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   },
   featuresTitle: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     color: 'rgba(255, 255, 255, 0.9)',
     marginBottom: SPACING.xs,
   },
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   featureText: {
     fontSize: FONT_SIZE.md,
     color: '#FFFFFF',
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
   },
   buttonContainer: {
     padding: SPACING.lg,
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   },
   homeButtonText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     color: AppColors.tint,
     letterSpacing: -0.2,
   },

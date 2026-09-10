@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { getCategoryColors } from '@/constants/colors';
 import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { formatMoney } from '@/src/utils/formatMoney';
 import { CategorySpending } from '@/src/utils/spendingCalculations';
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.3,
   },
   categoryList: {
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   },
   categoryAmount: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
   },
   barTrack: {
     height: 10,
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   },
   moreText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
     textAlign: 'center',
   },
 });

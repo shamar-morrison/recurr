@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppColors, GRADIENTS } from '@/constants/colors';
-import { BORDER_RADIUS, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
 import { FeatureItem } from '@/src/features/monetization/FeatureItem';
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: FONT_SIZE.hero,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     color: '#FFFFFF',
     textAlign: 'center',
     letterSpacing: -0.5,
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   },
   pricingLabel: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     color: AppColors.tint,
     letterSpacing: 1,
   },
@@ -338,13 +338,13 @@ const styles = StyleSheet.create({
   },
   priceCurrency: {
     fontSize: FONT_SIZE.xxl,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     color: AppColors.text,
     marginTop: SPACING.xs,
   },
   priceAmount: {
     fontSize: 64,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     color: AppColors.text,
     letterSpacing: -2,
     lineHeight: 72,
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     color: AppColors.text,
     marginBottom: SPACING.md,
     letterSpacing: -0.3,
@@ -398,19 +398,19 @@ const styles = StyleSheet.create({
   },
   comparisonBadgeText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
   comparisonBadgeTextPremium: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     color: AppColors.tint,
     letterSpacing: 0.5,
   },
   comparisonText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     color: '#FFFFFF',
   },
   comparisonDivider: {
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   },
   purchaseButtonText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     color: AppColors.tint,
     letterSpacing: -0.2,
   },
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   },
   restoreButtonText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     color: 'rgba(255, 255, 255, 0.85)',
   },
   helperText: {
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
   },
   premiumActiveTitle: {
     fontSize: FONT_SIZE.hero,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     color: '#FFFFFF',
     textAlign: 'center',
   },
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
   },
   doneButtonText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     color: AppColors.tint,
   },
 
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     color: AppColors.text,
     textAlign: 'center',
   },
@@ -526,6 +526,6 @@ const styles = StyleSheet.create({
   errorButtonText: {
     color: '#fff',
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
   },
 });

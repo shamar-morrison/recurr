@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 
 export type EmptyStateSize = 'sm' | 'md' | 'lg';
@@ -120,12 +120,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.3,
     textAlign: 'center',
   },
   description: {
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
     textAlign: 'center',
     lineHeight: 22,
     maxWidth: 300,

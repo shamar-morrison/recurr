@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 
 interface FormSectionProps {
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   label: {
     textTransform: 'uppercase',
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.4,
     marginLeft: SPACING.xs,
   },

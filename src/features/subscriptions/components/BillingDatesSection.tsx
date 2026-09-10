@@ -4,7 +4,7 @@ import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 
 import { AppColors } from '@/constants/colors';
 import { FormSection } from '@/src/components/ui/FormSection';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { BillingCycle } from '@/src/features/subscriptions/types';
 
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   label: {
     textTransform: 'uppercase',
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: 0.4,
     marginLeft: SPACING.xs,
   },
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.lg,
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     borderWidth: 1,
     shadowColor: '#000',
     shadowOpacity: 0.04,
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   row: {
     flexDirection: 'row',

@@ -32,7 +32,7 @@ import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { Button } from '@/src/components/ui/Button';
 import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
 import { getServiceDomain } from '@/src/constants/services';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { cancelNotification } from '@/src/features/notifications/notificationService';
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   hero: {
     alignItems: 'center',
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
   },
   serviceName: {
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.5,
     textAlign: 'center',
   },
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     marginLeft: SPACING.xs,
     marginBottom: SPACING.sm,
     letterSpacing: 0.5,
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   rowLabel: {
     flex: 1,
     fontSize: FONT_SIZE.lg,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
   },
   rowRight: {
     flexDirection: 'row',

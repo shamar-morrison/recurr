@@ -22,7 +22,7 @@ import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
 import { SERVICE_COLORS } from '@/src/constants/customServices';
 import { Service, SERVICES } from '@/src/constants/services';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useCustomServices } from '@/src/features/services/useCustomServices';
 import { useCategories } from '@/src/features/subscriptions/hooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
     color: AppColors.text,
     textAlign: 'center',
     flex: 1,
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   },
   customBadge: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     color: AppColors.tint,
     backgroundColor: AppColors.badgeBackground,
     paddingHorizontal: 6,
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     color: '#FFFFFF',
   },
   // Add Service Form Styles
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     color: AppColors.secondaryText,
     marginBottom: SPACING.md,
   },
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.lg,
     borderRadius: BORDER_RADIUS.md,
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     color: AppColors.text,
   },
   notesInput: {
@@ -503,12 +503,12 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
     color: AppColors.secondaryText,
   },
   categoryTextSelected: {
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   colorGrid: {
     flexDirection: 'row',
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     color: AppColors.secondaryText,
   },
   saveButton: {
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     color: '#FFFFFF',
   },
   loadingRow: {

@@ -36,6 +36,34 @@ export const FONT_SIZE = {
   hero: 32,
 } as const;
 
+/**
+ * Inter font families (loaded at startup via `@expo-google-fonts/inter`,
+ * see `app/_layout.tsx`).
+ *
+ * Rules (mirrors showseek):
+ * - Use the family matching the weight instead of setting `fontWeight`
+ *   (Android ignores/mismatches `fontWeight` on custom font families).
+ * - Weights 800/900 map to `bold` (capped at 700).
+ */
+export const FONT_FAMILY = {
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semiBold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+} as const;
+
+/** Maps a `fontWeight` value to its Inter family (800/900 capped at bold). */
+export const FONT_WEIGHT_TO_FAMILY: Record<string, string> = {
+  '400': FONT_FAMILY.regular,
+  normal: FONT_FAMILY.regular,
+  '500': FONT_FAMILY.medium,
+  '600': FONT_FAMILY.semiBold,
+  '700': FONT_FAMILY.bold,
+  bold: FONT_FAMILY.bold,
+  '800': FONT_FAMILY.bold,
+  '900': FONT_FAMILY.bold,
+};
+
 export const SHADOWS = {
   sm: {
     shadowColor: '#000',
@@ -64,4 +92,5 @@ export const SHADOWS = {
 export type Spacing = keyof typeof SPACING;
 export type BorderRadius = keyof typeof BORDER_RADIUS;
 export type FontSize = keyof typeof FONT_SIZE;
+export type FontFamily = keyof typeof FONT_FAMILY;
 export type Shadow = keyof typeof SHADOWS;

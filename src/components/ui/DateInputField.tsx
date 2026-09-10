@@ -2,7 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useCallback, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text } from 'react-native';
 
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 
 interface BaseDateInputFieldProps {
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   disabledInput: {
     opacity: 0.5,

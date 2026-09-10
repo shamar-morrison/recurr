@@ -18,7 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/src/components/ui/Button';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FONT_SIZE.hero,
-    fontWeight: '900',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -1,
     textAlign: 'center',
   },
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.lg,
     fontSize: FONT_SIZE.lg,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
     borderWidth: 1,
   },
   passwordInputWrapper: {
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   passwordInput: {
     flex: 1,
     fontSize: FONT_SIZE.lg,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
     paddingVertical: SPACING.lg,
   },
   passwordToggle: {
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   googleIcon: {
     width: 24,

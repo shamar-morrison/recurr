@@ -1,6 +1,6 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { PaywallSheet } from '@/src/features/monetization/PaywallSheet';
 
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FONT_SIZE.xxxl,
     letterSpacing: -0.2,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     marginBottom: 6,
   },
   subtitle: {

@@ -17,7 +17,7 @@ import { CategoryCreatorModal } from '@/src/components/CategoryCreatorModal';
 import { Button } from '@/src/components/ui/Button';
 import { EmptyState } from '@/src/components/ui/EmptyState';
 import { StackHeader } from '@/src/components/ui/StackHeader';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { CustomCategory, CustomCategoryInput } from '@/src/features/subscriptions/categoriesRepo';
 import { useCategories } from '@/src/features/subscriptions/hooks';
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     letterSpacing: 0.5,
     marginLeft: SPACING.xs,
   },
@@ -292,11 +292,11 @@ const styles = StyleSheet.create({
   categoryName: {
     flex: 1,
     fontSize: FONT_SIZE.lg,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
   },
   defaultLabel: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
   actionButtons: {
     flexDirection: 'row',

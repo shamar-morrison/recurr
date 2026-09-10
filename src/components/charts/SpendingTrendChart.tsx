@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
 
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { formatMoney } from '@/src/utils/formatMoney';
 import { SpendingDataPoint } from '@/src/utils/spendingCalculations';
@@ -98,7 +98,7 @@ export function SpendingTrendChart({ data, currency }: SpendingTrendChartProps) 
           xAxisLabelTextStyle={{
             color: colors.secondaryText,
             fontSize: 10,
-            fontWeight: '500',
+            fontFamily: FONT_FAMILY.medium,
           }}
           hideRules
           noOfSections={4}
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.bold,
     letterSpacing: -0.3,
   },
   statsRow: {
@@ -161,13 +161,13 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.medium,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   statValue: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
   },
   chartWrapper: {
     marginLeft: -SPACING.md,
@@ -185,6 +185,6 @@ const styles = StyleSheet.create({
   },
   tooltipText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.bold,
   },
 });

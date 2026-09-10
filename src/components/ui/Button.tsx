@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 
 import { AppColorPalette } from '@/constants/colors';
-import { BORDER_RADIUS, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SHADOWS, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
@@ -141,8 +141,7 @@ const styles = StyleSheet.create({
     ...SHADOWS.md,
   },
   text: {
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
     textAlign: 'center',
-    fontFamily: 'Inter_600SemiBold',
   },
 });

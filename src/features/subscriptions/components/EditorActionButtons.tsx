@@ -3,7 +3,7 @@ import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/src/components/ui/Button';
-import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
+import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 
 interface EditorActionButtonsProps {
@@ -95,6 +95,6 @@ const styles = StyleSheet.create({
   },
   deleteText: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.semiBold,
   },
 });

@@ -3,6 +3,7 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { WarningDot } from '@/src/components/ui/WarningDot';
+import { FONT_FAMILY } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useNotificationStatus } from '@/src/features/notifications/useNotificationStatus';
 import { ChartBarIcon, CreditCardIcon, GearSixIcon } from 'phosphor-react-native';
@@ -22,6 +23,9 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
+        },
+        tabBarLabelStyle: {
+          fontFamily: FONT_FAMILY.semiBold,
         },
       }}
     >
