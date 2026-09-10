@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { WarningDot } from '@/src/components/ui/WarningDot';
 import { FONT_FAMILY } from '@/src/constants/theme';
@@ -12,6 +13,7 @@ import { AppIcon } from '@/src/components/ui/AppIcon';
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const notificationsEnabled = useNotificationStatus();
   const showNotificationWarning = notificationsEnabled === false;
 
@@ -25,9 +27,19 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
+          borderTopWidth: 1,
+          height: 70 + insets.bottom,
+          paddingTop: 5,
+          paddingBottom: insets.bottom,
         },
         tabBarLabelStyle: {
+          fontSize: 12,
           fontFamily: FONT_FAMILY.semiBold,
+          marginBottom: 4,
+        },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          paddingVertical: 4,
         },
       }}
     >
