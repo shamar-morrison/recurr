@@ -1,6 +1,8 @@
-import { Crown } from 'phosphor-react-native';
+import { CrownIcon } from '@hugeicons/core-free-icons';
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
+
+import { AppIcon } from '@/src/components/ui/AppIcon';
 
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 
@@ -28,7 +30,12 @@ export function PremiumBadge({ size = 'sm', style }: PremiumBadgeProps) {
 
   return (
     <View style={[styles.container, sizeStyles.container, style]}>
-      <Crown size={sizeStyles.iconSize} color={PREMIUM_COLORS.text} weight="fill" />
+      <AppIcon
+        icon={CrownIcon}
+        size={sizeStyles.iconSize}
+        color={PREMIUM_COLORS.text}
+        fill={PREMIUM_COLORS.text}
+      />
       <Text style={[styles.text, sizeStyles.text]}>PREMIUM</Text>
     </View>
   );

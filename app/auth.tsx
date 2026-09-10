@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
-import { EyeIcon, EyeSlashIcon } from 'phosphor-react-native';
+import { ViewIcon, ViewOffIcon } from '@hugeicons/core-free-icons';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/src/components/ui/Button';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useAuth } from '@/src/features/auth/AuthProvider';
@@ -180,9 +181,9 @@ export default function AuthScreen() {
                         style={styles.passwordToggle}
                       >
                         {isPasswordVisible ? (
-                          <EyeSlashIcon color={colors.secondaryText} size={20} />
+                          <AppIcon icon={ViewOffIcon} color={colors.secondaryText} size={20} />
                         ) : (
-                          <EyeIcon color={colors.secondaryText} size={20} />
+                          <AppIcon icon={ViewIcon} color={colors.secondaryText} size={20} />
                         )}
                       </Pressable>
                     </View>

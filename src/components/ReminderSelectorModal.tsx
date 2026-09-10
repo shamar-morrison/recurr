@@ -1,9 +1,10 @@
-import { BellIcon } from 'phosphor-react-native';
+import { Notification01Icon } from '@hugeicons/core-free-icons';
 import React, { useCallback } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { REMINDER_OPTIONS, ReminderDays } from '@/src/features/subscriptions/types';
@@ -33,7 +34,7 @@ export function ReminderSelectorModal({
   return (
     <BaseModal visible={visible} title="Set Reminder" onClose={onClose}>
       <View style={[styles.infoBox, { backgroundColor: colors.selectedBackground }]}>
-        <BellIcon color={colors.tint} size={20} />
+        <AppIcon icon={Notification01Icon} color={colors.tint} size={20} />
         <Text style={[styles.infoText, { color: colors.secondaryText }]}>
           Get notified before your subscription renews so you never miss a payment.
         </Text>

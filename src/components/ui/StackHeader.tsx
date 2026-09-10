@@ -5,7 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
-import { CaretLeftIcon } from 'phosphor-react-native';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+
+import { AppIcon } from '@/src/components/ui/AppIcon';
 
 interface StackHeaderProps {
   title?: string;
@@ -56,7 +58,7 @@ export function StackHeader({
                 ]}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <CaretLeftIcon color={colors.text} size={22} />
+                <AppIcon icon={ArrowLeft01Icon} color={colors.text} size={22} />
               </Pressable>
             ) : null}
           </View>

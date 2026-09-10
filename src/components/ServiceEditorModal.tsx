@@ -1,4 +1,4 @@
-import { CheckIcon, PencilSimpleIcon, PlusIcon } from 'phosphor-react-native';
+import { Tick02Icon, PencilEdit01Icon, Add01Icon } from '@hugeicons/core-free-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { CustomService, CustomServiceInput, SERVICE_COLORS } from '@/src/constants/customServices';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -139,9 +140,9 @@ export function ServiceEditorModal({
             <View style={styles.header}>
               <View style={[styles.iconContainer, { backgroundColor: selectedColor }]}>
                 {isEditMode ? (
-                  <PencilSimpleIcon color="#fff" size={24} weight="bold" />
+                  <AppIcon icon={PencilEdit01Icon} color="#fff" size={24} />
                 ) : (
-                  <PlusIcon color="#fff" size={24} weight="bold" />
+                  <AppIcon icon={Add01Icon} color="#fff" size={24} />
                 )}
               </View>
               <Text style={[styles.title, { color: colors.text }]}>
@@ -230,7 +231,7 @@ export function ServiceEditorModal({
                       testID={`serviceEditorColor_${color}`}
                     >
                       {selectedColor === color && (
-                        <CheckIcon color="#fff" size={18} weight="bold" />
+                        <AppIcon icon={Tick02Icon} color="#fff" size={18} />
                       )}
                     </Pressable>
                   ))}

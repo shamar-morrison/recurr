@@ -1,6 +1,8 @@
-import { BellIcon, CaretDownIcon, ClockIcon } from 'phosphor-react-native';
+import { ArrowDown01Icon, Clock01Icon, Notification01Icon } from '@hugeicons/core-free-icons';
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { AppIcon } from '@/src/components/ui/AppIcon';
 
 import { ReminderSelectorModal } from '@/src/components/ReminderSelectorModal';
 import { ReminderTimeSelectorModal } from '@/src/components/ReminderTimeSelectorModal';
@@ -75,14 +77,15 @@ export function ReminderSection({
         testID="subscriptionEditorReminder"
       >
         <View style={styles.iconRow}>
-          <BellIcon
+          <AppIcon
+            icon={Notification01Icon}
             color={reminderDays === null ? colors.secondaryText : colors.tint}
             size={18}
-            weight={reminderDays === null ? 'regular' : 'fill'}
+            fill={reminderDays === null ? 'transparent' : colors.tint}
           />
           <Text style={[styles.dropdownText, { color: colors.text }]}>{reminderLabel}</Text>
         </View>
-        <CaretDownIcon color={colors.secondaryText} size={16} />
+        <AppIcon icon={ArrowDown01Icon} color={colors.secondaryText} size={16} />
       </Pressable>
 
       {/* Reminder Time (only if reminder is set) */}
@@ -110,10 +113,10 @@ export function ReminderSection({
             testID="subscriptionEditorReminderTime"
           >
             <View style={styles.iconRow}>
-              <ClockIcon color={colors.secondaryText} size={18} />
+              <AppIcon icon={Clock01Icon} color={colors.secondaryText} size={18} />
               <Text style={[styles.dropdownText, { color: colors.text }]}>{reminderTimeLabel}</Text>
             </View>
-            <CaretDownIcon color={colors.secondaryText} size={16} />
+            <AppIcon icon={ArrowDown01Icon} color={colors.secondaryText} size={16} />
           </Pressable>
         </>
       )}

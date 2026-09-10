@@ -14,6 +14,8 @@
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/html-elements": "^0.12.5",
+    "@hugeicons/core-free-icons": "^4.3.2",
+    "@hugeicons/react-native": "^1.0.16",
     "@legendapp/list": "^2.0.19",
     "@legendapp/motion": "^2.5.3",
     "@nkzw/create-context-hook": "^1.1.0",
@@ -42,7 +44,6 @@
     "expo-updates": "~29.0.15",
     "expo-web-browser": "~15.0.10",
     "firebase": "^12.7.0",
-    "phosphor-react-native": "^3.0.2",
     "react": "19.1.0",
     "react-aria": "^3.45.0",
     "react-dom": "19.1.0",

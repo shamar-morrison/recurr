@@ -1,6 +1,8 @@
-import { CheckIcon } from 'phosphor-react-native';
+import { Tick02Icon } from '@hugeicons/core-free-icons';
 import React, { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { AppIcon } from '@/src/components/ui/AppIcon';
 
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -68,7 +70,7 @@ export function BaseModalListItem({
       {rightElement !== undefined ? (
         rightElement
       ) : showCheckIcon ? (
-        <CheckIcon color={colors.tint} size={20} weight="bold" />
+        <AppIcon icon={Tick02Icon} color={colors.tint} size={20} />
       ) : null}
     </Pressable>
   );

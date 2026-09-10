@@ -1,7 +1,8 @@
-import { TrashIcon } from 'phosphor-react-native';
+import { Delete02Icon } from '@hugeicons/core-free-icons';
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { Button } from '@/src/components/ui/Button';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -70,7 +71,7 @@ export function EditorActionButtons({
             {processingAction === 'delete' ? (
               <ActivityIndicator color={colors.negative} />
             ) : (
-              <TrashIcon color={colors.negative} size={20} />
+              <AppIcon icon={Delete02Icon} color={colors.negative} size={20} />
             )}
             <Text style={[styles.deleteText, { color: colors.negative }]}>Delete Subscription</Text>
           </Pressable>

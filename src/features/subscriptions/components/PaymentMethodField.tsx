@@ -1,8 +1,9 @@
-import { CaretDownIcon } from 'phosphor-react-native';
+import { ArrowDown01Icon } from '@hugeicons/core-free-icons';
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PAYMENT_METHOD_CONFIG, PaymentMethodModal } from '@/src/components/PaymentMethodModal';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { PaymentMethod } from '@/src/features/subscriptions/types';
@@ -33,8 +34,7 @@ export function PaymentMethodField({
     if (!value) return null;
     const config = PAYMENT_METHOD_CONFIG.find((c) => c.label === value);
     if (!config) return null;
-    const IconComponent = config.icon;
-    return <IconComponent color={colors.text} size={20} />;
+    return <AppIcon icon={config.icon} color={colors.text} size={20} />;
   }, [value, colors]);
 
   return (
@@ -69,7 +69,7 @@ export function PaymentMethodField({
             {value || 'Select payment method'}
           </Text>
         </View>
-        <CaretDownIcon color={colors.secondaryText} size={16} />
+        <AppIcon icon={ArrowDown01Icon} color={colors.secondaryText} size={16} />
       </Pressable>
 
       <PaymentMethodModal

@@ -1,5 +1,5 @@
 import { router, Stack } from 'expo-router';
-import { CaretLeftIcon, WarningCircleIcon } from 'phosphor-react-native';
+import { AlertCircleIcon, ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CategoryBreakdownChart } from '@/src/components/charts/CategoryBreakdownChart';
 import { SpendingBarChart } from '@/src/components/charts/SpendingBarChart';
 import { SpendingTrendChart } from '@/src/components/charts/SpendingTrendChart';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useCategories } from '@/src/features/subscriptions/hooks';
@@ -49,7 +50,7 @@ const HeaderBackButton = React.memo(function HeaderBackButton({
       style={[styles.headerButton, { backgroundColor }]}
       testID="spendingHistoryBack"
     >
-      <CaretLeftIcon color={iconColor} size={22} />
+      <AppIcon icon={ArrowLeft01Icon} color={iconColor} size={22} />
     </Pressable>
   );
 });
@@ -140,7 +141,7 @@ export default function SpendingHistoryScreen() {
           {/* Mixed Currency Warning */}
           {currencyInfo.hasMixedCurrencies && (
             <View style={[styles.warningBanner, { backgroundColor: colors.negativeBackground }]}>
-              <WarningCircleIcon color={colors.warning} size={20} />
+              <AppIcon icon={AlertCircleIcon} color={colors.warning} size={20} />
               <Text style={[styles.warningText, { color: colors.text }]}>
                 You have subscriptions in multiple currencies ({currencyInfo.currencies.join(', ')}
                 ). Totals are shown in {currencyInfo.primaryCurrency} without conversion.

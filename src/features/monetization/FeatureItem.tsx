@@ -1,15 +1,16 @@
 import { Motion } from '@legendapp/motion';
-import { IconProps } from 'phosphor-react-native';
+import type { IconSvgElement } from '@hugeicons/react-native';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AppColors } from '@/constants/colors';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 
 export interface FeatureItemProps {
   title: string;
   description: string;
-  icon: React.ComponentType<IconProps>;
+  icon: IconSvgElement;
   index?: number;
 }
 
@@ -28,7 +29,7 @@ export function FeatureItem({ title, description, icon: Icon, index = 0 }: Featu
       style={styles.container}
     >
       <View style={styles.iconContainer}>
-        <Icon size={18} color="#FFFFFF" weight="bold" />
+        <AppIcon icon={Icon} size={18} color="#FFFFFF" />
       </View>
       <View style={styles.textContainer}>
         <Text style={styles.title}>{title}</Text>

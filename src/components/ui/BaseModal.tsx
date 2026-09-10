@@ -1,7 +1,9 @@
-import { MagnifyingGlassIcon, XIcon } from 'phosphor-react-native';
+import { Cancel01Icon, Search01Icon } from '@hugeicons/core-free-icons';
 import React, { ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { AppIcon } from '@/src/components/ui/AppIcon';
 
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -59,14 +61,14 @@ export function BaseModal({
             onPress={onClose}
             style={[styles.closeButton, { backgroundColor: colors.tertiaryBackground }]}
           >
-            <XIcon color={colors.text} size={22} />
+            <AppIcon icon={Cancel01Icon} color={colors.text} size={22} />
           </Pressable>
         </View>
 
         {/* Optional Search Bar */}
         {showSearch && (
           <View style={[styles.searchContainer, { backgroundColor: colors.inputBackground }]}>
-            <MagnifyingGlassIcon color={colors.secondaryText} size={18} />
+            <AppIcon icon={Search01Icon} color={colors.secondaryText} size={18} />
             <TextInput
               value={searchValue}
               onChangeText={onSearchChange}

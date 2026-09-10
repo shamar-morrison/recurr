@@ -1,6 +1,8 @@
-import { CaretDownIcon } from 'phosphor-react-native';
+import { ArrowDown01Icon } from '@hugeicons/core-free-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { AppIcon } from '@/src/components/ui/AppIcon';
 
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -49,7 +51,7 @@ export function DropdownField({
           {displayText}
         </Text>
       </View>
-      <CaretDownIcon color={colors.secondaryText} size={16} />
+      <AppIcon icon={ArrowDown01Icon} color={colors.secondaryText} size={16} />
     </Pressable>
   );
 }

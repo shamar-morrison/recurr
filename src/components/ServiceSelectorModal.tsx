@@ -1,5 +1,5 @@
 import { LegendList } from '@legendapp/list';
-import { CheckIcon, PlusIcon, XIcon } from 'phosphor-react-native';
+import { Tick02Icon, Add01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -20,6 +20,7 @@ import { AppColors } from '@/constants/colors';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { SERVICE_COLORS } from '@/src/constants/customServices';
 import { Service, SERVICES } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
@@ -229,7 +230,7 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
                 <View style={styles.headerSpacer} />
                 <Text style={styles.title}>Add Custom Service</Text>
                 <Pressable onPress={handleCancelAddMode} style={styles.closeButton}>
-                  <XIcon color={AppColors.text} size={22} />
+                  <AppIcon icon={Cancel01Icon} color={AppColors.text} size={22} />
                 </Pressable>
               </View>
 
@@ -286,7 +287,7 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
                         style={[styles.colorSwatch, { backgroundColor: color }]}
                         onPress={() => setSelectedColor(color)}
                       >
-                        {isColorSelected && <CheckIcon color="#FFFFFF" size={20} weight="bold" />}
+                        {isColorSelected && <AppIcon icon={Tick02Icon} color="#FFFFFF" size={20} />}
                       </Pressable>
                     );
                   })}
@@ -361,7 +362,7 @@ export function ServiceSelectorModal({ visible, selectedService = '', onSelect, 
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>No services found</Text>
           <Pressable style={styles.addButton} onPress={handleOpenAddMode}>
-            <PlusIcon color="#FFFFFF" size={18} weight="bold" />
+            <AppIcon icon={Add01Icon} color="#FFFFFF" size={18} />
             <Text style={styles.addButtonText}>Add "{search.trim()}"</Text>
           </Pressable>
         </View>

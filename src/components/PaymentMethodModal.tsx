@@ -1,34 +1,36 @@
 import {
-  AppleLogoIcon,
+  AppleIcon,
   BankIcon,
   CoinsIcon,
   CreditCardIcon,
-  GoogleLogoIcon,
-  MoneyIcon,
-  PaypalLogoIcon,
-  WalletIcon,
-} from 'phosphor-react-native';
+  GoogleIcon,
+  Money01Icon,
+  PaypalIcon,
+  Wallet01Icon,
+} from '@hugeicons/core-free-icons';
+import type { IconSvgElement } from '@hugeicons/react-native';
 import React, { useCallback } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { useTheme } from '@/src/context/ThemeContext';
 import { PaymentMethod } from '@/src/features/subscriptions/types';
 
 type PaymentMethodConfig = {
   label: PaymentMethod;
-  icon: React.ComponentType<{ color: string; size: number; weight?: 'regular' | 'fill' }>;
+  icon: IconSvgElement;
 };
 
 export const PAYMENT_METHOD_CONFIG: PaymentMethodConfig[] = [
   { label: 'Credit Card', icon: CreditCardIcon },
-  { label: 'Debit Card', icon: WalletIcon },
-  { label: 'PayPal', icon: PaypalLogoIcon },
-  { label: 'Apple Pay', icon: AppleLogoIcon },
-  { label: 'Google Pay', icon: GoogleLogoIcon },
+  { label: 'Debit Card', icon: Wallet01Icon },
+  { label: 'PayPal', icon: PaypalIcon },
+  { label: 'Apple Pay', icon: AppleIcon },
+  { label: 'Google Pay', icon: GoogleIcon },
   { label: 'Bank Transfer', icon: BankIcon },
-  { label: 'Cash', icon: MoneyIcon },
+  { label: 'Cash', icon: Money01Icon },
   { label: 'Other', icon: CoinsIcon },
 ];
 
@@ -55,7 +57,7 @@ export function PaymentMethodModal({ visible, selectedMethod, onSelect, onClose 
       <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
         {PAYMENT_METHOD_CONFIG.map((config) => {
           const isSelected = config.label === selectedMethod;
-          const IconComponent = config.icon;
+          const selectedColor = isSelected ? colors.tint : colors.text;
           return (
             <BaseModalListItem
               key={config.label}
@@ -63,10 +65,11 @@ export function PaymentMethodModal({ visible, selectedMethod, onSelect, onClose 
               isSelected={isSelected}
               onPress={() => handleSelect(config.label)}
               leftElement={
-                <IconComponent
-                  color={isSelected ? colors.tint : colors.text}
+                <AppIcon
+                  icon={config.icon}
+                  color={selectedColor}
                   size={24}
-                  weight={isSelected ? 'fill' : 'regular'}
+                  fill={isSelected ? selectedColor : 'transparent'}
                 />
               }
             />

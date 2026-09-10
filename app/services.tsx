@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { CubeIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from 'phosphor-react-native';
+import { Add01Icon, CubeIcon, Delete02Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ServiceEditorModal } from '@/src/components/ServiceEditorModal';
 import { Button } from '@/src/components/ui/Button';
 import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { EmptyState } from '@/src/components/ui/EmptyState';
 import { StackHeader } from '@/src/components/ui/StackHeader';
 import { CustomService, CustomServiceInput } from '@/src/constants/customServices';
@@ -95,7 +96,7 @@ export default function ServicesScreen() {
         style={[styles.headerButton, { backgroundColor: colors.primary }]}
         testID="servicesAddButton"
       >
-        <PlusIcon color="#fff" size={20} weight="bold" />
+        <AppIcon icon={Add01Icon} color="#fff" size={20} />
       </Pressable>
     ),
     [colors, handleOpenCreate]
@@ -138,7 +139,7 @@ export default function ServicesScreen() {
               </View>
             ) : customServices.length === 0 ? (
               <EmptyState
-                icon={<CubeIcon color={colors.secondaryText} size={48} />}
+                icon={<AppIcon icon={CubeIcon} color={colors.secondaryText} size={48} />}
                 title="No custom services yet"
                 description="Custom services you create when adding subscriptions will appear here."
                 size="lg"
@@ -146,7 +147,7 @@ export default function ServicesScreen() {
                   <Button
                     title="Create One"
                     onPress={handleOpenCreate}
-                    icon={<PlusIcon color="#fff" size={18} weight="bold" />}
+                    icon={<AppIcon icon={Add01Icon} color="#fff" size={18} />}
                   />
                 }
               />
@@ -176,7 +177,7 @@ export default function ServicesScreen() {
                             style={[styles.actionButton, isServiceDeleting && { opacity: 0.5 }]}
                             testID={`serviceEdit_${service.id}`}
                           >
-                            <PencilSimpleIcon color={colors.primary} size={20} />
+                            <AppIcon icon={PencilEdit01Icon} color={colors.primary} size={20} />
                           </Pressable>
 
                           <Pressable
@@ -188,7 +189,7 @@ export default function ServicesScreen() {
                             {isServiceDeleting ? (
                               <ActivityIndicator color={colors.negative} size="small" />
                             ) : (
-                              <TrashIcon color={colors.negative} size={20} />
+                              <AppIcon icon={Delete02Icon} color={colors.negative} size={20} />
                             )}
                           </Pressable>
                         </View>

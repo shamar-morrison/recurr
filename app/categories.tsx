@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { PencilSimpleIcon, PlusIcon, TagIcon, TrashIcon } from 'phosphor-react-native';
+import { Add01Icon, Delete02Icon, PencilEdit01Icon, Tag01Icon } from '@hugeicons/core-free-icons';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -16,6 +16,7 @@ import { getCategoryColors } from '@/constants/colors';
 import { CategoryCreatorModal } from '@/src/components/CategoryCreatorModal';
 import { Button } from '@/src/components/ui/Button';
 import { EmptyState } from '@/src/components/ui/EmptyState';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { StackHeader } from '@/src/components/ui/StackHeader';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -110,7 +111,7 @@ export default function CategoriesScreen() {
         style={[styles.headerButton, { backgroundColor: colors.primary }]}
         testID="categoriesAddButton"
       >
-        <PlusIcon color="#fff" size={20} weight="bold" />
+        <AppIcon icon={Add01Icon} color="#fff" size={20} />
       </Pressable>
     ),
     [colors, handleOpenCreate]
@@ -169,7 +170,7 @@ export default function CategoriesScreen() {
               </View>
             ) : customCategories.length === 0 ? (
               <EmptyState
-                icon={<TagIcon color={colors.secondaryText} size={40} />}
+                icon={<AppIcon icon={Tag01Icon} color={colors.secondaryText} size={40} />}
                 title="No custom categories yet"
                 description="Create custom categories to better organize your subscriptions."
                 size="md"
@@ -178,7 +179,7 @@ export default function CategoriesScreen() {
                     size="sm"
                     title="Create One"
                     onPress={handleOpenCreate}
-                    icon={<PlusIcon color="#fff" size={18} weight="bold" />}
+                    icon={<AppIcon icon={Add01Icon} color="#fff" size={18} />}
                   />
                 }
               />
@@ -206,7 +207,7 @@ export default function CategoriesScreen() {
                             style={[styles.actionButton, isDeleting && { opacity: 0.5 }]}
                             testID={`categoryEdit_${cat.id}`}
                           >
-                            <PencilSimpleIcon color={colors.primary} size={20} />
+                            <AppIcon icon={PencilEdit01Icon} color={colors.primary} size={20} />
                           </Pressable>
 
                           <Pressable
@@ -218,7 +219,7 @@ export default function CategoriesScreen() {
                             {isDeleting ? (
                               <ActivityIndicator color={colors.negative} size="small" />
                             ) : (
-                              <TrashIcon color={colors.negative} size={20} />
+                              <AppIcon icon={Delete02Icon} color={colors.negative} size={20} />
                             )}
                           </Pressable>
                         </View>

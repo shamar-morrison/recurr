@@ -6,17 +6,18 @@ import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 import { AppColors } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { requestNotificationPermissions } from '@/src/features/notifications/notificationService';
 import {
-  BellRingingIcon,
-  CaretRightIcon,
+  ArrowRight01Icon,
+  BellRingIcon,
   CoinsIcon,
-  GlobeIcon,
-  ShieldWarningIcon,
-  SparkleIcon,
-} from 'phosphor-react-native';
+  Globe02Icon,
+  ShieldAlertIcon,
+  SparklesIcon,
+} from '@hugeicons/core-free-icons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -175,7 +176,7 @@ export default function OnboardingScreen() {
                 size="lg"
                 style={[styles.mainButton, { backgroundColor: PAGES[pageIndex].color }]}
                 textStyle={{ fontSize: 16 }}
-                icon={<CaretRightIcon color="#fff" size={20} />}
+                icon={<AppIcon icon={ArrowRight01Icon} color="#fff" size={20} />}
               />
             </View>
           </View>
@@ -296,7 +297,7 @@ function OnboardingPageContent({
               variant="primary"
               size="md"
               style={[styles.notifyButton, { backgroundColor: item.color }]}
-              icon={<BellRingingIcon color="#fff" size={20} />}
+              icon={<AppIcon icon={BellRingIcon} color="#fff" size={20} />}
               testID="onboardingEnableNotifications"
             />
             <Button
@@ -357,7 +358,7 @@ function VisualAlerts() {
     <View style={styles.visualCard}>
       <View style={styles.alertCard}>
         <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
-          <BellRingingIcon size={24} color="#D97706" />
+          <AppIcon icon={BellRingIcon} size={24} color="#D97706" />
         </View>
         <Text style={styles.alertTitle}>Payment Reminder</Text>
         <Text style={styles.alertDesc}>Netflix is due tomorrow!</Text>
@@ -374,7 +375,7 @@ function VisualNotifications() {
   return (
     <View style={styles.visualCard}>
       <View style={[styles.iconCircle, { backgroundColor: '#FEE2E2' }]}>
-        <BellRingingIcon size={32} color="#DC2626" weight="fill" />
+        <AppIcon icon={BellRingIcon} size={32} color="#DC2626" fill="#DC2626" />
       </View>
       <View style={styles.notifyList}>
         <View style={styles.notifyRow}>
@@ -431,20 +432,20 @@ function VisualStart() {
   return (
     <View style={styles.visualCard}>
       <View style={styles.logoContainer}>
-        <CoinsIcon size={64} color={AppColors.tint} weight="fill" />
+        <AppIcon icon={CoinsIcon} size={64} color={AppColors.tint} fill={AppColors.tint} />
       </View>
 
       <View style={styles.bulletList}>
         <View style={styles.bulletRow}>
-          <SparkleIcon size={20} color={AppColors.tint} />
+          <AppIcon icon={SparklesIcon} size={20} color={AppColors.tint} />
           <Text style={styles.bulletText}>Smart Insights</Text>
         </View>
         <View style={styles.bulletRow}>
-          <ShieldWarningIcon size={20} color={AppColors.tint} />
+          <AppIcon icon={ShieldAlertIcon} size={20} color={AppColors.tint} />
           <Text style={styles.bulletText}>Secure Data</Text>
         </View>
         <View style={styles.bulletRow}>
-          <GlobeIcon size={20} color={AppColors.tint} />
+          <AppIcon icon={Globe02Icon} size={20} color={AppColors.tint} />
           <Text style={styles.bulletText}>Global Currencies</Text>
         </View>
       </View>

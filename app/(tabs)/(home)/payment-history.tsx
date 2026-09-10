@@ -1,11 +1,12 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { CaretLeftIcon, CheckCircleIcon, ClockIcon } from 'phosphor-react-native';
+import { ArrowLeft01Icon, CheckmarkCircle02Icon, Clock01Icon } from '@hugeicons/core-free-icons';
 import React, { useCallback, useMemo } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { Button } from '@/src/components/ui/Button';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
@@ -68,7 +69,7 @@ export default function PaymentHistoryScreen() {
         style={[styles.headerButton, { backgroundColor: colors.tertiaryBackground }]}
         testID="paymentHistoryBack"
       >
-        <CaretLeftIcon color={colors.text} size={22} />
+        <AppIcon icon={ArrowLeft01Icon} color={colors.text} size={22} />
       </Pressable>
     ),
     [colors]
@@ -84,9 +85,9 @@ export default function PaymentHistoryScreen() {
         >
           <View style={styles.paymentLeft}>
             {isPast ? (
-              <CheckCircleIcon color={colors.positive} size={24} weight="fill" />
+              <AppIcon icon={CheckmarkCircle02Icon} color={colors.positive} size={24} fill={colors.positive} />
             ) : (
-              <ClockIcon color={colors.warning} size={24} />
+              <AppIcon icon={Clock01Icon} color={colors.warning} size={24} />
             )}
             <View style={styles.paymentInfo}>
               <Text style={[styles.paymentDate, { color: colors.text }]}>

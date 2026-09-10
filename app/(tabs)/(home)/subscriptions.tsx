@@ -1,19 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, Stack } from 'expo-router';
 import {
-  CheckIcon,
-  CirclesThreePlusIcon,
+  Add01Icon,
+  AddCircleIcon,
+  CancelCircleIcon,
   CrownIcon,
-  ListBulletsIcon,
-  MagnifyingGlassIcon,
-  PlusCircleIcon,
-  PlusIcon,
-  SlidersIcon,
-  SortAscendingIcon,
+  GridViewIcon,
+  ListViewIcon,
+  Search01Icon,
+  SlidersHorizontalIcon,
+  SortByUpIcon,
   SortDescendingIcon,
-  SquaresFourIcon,
-  XCircleIcon,
-} from 'phosphor-react-native';
+  Tick02Icon,
+} from '@hugeicons/core-free-icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -34,6 +33,7 @@ import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { Button } from '@/src/components/ui/Button';
 import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
 import { EmptyState } from '@/src/components/ui/EmptyState';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -162,7 +162,7 @@ export default function SubscriptionsHomeScreen() {
   const headerRight = useCallback(() => {
     return (
       <Pressable onPress={handleAdd} style={styles.headerButton} testID="subscriptionsHeaderAdd">
-        <CirclesThreePlusIcon color={colors.tint} size={20} />
+        <AppIcon icon={Add01Icon} color={colors.tint} size={20} />
       </Pressable>
     );
   }, [handleAdd, colors]);
@@ -321,7 +321,7 @@ export default function SubscriptionsHomeScreen() {
                   testID="unlockPremiumCta"
                 >
                   <Text style={[styles.limitCtaText, { color: colors.tint }]}>Unlock</Text>
-                  <CrownIcon color={colors.tint} size={16} />
+                  <AppIcon icon={CrownIcon} color={colors.tint} size={16} />
                 </Pressable>
               ) : null}
             </View>
@@ -336,7 +336,7 @@ export default function SubscriptionsHomeScreen() {
               { backgroundColor: colors.card, borderColor: colors.border },
             ]}
           >
-            <MagnifyingGlassIcon color={colors.secondaryText} size={18} />
+            <AppIcon icon={Search01Icon} color={colors.secondaryText} size={18} />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search subscriptions..."
@@ -347,7 +347,7 @@ export default function SubscriptionsHomeScreen() {
             />
             {searchQuery.length > 0 && (
               <Pressable onPress={() => setSearchQuery('')} hitSlop={24}>
-                <XCircleIcon color={colors.secondaryText} size={18} weight="fill" />
+                <AppIcon icon={CancelCircleIcon} color={colors.secondaryText} size={18} fill={colors.secondaryText} />
               </Pressable>
             )}
           </View>
@@ -360,9 +360,9 @@ export default function SubscriptionsHomeScreen() {
             ]}
           >
             {sortBy === 'CostAsc' || sortBy === 'Name' ? (
-              <SortAscendingIcon color={colors.text} size={20} />
+              <AppIcon icon={SortByUpIcon} color={colors.text} size={20} />
             ) : (
-              <SortDescendingIcon color={colors.text} size={20} />
+              <AppIcon icon={SortDescendingIcon} color={colors.text} size={20} />
             )}
           </Pressable>
 
@@ -375,9 +375,9 @@ export default function SubscriptionsHomeScreen() {
             testID="viewModeToggle"
           >
             {viewMode === 'list' ? (
-              <SquaresFourIcon color={colors.text} size={20} />
+              <AppIcon icon={GridViewIcon} color={colors.text} size={20} />
             ) : (
-              <ListBulletsIcon color={colors.text} size={20} />
+              <AppIcon icon={ListViewIcon} color={colors.text} size={20} />
             )}
           </Pressable>
         </View>
@@ -411,7 +411,7 @@ export default function SubscriptionsHomeScreen() {
                 >
                   Next Bill Date
                 </Text>
-                {sortBy === 'Date' && <CheckIcon color={colors.tint} size={16} />}
+                {sortBy === 'Date' && <AppIcon icon={Tick02Icon} color={colors.tint} size={16} />}
               </Pressable>
               <Pressable
                 onPress={() => {
@@ -428,7 +428,7 @@ export default function SubscriptionsHomeScreen() {
                 >
                   Highest Cost
                 </Text>
-                {sortBy === 'CostDesc' && <CheckIcon color={colors.tint} size={16} />}
+                {sortBy === 'CostDesc' && <AppIcon icon={Tick02Icon} color={colors.tint} size={16} />}
               </Pressable>
               <Pressable
                 onPress={() => {
@@ -445,7 +445,7 @@ export default function SubscriptionsHomeScreen() {
                 >
                   Lowest Cost
                 </Text>
-                {sortBy === 'CostAsc' && <CheckIcon color={colors.tint} size={16} />}
+                {sortBy === 'CostAsc' && <AppIcon icon={Tick02Icon} color={colors.tint} size={16} />}
               </Pressable>
               <Pressable
                 onPress={() => {
@@ -462,7 +462,7 @@ export default function SubscriptionsHomeScreen() {
                 >
                   Name (A-Z)
                 </Text>
-                {sortBy === 'Name' && <CheckIcon color={colors.tint} size={16} />}
+                {sortBy === 'Name' && <AppIcon icon={Tick02Icon} color={colors.tint} size={16} />}
               </Pressable>
             </Pressable>
           </Pressable>
@@ -470,7 +470,7 @@ export default function SubscriptionsHomeScreen() {
 
         <View style={styles.filters}>
           <View style={styles.filtersLeft}>
-            <SlidersIcon color={colors.secondaryText} size={16} />
+            <AppIcon icon={SlidersHorizontalIcon} color={colors.secondaryText} size={16} />
             <Text style={[styles.filtersLabel, { color: colors.secondaryText }]}>Filter</Text>
           </View>
           <ScrollView
@@ -526,9 +526,9 @@ export default function SubscriptionsHomeScreen() {
           <EmptyState
             icon={
               filter === 'All' && !searchQuery ? (
-                <PlusCircleIcon color={colors.tint} size={40} />
+                <AppIcon icon={AddCircleIcon} color={colors.tint} size={40} />
               ) : (
-                <XCircleIcon color={colors.tint} size={40} />
+                <AppIcon icon={CancelCircleIcon} color={colors.tint} size={40} />
               )
             }
             title={filter === 'All' && !searchQuery ? 'Add your first subscription' : 'No matches'}
@@ -612,7 +612,7 @@ export default function SubscriptionsHomeScreen() {
           ]}
           testID="subscriptionsFab"
         >
-          <PlusIcon color="#fff" size={22} />
+          <AppIcon icon={Add01Icon} color="#fff" size={22} />
         </Pressable>
       </View>
     </>

@@ -1,7 +1,7 @@
 import { Motion } from '@legendapp/motion';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, Stack } from 'expo-router';
-import { CrownIcon, SparkleIcon } from 'phosphor-react-native';
+import { CrownIcon, SparklesIcon } from '@hugeicons/core-free-icons';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -19,6 +19,7 @@ import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SHADOWS, SPACING } from '@/src/c
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { useRemoteConfig } from '@/src/features/config/useRemoteConfig';
 import { FeatureItem } from '@/src/features/monetization/FeatureItem';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { useIAP } from '@/src/features/monetization/IAPProvider';
 import { PREMIUM_PRODUCT_ID } from '@/src/features/monetization/iapService';
 import { getPremiumFeatures } from '@/src/features/monetization/premiumFeatures';
@@ -98,7 +99,7 @@ export default function PaywallScreen() {
                 transition={{ type: 'spring', damping: 12 }}
                 style={styles.crownContainerLarge}
               >
-                <CrownIcon size={64} color="#FFD700" weight="fill" />
+                <AppIcon icon={CrownIcon} size={64} color="#FFD700" fill="#FFD700" />
               </Motion.View>
 
               <Text style={styles.premiumActiveTitle}>You're Premium!</Text>
@@ -144,7 +145,7 @@ export default function PaywallScreen() {
                 style={styles.crownContainer}
               >
                 <View style={styles.crownGlow} />
-                <CrownIcon size={48} color="#FFD700" weight="fill" />
+                <AppIcon icon={CrownIcon} size={48} color="#FFD700" fill="#FFD700" />
               </Motion.View>
 
               <Motion.View
@@ -169,7 +170,7 @@ export default function PaywallScreen() {
               style={styles.pricingCard}
             >
               <View style={styles.pricingHeader}>
-                <SparkleIcon size={20} color={AppColors.tint} weight="fill" />
+                <AppIcon icon={SparklesIcon} size={20} color={AppColors.tint} fill={AppColors.tint} />
                 <Text style={styles.pricingLabel}>LIFETIME ACCESS</Text>
               </View>
 
@@ -236,7 +237,7 @@ export default function PaywallScreen() {
                 <ActivityIndicator color={AppColors.tint} />
               ) : (
                 <>
-                  <CrownIcon size={20} color={AppColors.tint} weight="fill" />
+                  <AppIcon icon={CrownIcon} size={20} color={AppColors.tint} fill={AppColors.tint} />
                   <Text style={styles.purchaseButtonText}>Unlock Premium • {formattedPrice}</Text>
                 </>
               )}

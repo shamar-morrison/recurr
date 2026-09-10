@@ -6,7 +6,9 @@ import { WarningDot } from '@/src/components/ui/WarningDot';
 import { FONT_FAMILY } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { useNotificationStatus } from '@/src/features/notifications/useNotificationStatus';
-import { ChartBarIcon, CreditCardIcon, GearSixIcon } from 'phosphor-react-native';
+import { CreditCardIcon, ChartBarLineIcon, Settings01Icon } from '@hugeicons/core-free-icons';
+
+import { AppIcon } from '@/src/components/ui/AppIcon';
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme();
@@ -33,8 +35,8 @@ export default function TabLayout() {
         name="(home)"
         options={{
           title: 'Subscriptions',
-          tabBarIcon: ({ color, size, focused }) => (
-            <CreditCardIcon color={color} size={size} weight={focused ? 'fill' : 'regular'} />
+          tabBarIcon: ({ color, size }) => (
+            <AppIcon icon={CreditCardIcon} color={color} size={size} />
           ),
         }}
       />
@@ -42,8 +44,8 @@ export default function TabLayout() {
         name="insights"
         options={{
           title: 'Insights',
-          tabBarIcon: ({ color, size, focused }) => (
-            <ChartBarIcon color={color} size={size} weight={focused ? 'fill' : 'regular'} />
+          tabBarIcon: ({ color, size }) => (
+            <AppIcon icon={ChartBarLineIcon} color={color} size={size} />
           ),
         }}
       />
@@ -51,9 +53,9 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ color, size }) => (
             <View style={styles.iconWrapper}>
-              <GearSixIcon color={color} size={size} weight={focused ? 'fill' : 'regular'} />
+              <AppIcon icon={Settings01Icon} color={color} size={size} />
               {showNotificationWarning && (
                 <View style={styles.warningDot}>
                   <WarningDot size={14} testID="settingsTabWarning" />

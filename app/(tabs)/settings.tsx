@@ -30,25 +30,26 @@ import { useNotificationStatus } from '@/src/features/notifications/useNotificat
 import { consumePurchaseForTesting } from '@/src/features/monetization/iapService';
 import { useSubscriptionsQuery } from '@/src/features/subscriptions/subscriptionsHooks';
 import {
-  ArrowCounterClockwiseIcon,
-  CalendarIcon,
-  CaretRightIcon,
-  ChatCircleDotsIcon,
+  ArrowRight01Icon,
+  Calendar03Icon,
   CoinsIcon,
   CrownIcon,
   CubeIcon,
-  DownloadSimpleIcon,
-  GridFourIcon,
-  InfoIcon,
-  InvoiceIcon,
+  Delete02Icon,
+  Download01Icon,
+  GridIcon,
+  InformationCircleIcon,
+  Invoice01Icon,
+  Logout01Icon,
+  MessageCircleMoreIcon,
   PaletteIcon,
-  ShareNetworkIcon,
-  SignOutIcon,
+  RotateCcwIcon,
+  Share01Icon,
   StarIcon,
-  TagIcon,
-  TrashIcon,
-} from 'phosphor-react-native';
+  Tag01Icon,
+} from '@hugeicons/core-free-icons';
 import { WarningDot } from '@/src/components/ui/WarningDot';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface SettingRowProps {
@@ -116,7 +117,7 @@ function SettingRow({
               {value}
             </Text>
           )}
-          {showChevron && <CaretRightIcon size={20} color={colors.secondaryText} />}
+          {showChevron && <AppIcon icon={ArrowRight01Icon} size={20} color={colors.secondaryText} />}
         </View>
       )}
     </Pressable>
@@ -486,7 +487,7 @@ export default function SettingsScreen() {
                 <View style={[styles.divider, { backgroundColor: colors.border }]} />
                 <SettingRow
                   colors={colors}
-                  icon={<CrownIcon weight="fill" />}
+                  icon={<AppIcon icon={CrownIcon} fill="#D97706" />}
                   iconColor="#D97706"
                   iconBg="#FEF3C7"
                   label="Upgrade to Premium"
@@ -501,7 +502,7 @@ export default function SettingsScreen() {
                 <View style={[styles.divider, { backgroundColor: colors.border }]} />
                 <SettingRow
                   colors={colors}
-                  icon={<ArrowCounterClockwiseIcon />}
+                  icon={<AppIcon icon={RotateCcwIcon} />}
                   iconColor="#EF4444"
                   iconBg="#FEE2E2"
                   label={isResettingPurchase ? 'Resetting...' : 'Reset Purchase (DEV)'}
@@ -518,7 +519,7 @@ export default function SettingsScreen() {
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
               colors={colors}
-              icon={<InvoiceIcon />}
+              icon={<AppIcon icon={Invoice01Icon} />}
               iconColor="#A855F7"
               iconBg="#F3E8FF"
               label="Billing Reminders"
@@ -534,7 +535,7 @@ export default function SettingsScreen() {
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
               colors={colors}
-              icon={<CoinsIcon />}
+              icon={<AppIcon icon={CoinsIcon} />}
               iconColor="#10B981"
               iconBg="#D1FAE5"
               label="Default Currency"
@@ -546,7 +547,7 @@ export default function SettingsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<CalendarIcon />}
+              icon={<AppIcon icon={Calendar03Icon} />}
               iconColor="#6366F1"
               iconBg="#E0E7FF"
               label="Date Format"
@@ -558,7 +559,7 @@ export default function SettingsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<PaletteIcon />}
+              icon={<AppIcon icon={PaletteIcon} />}
               iconColor="#8B5CF6"
               iconBg="#EDE9FE"
               label="Theme"
@@ -570,7 +571,7 @@ export default function SettingsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<TagIcon />}
+              icon={<AppIcon icon={Tag01Icon} />}
               iconColor="#EC4899"
               iconBg="#FCE7F3"
               label="Manage Categories"
@@ -581,7 +582,7 @@ export default function SettingsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<CubeIcon />}
+              icon={<AppIcon icon={CubeIcon} />}
               iconColor="#14B8A6"
               iconBg="#CCFBF1"
               label="Manage Services"
@@ -596,7 +597,7 @@ export default function SettingsScreen() {
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
               colors={colors}
-              icon={<DownloadSimpleIcon />}
+              icon={<AppIcon icon={Download01Icon} />}
               iconColor="#059669"
               iconBg="#D1FAE5"
               label="Export data"
@@ -611,7 +612,7 @@ export default function SettingsScreen() {
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
               colors={colors}
-              icon={<StarIcon weight="fill" />}
+              icon={<AppIcon icon={StarIcon} fill="#F59E0B" />}
               iconColor="#F59E0B"
               iconBg="#FEF3C7"
               label="Rate us"
@@ -622,7 +623,7 @@ export default function SettingsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<ChatCircleDotsIcon />}
+              icon={<AppIcon icon={MessageCircleMoreIcon} />}
               iconColor="#06B6D4"
               iconBg="#CFFAFE"
               label="Contact Support"
@@ -633,7 +634,7 @@ export default function SettingsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<GridFourIcon />}
+              icon={<AppIcon icon={GridIcon} />}
               iconColor="#8B5CF6"
               iconBg="#EDE9FE"
               label="Other apps"
@@ -644,7 +645,7 @@ export default function SettingsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<ShareNetworkIcon />}
+              icon={<AppIcon icon={Share01Icon} />}
               iconColor="#EC4899"
               iconBg="#FCE7F3"
               label="Share App"
@@ -655,7 +656,7 @@ export default function SettingsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<InfoIcon />}
+              icon={<AppIcon icon={InformationCircleIcon} />}
               iconColor="#6366F1"
               iconBg="#E0E7FF"
               label="About"
@@ -673,7 +674,7 @@ export default function SettingsScreen() {
             style={[styles.logoutCard, isDeletingAccount && styles.disabledCard]}
           >
             <View style={styles.logoutIconContainer}>
-              <TrashIcon size={20} color={AppColors.negative} />
+              <AppIcon icon={Delete02Icon} size={20} color={AppColors.negative} />
             </View>
             <Text style={styles.logoutText}>
               {isDeletingAccount ? 'Deleting Account...' : 'Delete Account'}
@@ -685,7 +686,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Pressable onPress={handleSignOut} style={styles.logoutCard}>
             <View style={styles.logoutIconContainer}>
-              <SignOutIcon size={20} color={AppColors.negative} />
+              <AppIcon icon={Logout01Icon} size={20} color={AppColors.negative} />
             </View>
             <Text style={styles.logoutText}>Log Out</Text>
           </Pressable>

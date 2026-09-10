@@ -1,21 +1,23 @@
 import {
+  Add01Icon,
+  AiBrain01Icon,
   AppWindowIcon,
-  DotsThreeCircleIcon,
-  ForkKnifeIcon,
   GraduationCapIcon,
-  HeartbeatIcon,
+  HeartPulseIcon,
   LightbulbIcon,
-  MusicNotesIcon,
-  PlayCircleIcon,
-  PlusIcon,
-  RobotIcon,
-  ShoppingCartIcon,
-  TagIcon,
-} from 'phosphor-react-native';
+  MoreHorizontalCircleIcon,
+  MusicNote01Icon,
+  PlayCircle02Icon,
+  Restaurant01Icon,
+  ShoppingCart01Icon,
+  Tag01Icon,
+} from '@hugeicons/core-free-icons';
+import type { IconSvgElement } from '@hugeicons/react-native';
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getCategoryColors } from '@/constants/colors';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import {
@@ -38,28 +40,28 @@ interface CategoryChipsProps {
   isLoading?: boolean;
 }
 
-const CATEGORY_ICONS: Record<DefaultCategory, React.FC<any>> = {
-  Streaming: PlayCircleIcon,
-  Music: MusicNotesIcon,
+const CATEGORY_ICONS: Record<DefaultCategory, IconSvgElement> = {
+  Streaming: PlayCircle02Icon,
+  Music: MusicNote01Icon,
   Software: AppWindowIcon,
   Utilities: LightbulbIcon,
-  Health: HeartbeatIcon,
-  Food: ForkKnifeIcon,
+  Health: HeartPulseIcon,
+  Food: Restaurant01Icon,
   Education: GraduationCapIcon,
-  Shopping: ShoppingCartIcon,
-  AI: RobotIcon,
-  Other: DotsThreeCircleIcon,
+  Shopping: ShoppingCart01Icon,
+  AI: AiBrain01Icon,
+  Other: MoreHorizontalCircleIcon,
 };
 
 /**
  * Get the icon component for a category.
- * Returns TagIcon for custom categories.
+ * Returns Tag01Icon for custom categories.
  */
-function getCategoryIcon(category: string): React.FC<any> {
+function getCategoryIcon(category: string): IconSvgElement {
   if (isDefaultCategory(category)) {
     return CATEGORY_ICONS[category];
   }
-  return TagIcon;
+  return Tag01Icon;
 }
 
 /**
@@ -108,12 +110,9 @@ export function CategoryChips({
         const iconColor = active ? '#fff' : colors.text;
         const IconComponent = getCategoryIcon(cat);
         const isDefault = isDefaultCategory(cat);
-        const weight = active ? 'fill' : 'regular';
-        // For certain icons, always use regular weight
-        const iconWeight =
-          cat === 'Music' || cat === 'Software' || cat === 'Other' || !isDefault
-            ? 'regular'
-            : weight;
+        // For certain icons, always use outline style
+        const isFilled =
+          active && isDefault && cat !== 'Music' && cat !== 'Software' && cat !== 'Other';
 
         return (
           <Pressable
@@ -134,7 +133,12 @@ export function CategoryChips({
             ]}
             testID={`subscriptionEditorCategory_${cat}`}
           >
-            <IconComponent color={iconColor} size={iconSize} weight={iconWeight} />
+            <AppIcon
+              icon={IconComponent}
+              color={iconColor}
+              size={iconSize}
+              fill={isFilled ? iconColor : 'transparent'}
+            />
             <Text
               style={[styles.chipText, { color: active ? '#fff' : colors.text }]}
               numberOfLines={1}
@@ -165,7 +169,7 @@ export function CategoryChips({
           {isAddingCategory ? (
             <ActivityIndicator color={colors.primary} size="small" />
           ) : (
-            <PlusIcon color={colors.primary} size={iconSize} weight="bold" />
+            <AppIcon icon={Add01Icon} color={colors.primary} size={iconSize} />
           )}
           <Text style={[styles.chipText, { color: colors.primary }]}>
             {isAddingCategory ? 'Adding...' : 'New'}

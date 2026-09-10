@@ -4,8 +4,10 @@ import React from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
-import { CaretLeftIcon } from 'phosphor-react-native';
 
 export default function AboutScreen() {
   return (
@@ -21,7 +23,7 @@ export default function AboutScreen() {
           {/* Back Button */}
           <View style={styles.header}>
             <Pressable onPress={() => router.back()} style={styles.backButton}>
-              <CaretLeftIcon size={24} color="#FFFFFF" weight="bold" />
+              <AppIcon icon={ArrowLeft01Icon} size={24} color="#FFFFFF" />
             </Pressable>
           </View>
 

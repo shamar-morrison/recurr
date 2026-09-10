@@ -1,5 +1,5 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { CaretDownIcon, CaretLeftIcon } from 'phosphor-react-native';
+import { ArrowDown01Icon, ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import React, { useCallback, useState } from 'react';
 import {
   Alert,
@@ -19,6 +19,7 @@ import { FrequencySelectorModal } from '@/src/components/FrequencySelectorModal'
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { ServiceSelection, ServiceSelectorModal } from '@/src/components/ServiceSelectorModal';
 import { FormSection } from '@/src/components/ui/FormSection';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -464,7 +465,7 @@ export default function SubscriptionEditorScreen() {
         style={[styles.headerLeft, { backgroundColor: colors.tertiaryBackground }]}
         testID="subscriptionEditorBack"
       >
-        <CaretLeftIcon color={colors.text} size={22} />
+        <AppIcon icon={ArrowLeft01Icon} color={colors.text} size={22} />
       </Pressable>
     ),
     [colors]
@@ -585,7 +586,7 @@ export default function SubscriptionEditorScreen() {
                     <Text style={[styles.dropdownText, { color: colors.text }]}>
                       {form.currency} ({form.currencySymbol})
                     </Text>
-                    <CaretDownIcon color={colors.secondaryText} size={16} />
+                    <AppIcon icon={ArrowDown01Icon} color={colors.secondaryText} size={16} />
                   </Pressable>
                 </View>
 
@@ -604,7 +605,7 @@ export default function SubscriptionEditorScreen() {
                     <Text style={[styles.dropdownText, { color: colors.text }]}>
                       {form.billingCycle}
                     </Text>
-                    <CaretDownIcon color={colors.secondaryText} size={16} />
+                    <AppIcon icon={ArrowDown01Icon} color={colors.secondaryText} size={16} />
                   </Pressable>
                 </View>
               </View>

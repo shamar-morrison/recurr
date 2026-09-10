@@ -1,19 +1,19 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import {
-  ArrowSquareOutIcon,
-  CalendarIcon,
-  CaretLeftIcon,
-  CaretRightIcon,
-  ClockIcon,
-  CurrencyCircleDollarIcon,
-  HourglassHighIcon,
-  ListBulletsIcon,
-  NotePencilIcon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  ArrowUpRightIcon,
+  Calendar03Icon,
+  Clock01Icon,
+  Delete02Icon,
+  DollarCircleIcon,
+  HourglassIcon,
+  ListViewIcon,
+  NoteEditIcon,
   PauseCircleIcon,
-  PlayCircleIcon,
+  PlayCircle02Icon,
   RepeatIcon,
-  TrashIcon,
-} from 'phosphor-react-native';
+} from '@hugeicons/core-free-icons';
 import React, { useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
@@ -30,6 +30,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppColors } from '@/constants/colors';
 import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { Button } from '@/src/components/ui/Button';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { formatDate as formatDateUtil } from '@/src/constants/dateFormats';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
@@ -102,7 +103,7 @@ function SettingRow({
             {value}
           </Text>
         )}
-        {showChevron && <CaretRightIcon size={20} color={colors.secondaryText} />}
+        {showChevron && <AppIcon icon={ArrowRight01Icon} size={20} color={colors.secondaryText} />}
       </View>
     </>
   );
@@ -250,7 +251,7 @@ export default function SubscriptionDetailsScreen() {
         style={[styles.headerButton, { backgroundColor: colors.tertiaryBackground }]}
         testID="subscriptionDetailsBack"
       >
-        <CaretLeftIcon color={colors.text} size={22} />
+        <AppIcon icon={ArrowLeft01Icon} color={colors.text} size={22} />
       </Pressable>
     ),
     [colors]
@@ -310,9 +311,9 @@ export default function SubscriptionDetailsScreen() {
           {/* Status Badge */}
           <View style={[styles.statusBadge, { backgroundColor: `${statusColor}20` }]}>
             {isPaused ? (
-              <PauseCircleIcon color={statusColor} size={16} weight="fill" />
+              <AppIcon icon={PauseCircleIcon} color={statusColor} size={16} fill={statusColor} />
             ) : (
-              <PlayCircleIcon color={statusColor} size={16} weight="fill" />
+              <AppIcon icon={PlayCircle02Icon} color={statusColor} size={16} fill={statusColor} />
             )}
             <Text style={[styles.statusText, { color: statusColor }]}>{subscription.status}</Text>
           </View>
@@ -326,7 +327,7 @@ export default function SubscriptionDetailsScreen() {
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
               colors={colors}
-              icon={<CurrencyCircleDollarIcon />}
+              icon={<AppIcon icon={DollarCircleIcon} />}
               iconColor="#10B981"
               iconBg="#D1FAE5"
               label="Price"
@@ -337,7 +338,7 @@ export default function SubscriptionDetailsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<RepeatIcon />}
+              icon={<AppIcon icon={RepeatIcon} />}
               iconColor="#6366F1"
               iconBg="#E0E7FF"
               label="Billing cycle"
@@ -348,7 +349,7 @@ export default function SubscriptionDetailsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<HourglassHighIcon />}
+              icon={<AppIcon icon={HourglassIcon} />}
               iconColor="#F59E0B"
               iconBg="#FEF3C7"
               label="Due in"
@@ -365,7 +366,7 @@ export default function SubscriptionDetailsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<CalendarIcon />}
+              icon={<AppIcon icon={Calendar03Icon} />}
               iconColor="#8B5CF6"
               iconBg="#EDE9FE"
               label="Next payment"
@@ -382,7 +383,7 @@ export default function SubscriptionDetailsScreen() {
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
               colors={colors}
-              icon={<CurrencyCircleDollarIcon />}
+              icon={<AppIcon icon={DollarCircleIcon} />}
               iconColor="#059669"
               iconBg="#D1FAE5"
               label="Total spent"
@@ -393,7 +394,7 @@ export default function SubscriptionDetailsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<ListBulletsIcon />}
+              icon={<AppIcon icon={ListViewIcon} />}
               iconColor="#EC4899"
               iconBg="#FCE7F3"
               label="Number of payments"
@@ -404,7 +405,7 @@ export default function SubscriptionDetailsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<ClockIcon />}
+              icon={<AppIcon icon={Clock01Icon} />}
               iconColor="#06B6D4"
               iconBg="#CFFAFE"
               label="Subscribed for"
@@ -415,7 +416,7 @@ export default function SubscriptionDetailsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<CalendarIcon />}
+              icon={<AppIcon icon={Calendar03Icon} />}
               iconColor="#8B5CF6"
               iconBg="#EDE9FE"
               label="Start date"
@@ -427,7 +428,7 @@ export default function SubscriptionDetailsScreen() {
                 <Divider colors={colors} />
                 <SettingRow
                   colors={colors}
-                  icon={<CalendarIcon />}
+                  icon={<AppIcon icon={Calendar03Icon} />}
                   iconColor="#EF4444"
                   iconBg="#FEE2E2"
                   label="End date"
@@ -440,7 +441,7 @@ export default function SubscriptionDetailsScreen() {
 
             <SettingRow
               colors={colors}
-              icon={<CalendarIcon />}
+              icon={<AppIcon icon={Calendar03Icon} />}
               iconColor="#6366F1"
               iconBg="#E0E7FF"
               label="Last payment"
@@ -453,7 +454,7 @@ export default function SubscriptionDetailsScreen() {
                 <Divider colors={colors} />
                 <SettingRow
                   colors={colors}
-                  icon={<ArrowSquareOutIcon />}
+                  icon={<AppIcon icon={ArrowUpRightIcon} />}
                   iconColor="#3B82F6"
                   iconBg="#DBEAFE"
                   label="Website"
@@ -469,7 +470,7 @@ export default function SubscriptionDetailsScreen() {
             <Divider colors={colors} />
             <SettingRow
               colors={colors}
-              icon={<ListBulletsIcon />}
+              icon={<AppIcon icon={ListViewIcon} />}
               iconColor="#A855F7"
               iconBg="#F3E8FF"
               label="See all payments"
@@ -485,7 +486,7 @@ export default function SubscriptionDetailsScreen() {
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <SettingRow
               colors={colors}
-              icon={<NotePencilIcon />}
+              icon={<AppIcon icon={NoteEditIcon} />}
               iconColor="#3B82F6"
               iconBg="#DBEAFE"
               label="Edit Subscription"
@@ -504,7 +505,7 @@ export default function SubscriptionDetailsScreen() {
                 {deleteMutation.isPending ? (
                   <ActivityIndicator size="small" color={AppColors.negative} />
                 ) : (
-                  <TrashIcon size={20} color={AppColors.negative} />
+                  <AppIcon icon={Delete02Icon} size={20} color={AppColors.negative} />
                 )}
               </View>
               <Text style={[styles.rowLabel, { color: AppColors.negative }]} numberOfLines={1}>

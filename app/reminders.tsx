@@ -1,5 +1,5 @@
 import { router, Stack } from 'expo-router';
-import { BellIcon, BellSlashIcon, FlaskIcon, FunnelSimpleIcon } from 'phosphor-react-native';
+import { FilterIcon, FlaskConicalIcon, Notification01Icon, NotificationOff01Icon } from '@hugeicons/core-free-icons';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -20,6 +20,7 @@ import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
 import { Button } from '@/src/components/ui/Button';
 import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
 import { EmptyState } from '@/src/components/ui/EmptyState';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { StackHeader } from '@/src/components/ui/StackHeader';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
@@ -214,7 +215,7 @@ export default function RemindersScreen() {
               {formatMoney(item.amount, item.currency)}
             </Text>
             <View style={styles.reminderRow}>
-              <BellIcon color={colors.tint} size={14} />
+              <AppIcon icon={Notification01Icon} color={colors.tint} size={14} />
               <Text style={[styles.reminderText, { color: colors.tint }]}>
                 {getReminderLabel(item.reminderDays)}
               </Text>
@@ -231,7 +232,7 @@ export default function RemindersScreen() {
   const ListEmptyComponent = useMemo(
     () => (
       <EmptyState
-        icon={<BellSlashIcon color={colors.secondaryText} size={48} />}
+        icon={<AppIcon icon={NotificationOff01Icon} color={colors.secondaryText} size={48} />}
         title={selectedCategory === 'All' ? 'No Reminders Set' : 'No Reminders Found'}
         description={
           selectedCategory === 'All'
@@ -287,7 +288,7 @@ export default function RemindersScreen() {
             onPress={scheduleTestNotification}
             style={[styles.filterButton, { backgroundColor: colors.tertiaryBackground }]}
           >
-            <FlaskIcon color={colors.text} size={20} weight="regular" />
+            <AppIcon icon={FlaskConicalIcon} color={colors.text} size={20} />
           </Pressable>
         )}
         <Pressable
@@ -298,10 +299,11 @@ export default function RemindersScreen() {
             selectedCategory !== 'All' && { backgroundColor: colors.tint },
           ]}
         >
-          <FunnelSimpleIcon
+          <AppIcon
+            icon={FilterIcon}
             color={selectedCategory !== 'All' ? '#fff' : colors.text}
             size={20}
-            weight={selectedCategory !== 'All' ? 'fill' : 'regular'}
+            fill={selectedCategory !== 'All' ? '#fff' : 'transparent'}
           />
         </Pressable>
       </View>
@@ -349,7 +351,7 @@ export default function RemindersScreen() {
         {notificationsEnabled === false && (
           <View style={styles.disabledBanner} testID="notificationsDisabledBanner">
             <View style={styles.disabledBannerRow}>
-              <BellSlashIcon color={colors.negative} size={24} />
+              <AppIcon icon={NotificationOff01Icon} color={colors.negative} size={24} />
               <View style={styles.disabledBannerText}>
                 <Text style={[styles.disabledBannerTitle, { color: colors.text }]}>
                   Notifications are disabled
@@ -365,7 +367,7 @@ export default function RemindersScreen() {
               variant="primary"
               size="md"
               style={styles.disabledBannerButton}
-              icon={<BellIcon color="#fff" size={20} />}
+              icon={<AppIcon icon={Notification01Icon} color="#fff" size={20} />}
               testID="remindersEnableNotifications"
             />
           </View>

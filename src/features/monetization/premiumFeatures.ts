@@ -6,12 +6,12 @@
  */
 
 import {
-  BellIcon,
-  ChartBarIcon,
-  ExportIcon,
-  IconProps,
-  LightningIcon,
-} from 'phosphor-react-native';
+  ChartBarLineIcon,
+  Notification01Icon,
+  Upload01Icon,
+  ZapIcon,
+} from '@hugeicons/core-free-icons';
+import type { IconSvgElement } from '@hugeicons/react-native';
 
 export interface PremiumFeature {
   /** Unique identifier for the feature */
@@ -22,8 +22,8 @@ export interface PremiumFeature {
   shortTitle: string;
   /** Description shown on paywall */
   description: string;
-  /** Icon component */
-  icon: React.ComponentType<IconProps>;
+  /** Icon definition */
+  icon: IconSvgElement;
 }
 
 /**
@@ -37,28 +37,28 @@ export function getPremiumFeatures(freeTierLimit: number): PremiumFeature[] {
       title: 'Unlimited Subscriptions',
       shortTitle: 'Unlimited subscriptions',
       description: `Track all your subscriptions without limits. Free users can only track ${freeTierLimit}.`,
-      icon: LightningIcon,
+      icon: ZapIcon,
     },
     {
       id: 'export-data',
       title: 'Export Your Data',
       shortTitle: 'Export to CSV & Markdown',
       description: 'Export to CSV or Markdown anytime. Keep your data portable and backed up.',
-      icon: ExportIcon,
+      icon: Upload01Icon,
     },
     {
       id: 'unlimited-reminders',
       title: 'Unlimited Reminders',
       shortTitle: 'Unlimited reminders',
       description: 'Never miss a payment. Set as many reminders as you need.',
-      icon: BellIcon,
+      icon: Notification01Icon,
     },
     {
       id: 'detailed-reports',
       title: 'Detailed Reports',
       shortTitle: 'Detailed reports & analytics',
       description: 'Access charts, trends and analytics to understand your spending patterns.',
-      icon: ChartBarIcon,
+      icon: ChartBarLineIcon,
     },
   ];
 }

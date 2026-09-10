@@ -1,10 +1,11 @@
 import * as Localization from 'expo-localization';
-import { ClockIcon } from 'phosphor-react-native';
+import { Clock01Icon } from '@hugeicons/core-free-icons';
 import React, { useCallback, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 import { BORDER_RADIUS, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
 import { REMINDER_TIME_OPTIONS, ReminderHour } from '@/src/features/subscriptions/types';
@@ -60,7 +61,7 @@ export function ReminderTimeSelectorModal({
   return (
     <BaseModal visible={visible} title="Reminder Time" onClose={onClose}>
       <View style={[styles.infoBox, { backgroundColor: colors.selectedBackground }]}>
-        <ClockIcon color={colors.tint} size={20} />
+        <AppIcon icon={Clock01Icon} color={colors.tint} size={20} />
         <Text style={[styles.infoText, { color: colors.secondaryText }]}>
           Choose what time of day you'd like to receive your reminder notification.
         </Text>

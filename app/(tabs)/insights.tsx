@@ -15,17 +15,18 @@ import {
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
 import {
-  CalendarCheckIcon,
-  CalendarIcon,
-  CaretDownIcon,
-  CaretRightIcon,
-  CaretUpIcon,
-  ChartBarIcon,
-  ChartLineUpIcon,
+  ArrowDown01Icon,
+  ArrowRight01Icon,
+  ArrowUp01Icon,
+  Calendar03Icon,
+  CalendarCheckIn01Icon,
+  ChartBarLineIcon,
+  ChartLineIcon,
   CrownIcon,
-} from 'phosphor-react-native';
+} from '@hugeicons/core-free-icons';
 
 import { PremiumBadge } from '@/src/components/ui/PremiumBadge';
+import { AppIcon } from '@/src/components/ui/AppIcon';
 
 const INITIAL_CATEGORIES_SHOWN = 5;
 
@@ -110,9 +111,9 @@ function CategoryBreakdownCard({
             {isExpanded ? 'Show less' : `Show all ${totalCount} categories`}
           </Text>
           {isExpanded ? (
-            <CaretUpIcon color={colors.primary} size={16} />
+            <AppIcon icon={ArrowUp01Icon} color={colors.primary} size={16} />
           ) : (
-            <CaretDownIcon color={colors.primary} size={16} />
+            <AppIcon icon={ArrowDown01Icon} color={colors.primary} size={16} />
           )}
         </Pressable>
       )}
@@ -200,7 +201,7 @@ export default function InsightsScreen() {
               <Text style={styles.heroTitle}>Spending</Text>
               {isPremium ? (
                 <View style={styles.premiumPill} testID="insightsPremiumPill">
-                  <CrownIcon color="#fff" size={14} />
+                  <AppIcon icon={CrownIcon} color="#fff" size={14} />
                   <Text style={styles.premiumPillText}>Premium</Text>
                 </View>
               ) : null}
@@ -234,7 +235,7 @@ export default function InsightsScreen() {
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderLeft}>
-              <ChartLineUpIcon color={colors.text} size={18} />
+              <AppIcon icon={ChartLineIcon} color={colors.text} size={18} />
               <Text style={[styles.cardTitle, { color: colors.text }]}>Highlights</Text>
             </View>
           </View>
@@ -251,7 +252,7 @@ export default function InsightsScreen() {
                 testID="insightsMostExpensive"
               >
                 <View style={[styles.highlightIconContainer, { backgroundColor: '#FEF3C7' }]}>
-                  <CrownIcon size={18} color="#D97706" weight="fill" />
+                  <AppIcon icon={CrownIcon} size={18} color="#D97706" fill="#D97706" />
                 </View>
                 <View style={styles.highlightContent}>
                   <Text style={[styles.highlightLabel, { color: colors.secondaryText }]}>
@@ -274,7 +275,7 @@ export default function InsightsScreen() {
                 testID="insightsUpcoming"
               >
                 <View style={[styles.highlightIconContainer, { backgroundColor: '#DBEAFE' }]}>
-                  <CalendarIcon size={18} color="#3B82F6" />
+                    <AppIcon icon={Calendar03Icon} size={18} color="#3B82F6" />
                 </View>
                 <View style={styles.highlightContent}>
                   <Text style={[styles.highlightLabel, { color: colors.secondaryText }]}>
@@ -299,7 +300,7 @@ export default function InsightsScreen() {
                   testID="insightsNext7Days"
                 >
                   <View style={[styles.highlightIconContainer, { backgroundColor: '#EDE9FE' }]}>
-                    <CalendarCheckIcon size={18} color="#8B5CF6" />
+                    <AppIcon icon={CalendarCheckIn01Icon} size={18} color="#8B5CF6" />
                   </View>
                   <View style={styles.highlightContent}>
                     <Text style={[styles.highlightLabel, { color: colors.secondaryText }]}>
@@ -342,7 +343,7 @@ export default function InsightsScreen() {
         >
           <View style={styles.detailedReportLeft}>
             <View style={[styles.detailedReportIcon, { backgroundColor: colors.badgeBackground }]}>
-              <ChartBarIcon color={colors.primary} size={24} weight="fill" />
+              <AppIcon icon={ChartBarLineIcon} color={colors.primary} size={24} fill={colors.primary} />
             </View>
             <View>
               <View style={styles.detailedReportTitleRow}>
@@ -356,7 +357,7 @@ export default function InsightsScreen() {
               </Text>
             </View>
           </View>
-          {isPremium && <CaretRightIcon color={colors.secondaryText} size={20} />}
+          {isPremium && <AppIcon icon={ArrowRight01Icon} color={colors.secondaryText} size={20} />}
         </Pressable>
 
         <View style={styles.footerSpace} />
