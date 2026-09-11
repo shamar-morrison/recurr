@@ -109,10 +109,6 @@ export function CategoryChips({
         const categoryColor = getCategoryColors(cat);
         const iconColor = active ? '#fff' : colors.text;
         const IconComponent = getCategoryIcon(cat);
-        const isDefault = isDefaultCategory(cat);
-        // For certain icons, always use outline style
-        const isFilled =
-          active && isDefault && cat !== 'Music' && cat !== 'Software' && cat !== 'Other';
 
         return (
           <Pressable
@@ -133,12 +129,7 @@ export function CategoryChips({
             ]}
             testID={`subscriptionEditorCategory_${cat}`}
           >
-            <AppIcon
-              icon={IconComponent}
-              color={iconColor}
-              size={iconSize}
-              fill={isFilled ? iconColor : 'transparent'}
-            />
+            <AppIcon icon={IconComponent} color={iconColor} size={iconSize} />
             <Text
               style={[styles.chipText, { color: active ? '#fff' : colors.text }]}
               numberOfLines={1}

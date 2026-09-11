@@ -14,11 +14,17 @@ export type { IconSvgElement };
  * `<AppIcon icon={Search01Icon} size={22} color={colors.text} />`.
  *
  * Notes:
- * - `fill` reproduces Phosphor's filled states (e.g. crown, check-circle):
+ * - `fill` reproduces Phosphor's filled states (e.g. rated stars):
  *   pass the same color as `color` to fill, or `'transparent'`/omit for
  *   outline. It is only forwarded when defined — forwarding
  *   `fill={undefined}` would clobber the renderer's `fill="none"` default
  *   and paint every glyph black.
+ * - Only pass `fill` for solid-object glyphs without hollow interiors
+ *   (star, sparkles, bell, crown, funnel, chart bars). Never for glyphs with
+ *   hollow containers or inner detail (disc/circle outlines, bills, coin
+ *   stacks, check-circles, category art) — the fill inherits into every
+ *   sub-shape and floods them solid. Render check-circles as a colored
+ *   circle `View` with a white `Tick02Icon` instead (see payment-history).
  * - Default `strokeWidth` is left undefined so icons render at the HugeIcons
  *   1.5px design weight. Pass explicitly to override.
  * - `style` is applied via a wrapper View because HugeIconsIcon accepts a

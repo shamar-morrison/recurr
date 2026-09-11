@@ -347,7 +347,7 @@ export default function SubscriptionsHomeScreen() {
             />
             {searchQuery.length > 0 && (
               <Pressable onPress={() => setSearchQuery('')} hitSlop={24}>
-                <AppIcon icon={CancelCircleIcon} color={colors.secondaryText} size={18} fill={colors.secondaryText} />
+                <AppIcon icon={CancelCircleIcon} color={colors.secondaryText} size={18} />
               </Pressable>
             )}
           </View>

@@ -311,9 +311,9 @@ export default function SubscriptionDetailsScreen() {
           {/* Status Badge */}
           <View style={[styles.statusBadge, { backgroundColor: `${statusColor}20` }]}>
             {isPaused ? (
-              <AppIcon icon={PauseCircleIcon} color={statusColor} size={16} fill={statusColor} />
+              <AppIcon icon={PauseCircleIcon} color={statusColor} size={16} />
             ) : (
-              <AppIcon icon={PlayCircle02Icon} color={statusColor} size={16} fill={statusColor} />
+              <AppIcon icon={PlayCircle02Icon} color={statusColor} size={16} />
             )}
             <Text style={[styles.statusText, { color: statusColor }]}>{subscription.status}</Text>
           </View>

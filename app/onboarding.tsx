@@ -432,7 +432,7 @@ function VisualStart() {
   return (
     <View style={styles.visualCard}>
       <View style={styles.logoContainer}>
-        <AppIcon icon={CoinsIcon} size={64} color={AppColors.tint} fill={AppColors.tint} />
+        <AppIcon icon={CoinsIcon} size={64} color={AppColors.tint} />
       </View>
 
       <View style={styles.bulletList}>

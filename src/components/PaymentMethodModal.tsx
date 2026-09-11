@@ -64,14 +64,7 @@ export function PaymentMethodModal({ visible, selectedMethod, onSelect, onClose 
               label={config.label}
               isSelected={isSelected}
               onPress={() => handleSelect(config.label)}
-              leftElement={
-                <AppIcon
-                  icon={config.icon}
-                  color={selectedColor}
-                  size={24}
-                  fill={isSelected ? selectedColor : 'transparent'}
-                />
-              }
+              leftElement={<AppIcon icon={config.icon} color={selectedColor} size={24} />}
             />
           );
         })}

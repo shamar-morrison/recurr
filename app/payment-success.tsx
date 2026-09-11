@@ -9,9 +9,9 @@ import { Motion } from '@legendapp/motion';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, Stack } from 'expo-router';
 import {
-  CheckmarkCircle02Icon,
   CrownIcon,
   SparklesIcon,
+  Tick02Icon,
 } from '@hugeicons/core-free-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -48,7 +48,9 @@ export default function PaymentSuccessScreen() {
               style={styles.iconContainer}
             >
               <View style={styles.successCircle}>
-                <AppIcon icon={CheckmarkCircle02Icon} size={64} color="#22C55E" fill="#22C55E" />
+              <View style={[styles.paidBadge, { backgroundColor: '#22C55E' }]}>
+                <AppIcon icon={Tick02Icon} size={36} color="#fff" />
+              </View>
               </View>
               <Motion.View
                 initial={{ scale: 0 }}
@@ -113,7 +115,9 @@ export default function PaymentSuccessScreen() {
               <Text style={styles.featuresTitle}>What's unlocked:</Text>
               {getPremiumFeatures(0).map((feature) => (
                 <View key={feature.id} style={styles.featureRow}>
-                  <AppIcon icon={CheckmarkCircle02Icon} size={18} color="#22C55E" fill="#22C55E" />
+                  <View style={[styles.miniPaidBadge, { backgroundColor: '#22C55E' }]}>
+                    <AppIcon icon={Tick02Icon} size={12} color="#fff" />
+                  </View>
                   <Text style={styles.featureText}>{feature.shortTitle}</Text>
                 </View>
               ))}
@@ -162,6 +166,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...SHADOWS.lg,
+  },
+  paidBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: BORDER_RADIUS.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniPaidBadge: {
+    width: 18,
+    height: 18,
+    borderRadius: BORDER_RADIUS.full,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   crownBadge: {
     position: 'absolute',
