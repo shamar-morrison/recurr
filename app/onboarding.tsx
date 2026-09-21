@@ -7,6 +7,7 @@ import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { AppColors } from '@/constants/colors';
 import { Button } from '@/src/components/ui/Button';
 import { AppIcon } from '@/src/components/ui/AppIcon';
+import { HORIZONTAL_SCROLL_PROPS } from '@/src/components/ui/horizontalScrollProps';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useAuth } from '@/src/features/auth/AuthProvider';
 import { requestNotificationPermissions } from '@/src/features/notifications/notificationService';
@@ -140,10 +141,9 @@ export default function OnboardingScreen() {
             ref={listRef}
             data={PAGES}
             keyExtractor={(i) => i.key}
-            horizontal
+            {...HORIZONTAL_SCROLL_PROPS}
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            bounces={false}
             onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
               useNativeDriver: false, // backgroundColor interpolation needs false
               listener: (e: any) => {

@@ -34,6 +34,7 @@ import { Button } from '@/src/components/ui/Button';
 import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
 import { EmptyState } from '@/src/components/ui/EmptyState';
 import { AppIcon } from '@/src/components/ui/AppIcon';
+import { HORIZONTAL_SCROLL_PROPS } from '@/src/components/ui/horizontalScrollProps';
 import { getServiceDomain } from '@/src/constants/services';
 import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/theme';
 import { useTheme } from '@/src/context/ThemeContext';
@@ -474,7 +475,7 @@ export default function SubscriptionsHomeScreen() {
             <Text style={[styles.filtersLabel, { color: colors.secondaryText }]}>Filter</Text>
           </View>
           <ScrollView
-            horizontal
+            {...HORIZONTAL_SCROLL_PROPS}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.chipsScrollContent}
           >
