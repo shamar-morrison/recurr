@@ -234,18 +234,39 @@ export default function RemindersScreen() {
       await Promise.allSettled(
         expired.map((s) =>
           withSnoozeLock(s.id, async () => {
-            let notificationId: string | null = null;
-            if (s.reminderDays && s.reminderDays > 0) {
-              if (s.notificationId) {
-                await cancelNotification(s.notificationId);
-              }
-              notificationId = await scheduleSubscriptionReminder(
-                s,
-                s.reminderDays,
-                s.reminderHour ?? 12
-              );
+            // Re-read: the row may have changed since this effect snapshot
+            // (editor save, tray snooze). Skip unless still expired.
+            const fresh = await getSubscription(s.userId, s.id);
+            const target = fresh ?? s;
+            if (
+              typeof target.snoozedUntil !== 'number' ||
+              target.snoozedUntil > Date.now()
+            ) {
+              return;
             }
-            await upsertAsync({ ...s, notificationId, snoozedUntil: null });
+            if (target.reminderDays && target.reminderDays > 0) {
+              if (target.notificationId) {
+                await cancelNotification(target.notificationId);
+              }
+              const notificationId = await scheduleSubscriptionReminder(
+                target,
+                target.reminderDays,
+                target.reminderHour ?? 12
+              );
+              if (!notificationId) {
+                // Reschedule failed (e.g. permissions revoked): keep the row
+                // untouched so a later run retries instead of dropping the
+                // reminder permanently.
+                console.log(
+                  '[reminders] Expiry reschedule failed; keeping snooze for retry:',
+                  s.id
+                );
+                return;
+              }
+              await upsertAsync({ ...target, notificationId, snoozedUntil: null });
+            } else {
+              await upsertAsync({ ...target, notificationId: null, snoozedUntil: null });
+            }
           })
         )
       );

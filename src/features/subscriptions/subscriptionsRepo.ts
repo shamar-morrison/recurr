@@ -355,6 +355,21 @@ export async function retryPendingSyncs(userId: string, subs: Subscription[]): P
       if (retryInflight.has(s.id)) return;
       retryInflight.add(s.id);
       try {
+        // The snapshot may be stale (an edit may have landed after the sweep
+        // listed it). Only retry when this is still the current local version
+        // still flagged pending — otherwise skip rather than clobber newer
+        // data (or resurrect a deleted row) with a stale write.
+        const current = await getSubscription(userId, s.id);
+        if (
+          !current ||
+          current.pendingSync !== true ||
+          (current.updatedAt ?? 0) !== (s.updatedAt ?? 0)
+        ) {
+          console.log('[subscriptions] retryPendingSyncs skipping stale snapshot', {
+            id: s.id,
+          });
+          return;
+        }
         await upsertSubscription(userId, { ...s, pendingSync: undefined });
       } finally {
         retryInflight.delete(s.id);
