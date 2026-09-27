@@ -286,7 +286,7 @@ export function calculateTotalSpending(
   subscriptions: Subscription[],
   startDate: Date,
   endDate: Date,
-  options: { includePaused?: boolean } = {}
+  options: { includePaused?: boolean; primaryCurrency?: string } = {}
 ): number {
   const monthlyData = calculateSpendingByMonth(subscriptions, startDate, endDate, options);
   return monthlyData.reduce((sum, point) => sum + point.amount, 0);
