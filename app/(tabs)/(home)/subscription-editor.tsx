@@ -472,6 +472,10 @@ export default function SubscriptionEditorScreen() {
         } else if (preservedSnooze) {
           // Status-only change: still adopt the fresher snooze fields.
           notificationIdToSave = preservedSnooze.notificationId;
+        } else {
+          // No newer snooze to preserve — still adopt fresh's notification id if it
+          // changed underneath us (e.g. un-snooze rescheduled under a new id).
+          notificationIdToSave = freshSub?.notificationId ?? existing.notificationId;
         }
 
         const payloadBase = {
@@ -493,12 +497,14 @@ export default function SubscriptionEditorScreen() {
           reminderHour: shouldMerge ? form.reminderHour : existing.reminderHour,
           notificationId: notificationIdToSave,
           // Merging normally re-computes the reminder (snooze cleared) — unless
-          // a newer snooze landed mid-edit (see above); otherwise keep snapshot.
+          // a newer snooze landed mid-edit (see above); otherwise use the
+          // freshly re-read value, never the stale snapshot (a mid-edit
+          // un-snooze must stay cleared, not resurrect).
           snoozedUntil: preservedSnooze
             ? preservedSnooze.snoozedUntil
             : shouldMerge
               ? null
-              : (existing.snoozedUntil ?? null),
+              : (freshSub?.snoozedUntil ?? null),
           status: newStatus,
         };
 
