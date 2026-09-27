@@ -255,6 +255,15 @@ export default function SubscriptionEditorScreen() {
         } catch (freshError) {
           console.log('[subscription-editor] fresh re-read failed, using snapshot', freshError);
         }
+        if (!freshSub) {
+          // Deleted elsewhere while editing — saving would recreate it
+          // from stale state. (finally below resets the processing state.)
+          Alert.alert(
+            'No longer available',
+            'This subscription was deleted and can no longer be saved.'
+          );
+          return;
+        }
         preservedSnooze = resolvePreservedSnooze({
           snapshot: form.existing,
           fresh: freshSub,
@@ -420,6 +429,15 @@ export default function SubscriptionEditorScreen() {
           freshSub = await getSubscription(form.userId, existing.id);
         } catch (freshError) {
           console.log('[subscription-editor] fresh re-read failed, using snapshot', freshError);
+        }
+        if (!freshSub) {
+          // Deleted elsewhere — persisting would recreate it from stale state.
+          Alert.alert(
+            'No longer available',
+            'This subscription was deleted and can no longer be updated.'
+          );
+          setProcessingAction(null);
+          return;
         }
         const preservedSnooze = resolvePreservedSnooze({
           snapshot: existing,

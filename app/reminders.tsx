@@ -235,15 +235,17 @@ export default function RemindersScreen() {
         expired.map((s) =>
           withSnoozeLock(s.id, async () => {
             // Re-read: the row may have changed since this effect snapshot
-            // (editor save, tray snooze). Skip unless still expired.
+            // (editor save, tray snooze) — or have been deleted. Only proceed
+            // on the fresh row; never recreate from a stale snapshot.
             const fresh = await getSubscription(s.userId, s.id);
-            const target = fresh ?? s;
             if (
-              typeof target.snoozedUntil !== 'number' ||
-              target.snoozedUntil > Date.now()
+              !fresh ||
+              typeof fresh.snoozedUntil !== 'number' ||
+              fresh.snoozedUntil > Date.now()
             ) {
               return;
             }
+            const target = fresh;
             if (target.reminderDays && target.reminderDays > 0) {
               if (target.notificationId) {
                 await cancelNotification(target.notificationId);
@@ -364,28 +366,39 @@ export default function RemindersScreen() {
           }
 
           // Re-schedule the original reminder from its stored settings.
-          let notificationId: string | null = null;
+          // If scheduling fails (e.g. permissions revoked), return BEFORE
+          // persisting so the snooze stays intact for a later retry —
+          // clearing it here would leave no reminder at all.
           if (fresh.reminderDays && fresh.reminderDays > 0) {
-            notificationId = await scheduleSubscriptionReminder(
+            const notificationId = await scheduleSubscriptionReminder(
               fresh,
               fresh.reminderDays,
               fresh.reminderHour ?? 12
             );
-          }
-
-          const saved = await upsertMutation.mutateAsync({
-            ...fresh,
-            notificationId,
-            snoozedUntil: null,
-          });
-          if (saved.pendingSync === true) {
-            console.log('[reminders] Un-snooze saved locally; Firestore sync pending');
-          }
-          if (!notificationId) {
-            Alert.alert(
-              'Reminder not rescheduled',
-              'The snooze was cleared, but the original reminder could not be rescheduled. Check notification permissions and try setting the reminder again.'
-            );
+            if (!notificationId) {
+              Alert.alert(
+                'Could not reschedule',
+                'The reminder could not be re-scheduled (check notification permissions). Your snooze was left untouched — please try again.'
+              );
+              return;
+            }
+            const saved = await upsertMutation.mutateAsync({
+              ...fresh,
+              notificationId,
+              snoozedUntil: null,
+            });
+            if (saved.pendingSync === true) {
+              console.log('[reminders] Un-snooze saved locally; Firestore sync pending');
+            }
+          } else {
+            const saved = await upsertMutation.mutateAsync({
+              ...fresh,
+              notificationId: null,
+              snoozedUntil: null,
+            });
+            if (saved.pendingSync === true) {
+              console.log('[reminders] Un-snooze saved locally; Firestore sync pending');
+            }
           }
         });
       } catch (e) {

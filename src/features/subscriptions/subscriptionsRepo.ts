@@ -192,7 +192,11 @@ export async function getSubscription(
 
   try {
     const d = await getDoc(doc(firestore, 'users', userId, 'subscriptions', subscriptionId));
-    if (!d.exists()) return null;
+    if (!d.exists()) {
+      // No remote doc — may be an offline-created local_ row not yet synced.
+      const localOnly = await readLocal(userId);
+      return localOnly.find((s) => s.id === subscriptionId) ?? null;
+    }
 
     const remote = mapDocToSubscription(d.id, userId, d.data() as Record<string, unknown>);
     // Prefer a locally-pending (newer, unsynced) version over stale server data.
@@ -205,6 +209,86 @@ export async function getSubscription(
     const local = await readLocal(userId);
     return local.find((s) => s.id === subscriptionId) ?? null;
   }
+}
+
+/**
+ * Re-key notifications after a local_ row is assigned its real Firestore id.
+ *
+ * A reminder scheduled while the row was still local_ carries
+ * data.subscriptionId = "local_xxx". After sync that id is dead: tray
+ * actions on it would resolve to the ghost cache row and write a duplicate
+ * remote doc. So, only on an actual local_ -> real-id transition, schedule
+ * a replacement under the real id (snooze variant when a snooze is active,
+ * regular reminder otherwise), cancel the dead-id notification afterwards
+ * (schedule-before-cancel, so a failure leaves the original intact), and
+ * fix up the just-created remote doc with the new notificationId.
+ *
+ * Returns the row to persist locally. Never throws — on any failure the
+ * input `saved` is returned unchanged (ghost row is still dropped by the
+ * caller, so a dead-id lookup cleanly misses afterwards).
+ *
+ * NOTE: dynamic import to avoid a module cycle (notificationService imports
+ * this repo). Resolved at call time, when both modules are initialized.
+ */
+async function rekeySyncedRowNotifications(
+  userId: string,
+  realId: string,
+  localSub: Subscription,
+  saved: Subscription
+): Promise<Subscription> {
+  const hasLiveRef = (localSub.notificationId ?? null) !== null;
+  const snoozeActive =
+    typeof localSub.snoozedUntil === 'number' && localSub.snoozedUntil > Date.now();
+  if (!hasLiveRef && !snoozeActive) return saved;
+
+  const {
+    cancelNotification,
+    scheduleSubscriptionReminder,
+    snoozeSubscriptionReminderUntil,
+  } = await import('@/src/features/notifications/notificationService');
+
+  let notificationId: string | null = null;
+  if (snoozeActive && typeof localSub.snoozedUntil === 'number') {
+    const res = await snoozeSubscriptionReminderUntil(
+      { ...saved, notificationId: null },
+      localSub.snoozedUntil
+    );
+    notificationId = res.notificationId;
+  } else if (typeof saved.reminderDays === 'number' && saved.reminderDays > 0) {
+    notificationId = await scheduleSubscriptionReminder(
+      { ...saved, notificationId: null },
+      saved.reminderDays,
+      saved.reminderHour ?? 12
+    );
+  } else {
+    return saved;
+  }
+
+  if (!notificationId) {
+    console.log('[subscriptions] rekey reschedule failed; keeping synced row as-is', {
+      id: realId,
+    });
+    return saved;
+  }
+
+  if (localSub.notificationId) {
+    await cancelNotification(localSub.notificationId);
+  }
+
+  // The remote doc was just created with the dead id — patch it in the same
+  // upsert. If this patch fails, flag pending so a later sweep heals it.
+  const now = nowMillis();
+  try {
+    await setDoc(
+      doc(firestore, 'users', userId, realId),
+      { notificationId, updatedAt: now },
+      { merge: true }
+    );
+  } catch (e) {
+    console.log('[subscriptions] rekey remote fix-up failed (pendingSync)', e);
+    return { ...saved, notificationId, updatedAt: now, pendingSync: true };
+  }
+  return { ...saved, notificationId, updatedAt: now };
 }
 
 export async function upsertSubscription(
@@ -293,9 +377,20 @@ export async function upsertSubscription(
       });
 
       const saved: Subscription = { ...sub, id: docRef.id, updatedAt: now };
-      const replaced = mergeLocal(nextLocal, saved);
+      // local_ -> real-id transition: re-key notifications to the real id
+      // and drop the ghost row (see rekeySyncedRowNotifications).
+      let finalSaved = saved;
+      try {
+        finalSaved = await rekeySyncedRowNotifications(userId, docRef.id, sub, saved);
+      } catch (e) {
+        console.log('[subscriptions] rekey after sync failed, keeping synced row', e);
+      }
+      const replaced = mergeLocal(
+        nextLocal.filter((s) => s.id !== sub.id),
+        finalSaved
+      );
       await writeLocal(userId, replaced);
-      return saved;
+      return finalSaved;
     }
 
     await setDoc(

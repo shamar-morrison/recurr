@@ -330,9 +330,10 @@ export async function withSnoozeLock<T>(
  * Schedule a one-off snoozed reminder for an exact timestamp.
  * Shared core for `snoozeSubscriptionReminder` (day counts) and custom dates.
  *
- * Cancels the currently scheduled notification for the subscription, then
- * schedules a new one-off notification at `snoozedUntil`, fired at the
- * subscription's `reminderHour` (default noon). Does NOT modify
+ * Schedules the new one-off notification at `snoozedUntil` first, then
+ * cancels the currently scheduled notification — so a scheduling failure
+ * leaves the original reminder intact instead of deleting it prematurely.
+ * Fired at the subscription's `reminderHour` (default noon). Does NOT modify
  * `reminderDays` / `reminderHour` — those stay as the permanent setting.
  *
  * @returns The new notificationId and snoozedUntil timestamp (both null on failure)
@@ -354,11 +355,8 @@ export async function snoozeSubscriptionReminderUntil(
       return { notificationId: null, snoozedUntil: null };
     }
 
-    // Cancel the currently scheduled notification for this subscription
-    if (subscription.notificationId) {
-      await cancelNotification(subscription.notificationId);
-    }
-
+    // Schedule the replacement FIRST: if this throws, the original
+    // notification is still intact (cancel happens only on success below).
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title: `📅 ${subscription.serviceName} Renewal Reminder`,
@@ -389,6 +387,12 @@ export async function snoozeSubscriptionReminderUntil(
       notificationId,
       snoozedUntil: snoozeDate.toISOString(),
     });
+
+    // Only now that the replacement exists, cancel the previous one.
+    // cancelNotification never throws (failures are logged internally).
+    if (subscription.notificationId) {
+      await cancelNotification(subscription.notificationId);
+    }
 
     return { notificationId, snoozedUntil: snoozeDate.getTime() };
   } catch (error) {
