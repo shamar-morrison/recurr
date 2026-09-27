@@ -1,10 +1,13 @@
 import { router, Stack } from 'expo-router';
 import { FilterIcon, FlaskConicalIcon, Notification01Icon, NotificationOff01Icon } from '@hugeicons/core-free-icons';
-import React, { useCallback, useMemo, useState } from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  AppState,
   FlatList,
+  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -18,7 +21,6 @@ import { ServiceLogo } from '@/src/components/ServiceLogo';
 import { BaseModal } from '@/src/components/ui/BaseModal';
 import { BaseModalListItem } from '@/src/components/ui/BaseModalListItem';
 import { Button } from '@/src/components/ui/Button';
-import { CategoryBadge } from '@/src/components/ui/CategoryBadge';
 import { EmptyState } from '@/src/components/ui/EmptyState';
 import { AppIcon } from '@/src/components/ui/AppIcon';
 import { StackHeader } from '@/src/components/ui/StackHeader';
@@ -27,10 +29,16 @@ import { BORDER_RADIUS, FONT_FAMILY, FONT_SIZE, SPACING } from '@/src/constants/
 import { useTheme } from '@/src/context/ThemeContext';
 import {
   cancelNotification,
+  isSnoozedActive,
   openAppNotificationSettings,
+  scheduleSubscriptionReminder,
+  snoozeSubscriptionReminder,
+  snoozeSubscriptionReminderUntil,
+  withSnoozeLock,
 } from '@/src/features/notifications/notificationService';
 import { useNotificationStatus } from '@/src/features/notifications/useNotificationStatus';
 import { useCategories } from '@/src/features/subscriptions/hooks';
+import { getSubscription } from '@/src/features/subscriptions/subscriptionsRepo';
 import {
   useSubscriptionsQuery,
   useUpsertSubscriptionMutation,
@@ -54,6 +62,11 @@ export default function RemindersScreen() {
   const [selectedCategory, setSelectedCategory] = useState<FilterCategory>('All');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [isClearingAll, setIsClearingAll] = useState(false);
+  const [snoozeTarget, setSnoozeTarget] = useState<Subscription | null>(null);
+  const [isSnoozing, setIsSnoozing] = useState(false);
+  const [unsnoozeId, setUnsnoozeId] = useState<string | null>(null);
+  const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
+  const [customDate, setCustomDate] = useState(() => new Date(Date.now() + 24 * 60 * 60 * 1000));
   // null = still checking; the disabled banner stays hidden until we know
   // the OS status. Refreshes on focus + app foreground (see hook).
   const notificationsEnabled = useNotificationStatus();
@@ -108,6 +121,7 @@ export default function RemindersScreen() {
                   ...subscription,
                   reminderDays: null,
                   notificationId: null,
+                  snoozedUntil: null,
                 });
               } catch (e) {
                 console.error('[reminders] Failed to remove reminder:', e);
@@ -152,6 +166,7 @@ export default function RemindersScreen() {
                       ...sub,
                       reminderDays: null,
                       notificationId: null,
+                      snoozedUntil: null,
                     });
                     return sub.id;
                   } catch (err) {
@@ -188,8 +203,165 @@ export default function RemindersScreen() {
     );
   }, [subscriptionsWithReminders, upsertMutation]);
 
+  // Refetch on foreground so the expired-snooze cleanup below runs promptly
+  // instead of waiting for an unrelated mutation or manual refresh.
+  const refetchSubscriptions = subscriptionsQuery.refetch;
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        void refetchSubscriptions();
+      }
+    });
+    return () => sub.remove();
+  }, [refetchSubscriptions]);
+
+  // Clear expired snoozes back to null once their snoozedUntil timestamp passes
+  useEffect(() => {
+    const subs = subscriptionsQuery.data ?? [];
+    const expired = subs.filter(
+      (s) => typeof s.snoozedUntil === 'number' && s.snoozedUntil <= Date.now()
+    );
+    if (expired.length === 0) return;
+    (async () => {
+      await Promise.allSettled(
+        expired.map((s) => upsertMutation.mutateAsync({ ...s, snoozedUntil: null }))
+      );
+    })();
+  }, [subscriptionsQuery.data, upsertMutation]);
+
+  const persistSnoozeResult = useCallback(
+    async (
+      subscription: Subscription,
+      result: { notificationId: string | null; snoozedUntil: number | null }
+    ) => {
+      if (!result.notificationId || !result.snoozedUntil) {
+        Alert.alert('Error', 'Failed to snooze reminder. Please try again.');
+        return;
+      }
+      try {
+        const saved = await upsertMutation.mutateAsync({
+          ...subscription,
+          notificationId: result.notificationId,
+          snoozedUntil: result.snoozedUntil,
+        });
+        if (saved.pendingSync === true) {
+          console.log('[reminders] Snooze saved locally; Firestore sync pending');
+        }
+        setSnoozeTarget(null);
+        setShowCustomDatePicker(false);
+      } catch (e) {
+        console.error('[reminders] Failed to persist snooze:', e);
+        Alert.alert('Error', 'Failed to snooze reminder. Please try again.');
+      }
+    },
+    [upsertMutation]
+  );
+
+  const handleSnoozeDays = useCallback(
+    async (subscription: Subscription, days: number) => {
+      setIsSnoozing(true);
+      try {
+        // Guarded: shares the in-flight lock with the tray action handler,
+        // so a double-tap (or tray+picker race) can't schedule twice.
+        const result = await withSnoozeLock(subscription.id, () =>
+          snoozeSubscriptionReminder(subscription, days)
+        );
+        if (!result) return; // duplicate in-flight — first call handles it
+        await persistSnoozeResult(subscription, result);
+      } finally {
+        setIsSnoozing(false);
+      }
+    },
+    [persistSnoozeResult]
+  );
+
+  const handleSnoozeCustomDate = useCallback(
+    async (date: Date) => {
+      if (!snoozeTarget) return;
+      const hour = snoozeTarget.reminderHour ?? 12;
+      const snoozeDate = new Date(date);
+      snoozeDate.setHours(hour, 0, 0, 0);
+      if (snoozeDate.getTime() <= Date.now()) {
+        Alert.alert('Invalid date', 'Please pick a future date to snooze until.');
+        return;
+      }
+      setIsSnoozing(true);
+      try {
+        const result = await withSnoozeLock(snoozeTarget.id, () =>
+          snoozeSubscriptionReminderUntil(snoozeTarget, snoozeDate)
+        );
+        if (!result) return; // duplicate in-flight — first call handles it
+        await persistSnoozeResult(snoozeTarget, result);
+      } finally {
+        setIsSnoozing(false);
+      }
+    },
+    [snoozeTarget, persistSnoozeResult]
+  );
+
+  const handleUnsnooze = useCallback(
+    async (subscription: Subscription) => {
+      setUnsnoozeId(subscription.id);
+      try {
+        // Same lock as the snooze paths so a tray snooze can't interleave.
+        await withSnoozeLock(subscription.id, async () => {
+          // Fresh-read protection (same hazard as the editor clobber fixes):
+          // operate on the latest persisted row, never the possibly-stale
+          // snapshot the list rendered from.
+          const fresh = await getSubscription(subscription.userId, subscription.id);
+          if (!fresh) {
+            Alert.alert('Error', 'Subscription not found. Please try again.');
+            return;
+          }
+          if (!isSnoozedActive(fresh)) return; // already cleared elsewhere — no-op
+
+          if (fresh.notificationId) {
+            await cancelNotification(fresh.notificationId);
+          }
+
+          // Re-schedule the original reminder from its stored settings.
+          let notificationId: string | null = null;
+          if (fresh.reminderDays && fresh.reminderDays > 0) {
+            notificationId = await scheduleSubscriptionReminder(
+              fresh,
+              fresh.reminderDays,
+              fresh.reminderHour ?? 12
+            );
+          }
+
+          const saved = await upsertMutation.mutateAsync({
+            ...fresh,
+            notificationId,
+            snoozedUntil: null,
+          });
+          if (saved.pendingSync === true) {
+            console.log('[reminders] Un-snooze saved locally; Firestore sync pending');
+          }
+          if (!notificationId) {
+            Alert.alert(
+              'Reminder not rescheduled',
+              'The snooze was cleared, but the original reminder could not be rescheduled. Check notification permissions and try setting the reminder again.'
+            );
+          }
+        });
+      } catch (e) {
+        console.error('[reminders] Failed to un-snooze:', e);
+        Alert.alert('Error', 'Failed to un-snooze. Please try again.');
+      } finally {
+        setUnsnoozeId(null);
+      }
+    },
+    [upsertMutation]
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: Subscription }) => {
+      const snoozed = isSnoozedActive(item);
+      const busy = unsnoozeId === item.id;
+      const dotColor = getCategoryColors(
+        item.category,
+        customCategories.find((c) => c.name === item.category)?.color
+      ).text;
       return (
         <Pressable
           onPress={() => handleEditSubscription(item.id)}
@@ -204,27 +376,67 @@ export default function RemindersScreen() {
           />
 
           <View style={styles.rowMain}>
-            <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1}>
-              {item.serviceName}
-            </Text>
-            <CategoryBadge category={item.category} size="sm" />
+            <View style={styles.titleRow}>
+              <View style={[styles.categoryDot, { backgroundColor: dotColor }]} />
+              <Text style={[styles.rowTitle, { color: colors.text, flex: 1 }]}>
+                {item.serviceName}
+              </Text>
+            </View>
+
+            {snoozed && item.snoozedUntil ? (
+              <View
+                style={[
+                  styles.snoozedPill,
+                  { backgroundColor: 'rgba(247,144,9,0.12)', borderColor: colors.warning },
+                ]}
+              >
+                <Text style={[styles.snoozedPillText, { color: colors.warning }]}>
+                  Snoozed to {formatSnoozedUntil(item.snoozedUntil)}
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.reminderRow}>
+                <AppIcon icon={Notification01Icon} color={colors.tint} size={14} />
+                <Text style={[styles.reminderText, { color: colors.tint }]}>
+                  {getReminderLabel(item.reminderDays)}
+                </Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.rowRight}>
             <Text style={[styles.rowAmount, { color: colors.text }]}>
               {formatMoney(item.amount, item.currency)}
             </Text>
-            <View style={styles.reminderRow}>
-              <AppIcon icon={Notification01Icon} color={colors.tint} size={14} />
-              <Text style={[styles.reminderText, { color: colors.tint }]}>
-                {getReminderLabel(item.reminderDays)}
-              </Text>
-            </View>
+            {snoozed ? (
+              <Pressable
+                onPress={() => void handleUnsnooze(item)}
+                disabled={busy}
+                style={[
+                  styles.snoozeButton,
+                  styles.unsnoozeButton,
+                  { borderColor: colors.warning, opacity: busy ? 0.6 : 1 },
+                ]}
+                testID={`unsnoozeButton_${item.id}`}
+              >
+                <Text style={[styles.snoozeButtonText, { color: colors.warning }]}>
+                  {busy ? 'Working…' : 'Un-snooze'}
+                </Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => setSnoozeTarget(item)}
+                style={styles.snoozeButton}
+                testID={`snoozeButton_${item.id}`}
+              >
+                <Text style={[styles.snoozeButtonText, { color: colors.tint }]}>Snooze</Text>
+              </Pressable>
+            )}
           </View>
         </Pressable>
       );
     },
-    [getReminderLabel, handleEditSubscription, colors]
+    [getReminderLabel, handleEditSubscription, handleUnsnooze, unsnoozeId, customCategories, colors]
   );
 
   const keyExtractor = useCallback((item: Subscription) => item.id, []);
@@ -411,8 +623,87 @@ export default function RemindersScreen() {
           showsVerticalScrollIndicator={false}
         />
       </BaseModal>
+
+      {/* Snooze Picker Modal */}
+      <BaseModal
+        visible={snoozeTarget !== null}
+        title={snoozeTarget ? `Snooze ${snoozeTarget.serviceName}` : 'Snooze reminder'}
+        onClose={() => {
+          if (!isSnoozing) {
+            setSnoozeTarget(null);
+            setShowCustomDatePicker(false);
+          }
+        }}
+      >
+        {SNOOZE_PRESETS.map((preset) => (
+          <BaseModalListItem
+            key={preset.label}
+            label={isSnoozing ? `${preset.label}…` : preset.label}
+            disabled={isSnoozing}
+            onPress={() => {
+              if (snoozeTarget) void handleSnoozeDays(snoozeTarget, preset.days);
+            }}
+          />
+        ))}
+        <BaseModalListItem
+          label="Custom date…"
+          disabled={isSnoozing}
+          onPress={() => {
+            setCustomDate(new Date(Date.now() + 24 * 60 * 60 * 1000));
+            setShowCustomDatePicker(true);
+          }}
+        />
+        {showCustomDatePicker && (
+          <View style={styles.customDatePicker}>
+            <DateTimePicker
+              value={customDate}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              minimumDate={new Date(Date.now() + 24 * 60 * 60 * 1000)}
+              onChange={(event: { type: string }, selectedDate?: Date) => {
+                if (Platform.OS !== 'ios') {
+                  setShowCustomDatePicker(false);
+                }
+                if (event.type === 'dismissed') {
+                  return;
+                }
+                if (selectedDate) {
+                  if (Platform.OS === 'ios') {
+                    setCustomDate(selectedDate);
+                  } else {
+                    void handleSnoozeCustomDate(selectedDate);
+                  }
+                }
+              }}
+            />
+            {Platform.OS === 'ios' && (
+              <Button
+                title={isSnoozing ? 'Snoozing…' : 'Snooze until this date'}
+                onPress={() => void handleSnoozeCustomDate(customDate)}
+              />
+            )}
+          </View>
+        )}
+      </BaseModal>
     </>
   );
+}
+
+const SNOOZE_PRESETS = [
+  { label: 'Snooze 1 day', days: 1 },
+  { label: 'Snooze 3 days', days: 3 },
+  { label: 'Snooze 1 week', days: 7 },
+] as const;
+
+function formatSnoozedUntil(snoozedUntil: number): string {
+  try {
+    return new Date(snoozedUntil).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    });
+  } catch {
+    return '';
+  }
 }
 
 function formatMoney(amount: number, currency: string): string {
@@ -472,6 +763,17 @@ const styles = StyleSheet.create({
   rowMain: {
     flex: 1,
     gap: 6,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  categoryDot: {
+    width: 7,
+    height: 7,
+    borderRadius: BORDER_RADIUS.full,
+    flexShrink: 0,
   },
   rowTitle: {
     fontSize: FONT_SIZE.lg,
@@ -564,5 +866,36 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: BORDER_RADIUS.full,
+  },
+  snoozeButton: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS.sm,
+    backgroundColor: 'rgba(79,140,255,0.1)',
+  },
+  unsnoozeButton: {
+    backgroundColor: 'rgba(247,144,9,0.12)',
+    borderWidth: 1,
+  },
+  snoozeButtonText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONT_FAMILY.semiBold,
+  },
+  snoozedPill: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 2,
+    borderRadius: BORDER_RADIUS.full,
+    borderWidth: 1,
+  },
+  snoozedPillText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONT_FAMILY.semiBold,
+  },
+  customDatePicker: {
+    gap: SPACING.md,
+    paddingTop: SPACING.sm,
   },
 });

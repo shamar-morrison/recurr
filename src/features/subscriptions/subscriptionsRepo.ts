@@ -60,6 +60,9 @@ function normalizeSubscription(raw: unknown): Subscription | null {
     reminderDays: typeof r.reminderDays === 'number' ? r.reminderDays : null,
     reminderHour: typeof r.reminderHour === 'number' ? r.reminderHour : null,
     notificationId: typeof r.notificationId === 'string' ? r.notificationId : null,
+    snoozedUntil: typeof r.snoozedUntil === 'number' ? r.snoozedUntil : null,
+    // Local-only flag (AsyncStorage cache). Never trust a remote value for this.
+    pendingSync: r.pendingSync === true ? true : undefined,
     createdAt: typeof r.createdAt === 'number' ? r.createdAt : nowMillis(),
     updatedAt: typeof r.updatedAt === 'number' ? r.updatedAt : nowMillis(),
   };
@@ -117,6 +120,7 @@ function mapDocToSubscription(
     reminderDays: typeof data.reminderDays === 'number' ? data.reminderDays : null,
     reminderHour: typeof data.reminderHour === 'number' ? data.reminderHour : null,
     notificationId: typeof data.notificationId === 'string' ? data.notificationId : null,
+    snoozedUntil: typeof data.snoozedUntil === 'number' ? data.snoozedUntil : null,
     createdAt: typeof data.createdAt === 'number' ? data.createdAt : nowMillis(),
     updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : nowMillis(),
   };
@@ -149,9 +153,23 @@ export async function listSubscriptions(userId: string): Promise<Subscription[]>
       mapDocToSubscription(d.id, userId, d.data() as Record<string, unknown>)
     );
 
-    await writeLocal(userId, out);
+    // Don't clobber locally-newer rows whose Firestore write is still pending:
+    // the server snapshot is stale for these, so keep the local version.
+    const localBefore = await readLocal(userId);
+    const pendingById = new Map(
+      localBefore.filter((s) => s.pendingSync === true).map((s) => [s.id, s] as const)
+    );
+    const merged = out.map((s) => pendingById.get(s.id) ?? s);
+    for (const pending of pendingById.values()) {
+      if (!merged.some((s) => s.id === pending.id)) {
+        merged.push(pending);
+      }
+    }
+    merged.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
 
-    return out;
+    await writeLocal(userId, merged);
+
+    return merged;
   } catch (e) {
     console.log('[subscriptions] listSubscriptions Firestore failed -> fallback local', e);
     const local = await readLocal(userId);
@@ -176,7 +194,11 @@ export async function getSubscription(
     const d = await getDoc(doc(firestore, 'users', userId, 'subscriptions', subscriptionId));
     if (!d.exists()) return null;
 
-    return mapDocToSubscription(d.id, userId, d.data() as Record<string, unknown>);
+    const remote = mapDocToSubscription(d.id, userId, d.data() as Record<string, unknown>);
+    // Prefer a locally-pending (newer, unsynced) version over stale server data.
+    const local = await readLocal(userId);
+    const pending = local.find((s) => s.id === subscriptionId && s.pendingSync === true);
+    return pending ?? remote;
   } catch (e) {
     console.log('[subscriptions] getSubscription failed', e);
     // Fallback to local
@@ -227,6 +249,10 @@ export async function upsertSubscription(
     reminderDays: input.reminderDays ?? null,
     reminderHour: input.reminderHour ?? null,
     notificationId: input.notificationId ?? null,
+    snoozedUntil: input.snoozedUntil ?? null,
+    // Optimistic: cleared below on Firestore success, set on Firestore failure.
+    // Never sent to Firestore (see payloads below).
+    pendingSync: undefined,
     createdAt: (input as Partial<Subscription>).createdAt ?? existingCreatedAt ?? now,
     updatedAt: now,
   };
@@ -261,6 +287,7 @@ export async function upsertSubscription(
         reminderDays: sub.reminderDays ?? null,
         reminderHour: sub.reminderHour ?? null,
         notificationId: sub.notificationId ?? null,
+        snoozedUntil: sub.snoozedUntil ?? null,
         createdAt: now,
         updatedAt: now,
       });
@@ -289,6 +316,7 @@ export async function upsertSubscription(
         reminderDays: sub.reminderDays ?? null,
         reminderHour: sub.reminderHour ?? null,
         notificationId: sub.notificationId ?? null,
+        snoozedUntil: sub.snoozedUntil ?? null,
         updatedAt: now,
       },
       { merge: true }
@@ -296,9 +324,30 @@ export async function upsertSubscription(
 
     return sub;
   } catch (e) {
-    console.log('[subscriptions] upsertSubscription Firestore failed (local kept)', e);
-    return sub;
+    // Firestore write failed but the local cache already has the new data.
+    // Flag it pending (surfaced to callers via the return value) so a later
+    // listSubscriptions fetch won't clobber it with stale server data.
+    // The next successful upsert of this subscription clears the flag.
+    console.log('[subscriptions] upsertSubscription Firestore failed (local kept, pendingSync)', e);
+    const pending: Subscription = { ...sub, pendingSync: true };
+    const nextLocal = mergeLocal(local, pending);
+    await writeLocal(userId, nextLocal);
+    return pending;
   }
+}
+
+/**
+ * Retry Firestore writes for rows still flagged pendingSync (e.g. an offline
+ * snooze). Fire-and-forget safe: never throws, no UI — rows that fail again
+ * simply stay flagged for the next attempt.
+ */
+export async function retryPendingSyncs(userId: string, subs: Subscription[]): Promise<void> {
+  const pending = subs.filter((s) => s.pendingSync === true);
+  if (pending.length === 0) return;
+  console.log('[subscriptions] retryPendingSyncs', { count: pending.length });
+  await Promise.allSettled(
+    pending.map((s) => upsertSubscription(userId, { ...s, pendingSync: undefined }))
+  );
 }
 
 export async function deleteSubscription(userId: string, subscriptionId: string): Promise<void> {

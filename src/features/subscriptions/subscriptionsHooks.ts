@@ -6,6 +6,7 @@ import {
   deleteSubscription,
   getSubscription,
   listSubscriptions,
+  retryPendingSyncs,
   upsertSubscription,
 } from '@/src/features/subscriptions/subscriptionsRepo';
 import { toListItem } from '@/src/features/subscriptions/subscriptionsUtils';
@@ -26,7 +27,12 @@ export function useSubscriptionsQuery() {
     queryKey: subscriptionsKey(userId),
     enabled: Boolean(userId),
     queryFn: async () => {
-      return listSubscriptions(userId);
+      const subs = await listSubscriptions(userId);
+      // Flush any offline writes still flagged pendingSync. Fire-and-forget:
+      // the returned list already holds the newer local data, and rows that
+      // fail again stay flagged for the next fetch.
+      void retryPendingSyncs(userId, subs);
+      return subs;
     },
   });
 }

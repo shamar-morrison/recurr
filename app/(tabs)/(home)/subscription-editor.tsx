@@ -38,8 +38,13 @@ import {
   PaymentMethodField,
   ReminderSection,
 } from '@/src/features/subscriptions/components';
+import { getSubscription } from '@/src/features/subscriptions/subscriptionsRepo';
 import { useCategories, useSubscriptionForm } from '@/src/features/subscriptions/hooks';
-import { buildSubscriptionPayload } from '@/src/features/subscriptions/subscriptionsUtils';
+import {
+  buildSubscriptionPayload,
+  PreservedSnooze,
+  resolvePreservedSnooze,
+} from '@/src/features/subscriptions/subscriptionsUtils';
 import {
   BillingCycle,
   PaymentMethod,
@@ -237,21 +242,42 @@ export default function SubscriptionEditorScreen() {
             : undefined;
 
       let notificationIdToSave: string | null = null;
+      let preservedSnooze: PreservedSnooze = null;
 
       // For existing subscriptions, update notification
       if (form.existing) {
-        notificationIdToSave = await updateNotification({
-          existingNotificationId: form.existing.notificationId,
-          reminderDays: form.reminderDays,
-          reminderHour: form.reminderHour,
-          existingSubscription: form.existing,
-          overrides: {
-            serviceName: form.serviceName.trim(),
-            billingDay: effectiveBillingDay,
-            billingCycle: form.billingCycle,
-            startDate: form.startDate.getTime(),
-          },
+        // A tray snooze may have landed while the editor was open (stale
+        // snapshot). Re-read so we don't clobber it — and so cancellation
+        // targets the currently-live notification, not a stale id.
+        let freshSub: typeof form.existing | null = null;
+        try {
+          freshSub = await getSubscription(form.userId, form.existing.id);
+        } catch (freshError) {
+          console.log('[subscription-editor] fresh re-read failed, using snapshot', freshError);
+        }
+        preservedSnooze = resolvePreservedSnooze({
+          snapshot: form.existing,
+          fresh: freshSub,
+          keepsReminder: form.reminderDays !== null && form.reminderDays > 0,
         });
+        if (preservedSnooze) {
+          // A newer snooze happened mid-edit: keep it (and its live
+          // notification) instead of recomputing. No cancel/schedule here,
+          // so no orphan is created.
+        } else {
+          notificationIdToSave = await updateNotification({
+            existingNotificationId: freshSub?.notificationId ?? form.existing.notificationId,
+            reminderDays: form.reminderDays,
+            reminderHour: form.reminderHour,
+            existingSubscription: form.existing,
+            overrides: {
+              serviceName: form.serviceName.trim(),
+              billingDay: effectiveBillingDay,
+              billingCycle: form.billingCycle,
+              startDate: form.startDate.getTime(),
+            },
+          });
+        }
       }
 
       const payload = buildSubscriptionPayload(form.existing, form.userId, {
@@ -268,11 +294,14 @@ export default function SubscriptionEditorScreen() {
         reminderDays: form.reminderDays,
         reminderHour: form.reminderHour,
         status: form.existing?.status ?? (form.existing?.isArchived ? 'Archived' : 'Active'),
+        // Editing normally re-computes the reminder from scratch (snooze
+        // cleared) — unless a newer snooze landed mid-edit (see above).
+        snoozedUntil: preservedSnooze ? preservedSnooze.snoozedUntil : null,
       });
 
       const payloadWithNotification = {
         ...payload,
-        notificationId: notificationIdToSave,
+        notificationId: preservedSnooze ? preservedSnooze.notificationId : notificationIdToSave,
       };
 
       const savedSubscription = await form.upsertMutation.mutateAsync(payloadWithNotification);
@@ -384,22 +413,47 @@ export default function SubscriptionEditorScreen() {
         const trimmedName = form.serviceName.trim();
         const trimmedNotes = form.notes.trim();
 
+        // Same stale-snapshot hazard as the save path (see handleSave):
+        // re-read so a mid-edit tray snooze isn't clobbered.
+        let freshSub: typeof existing | null = null;
+        try {
+          freshSub = await getSubscription(form.userId, existing.id);
+        } catch (freshError) {
+          console.log('[subscription-editor] fresh re-read failed, using snapshot', freshError);
+        }
+        const preservedSnooze = resolvePreservedSnooze({
+          snapshot: existing,
+          fresh: freshSub,
+          keepsReminder: shouldMerge
+            ? form.reminderDays !== null && form.reminderDays > 0
+            : (existing.reminderDays ?? 0) > 0,
+        });
+
         let notificationIdToSave: string | null | undefined = existing.notificationId;
 
         // Update notifications if merging form changes (reminder settings may have changed)
         if (shouldMerge) {
-          notificationIdToSave = await updateNotification({
-            existingNotificationId: existing.notificationId,
-            reminderDays: form.reminderDays,
-            reminderHour: form.reminderHour,
-            existingSubscription: existing,
-            overrides: {
-              serviceName: trimmedName || existing.serviceName,
-              billingDay: effectiveBillingDay,
-              billingCycle: form.billingCycle,
-              startDate: form.startDate.getTime(),
-            },
-          });
+          if (preservedSnooze) {
+            // A newer snooze landed mid-edit: keep its live notification,
+            // skip the recompute so no orphan is created.
+            notificationIdToSave = preservedSnooze.notificationId;
+          } else {
+            notificationIdToSave = await updateNotification({
+              existingNotificationId: freshSub?.notificationId ?? existing.notificationId,
+              reminderDays: form.reminderDays,
+              reminderHour: form.reminderHour,
+              existingSubscription: existing,
+              overrides: {
+                serviceName: trimmedName || existing.serviceName,
+                billingDay: effectiveBillingDay,
+                billingCycle: form.billingCycle,
+                startDate: form.startDate.getTime(),
+              },
+            });
+          }
+        } else if (preservedSnooze) {
+          // Status-only change: still adopt the fresher snooze fields.
+          notificationIdToSave = preservedSnooze.notificationId;
         }
 
         const payloadBase = {
@@ -419,7 +473,14 @@ export default function SubscriptionEditorScreen() {
           paymentMethod: shouldMerge ? form.paymentMethod : existing.paymentMethod,
           reminderDays: shouldMerge ? form.reminderDays : existing.reminderDays,
           reminderHour: shouldMerge ? form.reminderHour : existing.reminderHour,
-          notificationId: shouldMerge ? notificationIdToSave : existing.notificationId,
+          notificationId: notificationIdToSave,
+          // Merging normally re-computes the reminder (snooze cleared) — unless
+          // a newer snooze landed mid-edit (see above); otherwise keep snapshot.
+          snoozedUntil: preservedSnooze
+            ? preservedSnooze.snoozedUntil
+            : shouldMerge
+              ? null
+              : (existing.snoozedUntil ?? null),
           status: newStatus,
         };
 

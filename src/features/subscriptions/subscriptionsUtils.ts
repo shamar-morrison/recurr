@@ -26,6 +26,7 @@ export function buildSubscriptionPayload(
     reminderDays?: number | null;
     reminderHour?: number | null;
     status?: Subscription['status'];
+    snoozedUntil?: number | null;
   }
 ) {
   return {
@@ -43,9 +44,46 @@ export function buildSubscriptionPayload(
     paymentMethod: base.paymentMethod,
     reminderDays: base.reminderDays ?? null,
     reminderHour: base.reminderHour ?? 12,
+    // Explicit null clears the snooze; undefined preserves the existing value.
+    snoozedUntil:
+      base.snoozedUntil === undefined ? (existing?.snoozedUntil ?? null) : base.snoozedUntil,
     isArchived: false,
     status: base.status ?? (existing?.isArchived ? 'Archived' : 'Active'),
   };
+}
+
+/**
+ * A fresher snooze worth preserving across a write, or null to proceed with
+ * the normal recompute-and-clear path.
+ */
+export type PreservedSnooze = {
+  snoozedUntil: number;
+  notificationId: string | null;
+} | null;
+
+/**
+ * "Preserve fresh snooze unless explicitly cleared" check, shared by the
+ * editor save and pause/resume-merge write paths.
+ *
+ * Compares the snapshot the screen opened with against a freshly re-read
+ * row: if a *newer* snooze landed mid-edit (e.g. a tray snooze action) and
+ * the write keeps a reminder, the caller should persist the fresh snooze
+ * fields instead of overwriting them with stale values.
+ *
+ * Returns the fresh snooze fields to preserve, or null when there is nothing
+ * newer to preserve (caller proceeds with its normal path).
+ */
+export function resolvePreservedSnooze(args: {
+  snapshot: Pick<Subscription, 'snoozedUntil'>;
+  fresh: Pick<Subscription, 'snoozedUntil' | 'notificationId'> | null;
+  keepsReminder: boolean;
+}): PreservedSnooze {
+  if (!args.keepsReminder) return null;
+  const snapshotSnooze = args.snapshot.snoozedUntil ?? null;
+  const freshSnooze = args.fresh?.snoozedUntil ?? null;
+  if (freshSnooze === null) return null;
+  if (snapshotSnooze !== null && freshSnooze <= snapshotSnooze) return null;
+  return { snoozedUntil: freshSnooze, notificationId: args.fresh?.notificationId ?? null };
 }
 
 export function clampBillingDay(day: number): number {
