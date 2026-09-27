@@ -473,9 +473,9 @@ export default function SubscriptionEditorScreen() {
           // Status-only change: still adopt the fresher snooze fields.
           notificationIdToSave = preservedSnooze.notificationId;
         } else {
-          // No newer snooze to preserve — still adopt fresh's notification id if it
-          // changed underneath us (e.g. un-snooze rescheduled under a new id).
-          notificationIdToSave = freshSub?.notificationId ?? existing.notificationId;
+          // No newer snooze to preserve — still adopt fresh's notification id
+          // (including a legitimate null, if the reminder was cleared elsewhere).
+          notificationIdToSave = freshSub.notificationId;
         }
 
         const payloadBase = {
