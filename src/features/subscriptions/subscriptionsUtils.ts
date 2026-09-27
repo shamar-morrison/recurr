@@ -27,6 +27,7 @@ export function buildSubscriptionPayload(
     reminderHour?: number | null;
     status?: Subscription['status'];
     snoozedUntil?: number | null;
+    notificationId?: string | null;
   }
 ) {
   return {
@@ -47,6 +48,7 @@ export function buildSubscriptionPayload(
     // Explicit null clears the snooze; undefined preserves the existing value.
     snoozedUntil:
       base.snoozedUntil === undefined ? (existing?.snoozedUntil ?? null) : base.snoozedUntil,
+    notificationId: base.notificationId ?? null,
     isArchived: false,
     status: base.status ?? (existing?.isArchived ? 'Archived' : 'Active'),
   };

@@ -75,16 +75,18 @@ export function useUpsertSubscriptionMutation() {
       if (!userId) throw new Error('Not signed in');
       return upsertSubscription(userId, input);
     },
-    onSuccess: (savedSub) => {
-      // Optimistically update list without refetching
+    onSuccess: (savedSub, input) => {
+      // Optimistically update list without refetching.
+      // Filter on BOTH the mutation input id and the saved id: on the first
+      // sync of an offline-created row the cache still holds the old local_
+      // id while savedSub.id is the new Firestore id — matching only the
+      // saved id would unshift a duplicate. (input.id may be undefined for
+      // brand-new rows; `s.id !== undefined` is then trivially true.)
       qc.setQueryData<Subscription[]>(subscriptionsKey(userId), (old) => {
-        const list = old ? [...old] : [];
-        const index = list.findIndex((s) => s.id === savedSub.id);
-        if (index >= 0) {
-          list[index] = savedSub;
-        } else {
-          list.unshift(savedSub);
-        }
+        const list = (old ?? []).filter(
+          (s) => s.id !== input.id && s.id !== savedSub.id
+        );
+        list.unshift(savedSub);
         // Maintain sort order (updatedAt desc would be ideal, or just let next fetch clean up)
         return list;
       });
