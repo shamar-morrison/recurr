@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -135,17 +135,30 @@ export default function InsightsScreen() {
   const { customCategories } = useCategories();
   const currency = settings.currency ?? 'USD';
 
-  // Trailing 12-month window. Every figure on this screen derives from actual
-  // recorded payments inside it (converted to the user's currency) — not from
-  // billing-cycle estimates — so hero totals and the breakdown always agree.
+  // Trailing 12-month window (inclusive of today, exclusive of the same
+  // date last year — exactly 12 months, not 12 months + 1 day). Every figure
+  // on this screen derives from the payment schedule regenerated from each
+  // subscription's *current* amount/cycle inside it (converted to the user's
+  // currency) — not from billing-cycle estimates — so hero totals and the
+  // breakdown always agree. Note: there is no immutable payment ledger, so
+  // editing a subscription's amount also restates its past months.
+  const [dayKey, setDayKey] = useState(() => startOfToday());
+  // Tabs stay mounted, so recompute the window when the screen regains focus
+  // (midnight rollover / background-across-days would otherwise show stale).
+  useFocusEffect(
+    useCallback(() => {
+      setDayKey(startOfToday());
+    }, [])
+  );
   const range = useMemo(() => {
-    const endDate = new Date();
+    const endDate = new Date(dayKey);
     endDate.setHours(23, 59, 59, 999);
     const startDate = new Date(endDate);
     startDate.setFullYear(startDate.getFullYear() - 1);
+    startDate.setDate(startDate.getDate() + 1);
     startDate.setHours(0, 0, 0, 0);
     return { startDate, endDate };
-  }, []);
+  }, [dayKey]);
 
   const insights = useMemo(() => {
     const yearlyTotal = calculateTotalSpending(subs, range.startDate, range.endDate, {
@@ -403,6 +416,12 @@ function formatMoney(amount: number, currency: string): string {
     const safe = Number.isFinite(amount) ? amount : 0;
     return `${safe.toFixed(2)} ${currency || 'USD'}`;
   }
+}
+
+function startOfToday(): number {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
 }
 
 function formatShortDate(iso: string): string {

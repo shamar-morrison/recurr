@@ -215,7 +215,15 @@ export default function RemindersScreen() {
     return () => sub.remove();
   }, [refetchSubscriptions]);
 
-  // Clear expired snoozes back to null once their snoozedUntil timestamp passes
+  // Clear expired snoozes back to null once their snoozedUntil timestamp passes.
+  // Also re-schedules the regular ongoing reminder — without this the
+  // subscription would be left with no future notification (the snooze
+  // replaced the original when it was set). Guarded by the shared snooze
+  // lock so a concurrent tray/picker snooze can't interleave; duplicate
+  // clears are idempotent no-ops (same payload) if the effect re-runs.
+  // Note: depends on the stable mutateAsync (not the whole mutation object,
+  // whose identity changes after each mutation and would re-trigger this).
+  const upsertAsync = upsertMutation.mutateAsync;
   useEffect(() => {
     const subs = subscriptionsQuery.data ?? [];
     const expired = subs.filter(
@@ -224,10 +232,25 @@ export default function RemindersScreen() {
     if (expired.length === 0) return;
     (async () => {
       await Promise.allSettled(
-        expired.map((s) => upsertMutation.mutateAsync({ ...s, snoozedUntil: null }))
+        expired.map((s) =>
+          withSnoozeLock(s.id, async () => {
+            let notificationId: string | null = null;
+            if (s.reminderDays && s.reminderDays > 0) {
+              if (s.notificationId) {
+                await cancelNotification(s.notificationId);
+              }
+              notificationId = await scheduleSubscriptionReminder(
+                s,
+                s.reminderDays,
+                s.reminderHour ?? 12
+              );
+            }
+            await upsertAsync({ ...s, notificationId, snoozedUntil: null });
+          })
+        )
       );
     })();
-  }, [subscriptionsQuery.data, upsertMutation]);
+  }, [subscriptionsQuery.data, upsertAsync]);
 
   const persistSnoozeResult = useCallback(
     async (

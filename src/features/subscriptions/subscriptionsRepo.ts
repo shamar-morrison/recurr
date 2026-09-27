@@ -340,13 +340,26 @@ export async function upsertSubscription(
  * Retry Firestore writes for rows still flagged pendingSync (e.g. an offline
  * snooze). Fire-and-forget safe: never throws, no UI — rows that fail again
  * simply stay flagged for the next attempt.
+ *
+ * Guarded per id (same pattern as withSnoozeLock): the sweep runs on every
+ * refetch, so overlapping sweeps must not upsert the same row concurrently.
  */
+const retryInflight = new Set<string>();
+
 export async function retryPendingSyncs(userId: string, subs: Subscription[]): Promise<void> {
-  const pending = subs.filter((s) => s.pendingSync === true);
+  const pending = subs.filter((s) => s.pendingSync === true && !retryInflight.has(s.id));
   if (pending.length === 0) return;
   console.log('[subscriptions] retryPendingSyncs', { count: pending.length });
   await Promise.allSettled(
-    pending.map((s) => upsertSubscription(userId, { ...s, pendingSync: undefined }))
+    pending.map(async (s) => {
+      if (retryInflight.has(s.id)) return;
+      retryInflight.add(s.id);
+      try {
+        await upsertSubscription(userId, { ...s, pendingSync: undefined });
+      } finally {
+        retryInflight.delete(s.id);
+      }
+    })
   );
 }
 
