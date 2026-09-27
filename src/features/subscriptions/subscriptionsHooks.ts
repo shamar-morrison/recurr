@@ -18,10 +18,10 @@ import {
 
 export const subscriptionsKey = (userId: string | null | undefined) =>
   ['subscriptions', userId ?? 'anon'] as const;
-
 export function useSubscriptionsQuery() {
   const { user } = useAuth();
   const userId = user?.uid ?? '';
+  const qc = useQueryClient();
 
   return useQuery({
     queryKey: subscriptionsKey(userId),
@@ -30,8 +30,24 @@ export function useSubscriptionsQuery() {
       const subs = await listSubscriptions(userId);
       // Flush any offline writes still flagged pendingSync. Fire-and-forget:
       // the returned list already holds the newer local data, and rows that
-      // fail again stay flagged for the next fetch.
-      void retryPendingSyncs(userId, subs);
+      // fail again stay flagged for the next fetch. Once resolved, patch the
+      // cache so synced rows (new id, cleared pendingSync) show up without
+      // waiting for the next full refetch.
+      void retryPendingSyncs(userId, subs).then((results) => {
+        if (results.length === 0) return;
+        qc.setQueryData<Subscription[]>(subscriptionsKey(userId), (old) => {
+          if (!old) return old;
+          let list = old;
+          for (const { originalId, subscription } of results) {
+            list = list.filter((s) => s.id !== originalId && s.id !== subscription.id);
+            list = [subscription, ...list];
+          }
+          return list;
+        });
+        for (const { subscription } of results) {
+          qc.setQueryData(['subscription', userId, subscription.id], subscription);
+        }
+      });
       return subs;
     },
   });
@@ -83,7 +99,11 @@ export function useUpsertSubscriptionMutation() {
       // saved id would unshift a duplicate. (input.id may be undefined for
       // brand-new rows; `s.id !== undefined` is then trivially true.)
       qc.setQueryData<Subscription[]>(subscriptionsKey(userId), (old) => {
-        const list = (old ?? []).filter(
+        // Never fetched: leave the query untouched (it will fetch normally
+        // on mount) instead of seeding a synthetic one-row list that could
+        // sit until staleTime expires.
+        if (!old) return undefined;
+        const list = old.filter(
           (s) => s.id !== input.id && s.id !== savedSub.id
         );
         list.unshift(savedSub);

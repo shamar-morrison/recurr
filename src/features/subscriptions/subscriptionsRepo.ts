@@ -441,13 +441,16 @@ export async function upsertSubscription(
  */
 const retryInflight = new Set<string>();
 
-export async function retryPendingSyncs(userId: string, subs: Subscription[]): Promise<void> {
+export async function retryPendingSyncs(
+  userId: string,
+  subs: Subscription[]
+): Promise<{ originalId: string; subscription: Subscription }[]> {
   const pending = subs.filter((s) => s.pendingSync === true && !retryInflight.has(s.id));
-  if (pending.length === 0) return;
+  if (pending.length === 0) return [];
   console.log('[subscriptions] retryPendingSyncs', { count: pending.length });
-  await Promise.allSettled(
+  const settled = await Promise.allSettled(
     pending.map(async (s) => {
-      if (retryInflight.has(s.id)) return;
+      if (retryInflight.has(s.id)) return null;
       retryInflight.add(s.id);
       try {
         // The snapshot may be stale (an edit may have landed after the sweep
@@ -460,17 +463,20 @@ export async function retryPendingSyncs(userId: string, subs: Subscription[]): P
           current.pendingSync !== true ||
           (current.updatedAt ?? 0) !== (s.updatedAt ?? 0)
         ) {
-          console.log('[subscriptions] retryPendingSyncs skipping stale snapshot', {
-            id: s.id,
-          });
-          return;
+          console.log('[subscriptions] retryPendingSyncs skipping stale snapshot', { id: s.id });
+          return null;
         }
-        await upsertSubscription(userId, { ...s, pendingSync: undefined });
+        const synced = await upsertSubscription(userId, { ...s, pendingSync: undefined });
+        return { originalId: s.id, subscription: synced };
       } finally {
         retryInflight.delete(s.id);
       }
     })
   );
+  return settled
+    .filter((r): r is PromiseFulfilledResult<{ originalId: string; subscription: Subscription } | null> => r.status === 'fulfilled')
+    .map((r) => r.value)
+    .filter((v): v is { originalId: string; subscription: Subscription } => v !== null);
 }
 
 export async function deleteSubscription(userId: string, subscriptionId: string): Promise<void> {
