@@ -247,9 +247,8 @@ export default function RemindersScreen() {
             }
             const target = fresh;
             if (target.reminderDays && target.reminderDays > 0) {
-              if (target.notificationId) {
-                await cancelNotification(target.notificationId);
-              }
+              // Schedule the replacement FIRST (same ordering guarantee as
+              // un-snooze): a failure preserves the row for a later retry.
               const notificationId = await scheduleSubscriptionReminder(
                 target,
                 target.reminderDays,
@@ -264,6 +263,9 @@ export default function RemindersScreen() {
                   s.id
                 );
                 return;
+              }
+              if (target.notificationId) {
+                await cancelNotification(target.notificationId);
               }
               await upsertAsync({ ...target, notificationId, snoozedUntil: null });
             } else {
@@ -361,44 +363,47 @@ export default function RemindersScreen() {
           }
           if (!isSnoozedActive(fresh)) return; // already cleared elsewhere — no-op
 
-          if (fresh.notificationId) {
-            await cancelNotification(fresh.notificationId);
-          }
-
-          // Re-schedule the original reminder from its stored settings.
-          // If scheduling fails (e.g. permissions revoked), return BEFORE
-          // persisting so the snooze stays intact for a later retry —
-          // clearing it here would leave no reminder at all.
-          if (fresh.reminderDays && fresh.reminderDays > 0) {
-            const notificationId = await scheduleSubscriptionReminder(
-              fresh,
-              fresh.reminderDays,
-              fresh.reminderHour ?? 12
-            );
-            if (!notificationId) {
-              Alert.alert(
-                'Could not reschedule',
-                'The reminder could not be re-scheduled (check notification permissions). Your snooze was left untouched — please try again.'
-              );
-              return;
+          // No ongoing reminder to restore: cancel + clear as before.
+          if (!fresh.reminderDays || fresh.reminderDays <= 0) {
+            if (fresh.notificationId) {
+              await cancelNotification(fresh.notificationId);
             }
-            const saved = await upsertMutation.mutateAsync({
-              ...fresh,
-              notificationId,
-              snoozedUntil: null,
-            });
-            if (saved.pendingSync === true) {
-              console.log('[reminders] Un-snooze saved locally; Firestore sync pending');
-            }
-          } else {
-            const saved = await upsertMutation.mutateAsync({
+            const cleared = await upsertMutation.mutateAsync({
               ...fresh,
               notificationId: null,
               snoozedUntil: null,
             });
-            if (saved.pendingSync === true) {
+            if (cleared.pendingSync === true) {
               console.log('[reminders] Un-snooze saved locally; Firestore sync pending');
             }
+            return;
+          }
+
+          // Re-schedule the replacement FIRST: if scheduling fails (e.g.
+          // permissions revoked), the live snooze stays intact for a retry —
+          // cancelling first would leave no reminder at all.
+          const notificationId = await scheduleSubscriptionReminder(
+            fresh,
+            fresh.reminderDays,
+            fresh.reminderHour ?? 12
+          );
+          if (!notificationId) {
+            Alert.alert(
+              'Could not reschedule',
+              'The reminder could not be re-scheduled (check notification permissions). Your snooze was left untouched — please try again.'
+            );
+            return;
+          }
+          if (fresh.notificationId) {
+            await cancelNotification(fresh.notificationId);
+          }
+          const saved = await upsertMutation.mutateAsync({
+            ...fresh,
+            notificationId,
+            snoozedUntil: null,
+          });
+          if (saved.pendingSync === true) {
+            console.log('[reminders] Un-snooze saved locally; Firestore sync pending');
           }
         });
       } catch (e) {

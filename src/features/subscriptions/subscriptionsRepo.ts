@@ -280,7 +280,7 @@ async function rekeySyncedRowNotifications(
   const now = nowMillis();
   try {
     await setDoc(
-      doc(firestore, 'users', userId, realId),
+      doc(firestore, 'users', userId, 'subscriptions', realId),
       { notificationId, updatedAt: now },
       { merge: true }
     );
