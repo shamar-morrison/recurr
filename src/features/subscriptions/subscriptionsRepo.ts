@@ -141,6 +141,7 @@ export async function listSubscriptions(userId: string): Promise<Subscription[]>
     console.log('[subscriptions] listSubscriptions from Firestore', { userId });
     const subsCol = collection(firestore, 'users', userId, 'subscriptions');
 
+    const fetchStartedAt = nowMillis();
     const q = query(
       subsCol,
       where('isArchived', '!=', true),
@@ -163,6 +164,20 @@ export async function listSubscriptions(userId: string): Promise<Subscription[]>
     for (const pending of pendingById.values()) {
       if (!merged.some((s) => s.id === pending.id)) {
         merged.push(pending);
+      }
+    }
+
+    // Preserve rows written to the cache while the fetch was in flight
+    // (promotion real rows, offline creates): the server snapshot above
+    // predates them, so a plain overwrite would erase them until the next
+    // fetch. Anything older that the server no longer returns stays dropped
+    // (e.g. remotely deleted rows).
+    const mergedIds = new Set(merged.map((s) => s.id));
+    const localNow = await readLocal(userId);
+    for (const s of localNow) {
+      if (!mergedIds.has(s.id) && (s.updatedAt ?? 0) >= fetchStartedAt) {
+        mergedIds.add(s.id);
+        merged.push(s);
       }
     }
     merged.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
