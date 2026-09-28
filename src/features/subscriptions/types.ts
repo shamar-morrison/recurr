@@ -54,6 +54,9 @@ export type Subscription = {
   reminderDays?: number | null; // Days before billing to remind (null = no reminder)
   reminderHour?: number | null; // Hour of day for reminder (0-23, null = default noon)
   notificationId?: string | null; // Scheduled notification identifier
+  snoozedUntil?: number | null; // Epoch ms the reminder is snoozed until (null = not snoozed)
+  /** Local-only: true when the last Firestore write failed and a retry is still due. Never synced. */
+  pendingSync?: boolean;
   createdAt: number;
   updatedAt: number;
 };

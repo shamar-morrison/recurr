@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -14,6 +14,10 @@ import {
   useSubscriptionsQuery,
 } from '@/src/features/subscriptions/subscriptionsHooks';
 import { SubscriptionCategory } from '@/src/features/subscriptions/types';
+import {
+  calculateSpendingByCategory,
+  calculateTotalSpending,
+} from '@/src/utils/spendingCalculations';
 import {
   ArrowDown01Icon,
   ArrowRight01Icon,
@@ -122,38 +126,72 @@ function CategoryBreakdownCard({
 }
 
 export default function InsightsScreen() {
-  const { isPremium } = useAuth();
+  const { isPremium, settings } = useAuth();
   const { colors } = useTheme();
 
   const subscriptionsQuery = useSubscriptionsQuery();
   const items = useSubscriptionListItems(subscriptionsQuery.data);
+  const subs = useMemo(() => subscriptionsQuery.data ?? [], [subscriptionsQuery.data]);
   const { customCategories } = useCategories();
+  const currency = settings.currency ?? 'USD';
+
+  // Trailing 12-month window (inclusive of today, exclusive of the same
+  // date last year — exactly 12 months, not 12 months + 1 day). Every figure
+  // on this screen derives from the payment schedule regenerated from each
+  // subscription's *current* amount/cycle inside it (converted to the user's
+  // currency) — not from billing-cycle estimates — so hero totals and the
+  // breakdown always agree. Note: there is no immutable payment ledger, so
+  // editing a subscription's amount also restates its past months.
+  const [dayKey, setDayKey] = useState(() => startOfToday());
+  // Tabs stay mounted, so recompute the window when the screen regains focus
+  // (midnight rollover / background-across-days would otherwise show stale).
+  useFocusEffect(
+    useCallback(() => {
+      setDayKey(startOfToday());
+    }, [])
+  );
+  const range = useMemo(() => {
+    const endDate = new Date(dayKey);
+    endDate.setHours(23, 59, 59, 999);
+    const startDate = new Date(endDate);
+    startDate.setFullYear(startDate.getFullYear() - 1);
+    startDate.setDate(startDate.getDate() + 1);
+    startDate.setHours(0, 0, 0, 0);
+    return { startDate, endDate };
+  }, [dayKey]);
 
   const insights = useMemo(() => {
-    const monthlyTotal = sum(items.map((i) => i.monthlyEquivalent));
-    const yearlyTotal = monthlyTotal * 12;
+    const yearlyTotal = calculateTotalSpending(subs, range.startDate, range.endDate, {
+      primaryCurrency: currency,
+    });
+    const monthlyTotal = yearlyTotal / 12;
 
-    const byCategory = groupByCategory(items);
+    const spendingByCategory = calculateSpendingByCategory(
+      subs,
+      range.startDate,
+      range.endDate,
+      { customCategories, primaryCurrency: currency }
+    );
+
+    const categoryRows: CategoryRow[] = spendingByCategory.map((c) => ({
+      category: c.category,
+      // Displayed as monthly averages so rows sum to the Monthly hero;
+      // ratios (and hence percentages) are identical to the yearly figures.
+      monthlyTotal: c.amount / 12,
+      customColor: c.customColor,
+    }));
 
     // Include custom categories even if they have no subscriptions
     for (const customCat of customCategories) {
-      if (!byCategory[customCat.name]) {
-        byCategory[customCat.name] = [];
+      if (!categoryRows.some((r) => r.category === customCat.name)) {
+        categoryRows.push({
+          category: customCat.name as SubscriptionCategory,
+          monthlyTotal: 0,
+          customColor: customCat.color,
+        });
       }
     }
-
-    const categoryRows = Object.entries(byCategory)
-      .map(([category, list]) => {
-        const total = sum(list.map((i) => i.monthlyEquivalent));
-        // Find custom category color if it's a custom category
-        const customCat = customCategories.find((c) => c.name === category);
-        return {
-          category: category as SubscriptionCategory,
-          monthlyTotal: total,
-          customColor: customCat?.color,
-        };
-      })
-      .sort((a, b) => b.monthlyTotal - a.monthlyTotal);
+    categoryRows.sort((a, b) => b.monthlyTotal - a.monthlyTotal);
 
     const mostExpensive = items
       .slice()
@@ -176,7 +214,7 @@ export default function InsightsScreen() {
       upcoming,
       next7Days,
     };
-  }, [items, customCategories]);
+  }, [items, subs, range, customCategories, currency]);
 
   return (
     <SafeAreaView
@@ -219,13 +257,13 @@ export default function InsightsScreen() {
               <View style={styles.totalCard} testID="insightsMonthlyTotal">
                 <Text style={styles.totalLabel}>Monthly</Text>
                 <Text style={styles.totalValue}>
-                  {formatMoney(insights.monthlyTotal, items[0]?.currency ?? 'USD')}
+                  {formatMoney(insights.monthlyTotal, currency)}
                 </Text>
               </View>
               <View style={styles.totalCard} testID="insightsYearlyTotal">
                 <Text style={styles.totalLabel}>Yearly</Text>
                 <Text style={styles.totalValue}>
-                  {formatMoney(insights.yearlyTotal, items[0]?.currency ?? 'USD')}
+                  {formatMoney(insights.yearlyTotal, currency)}
                 </Text>
               </View>
             </View>
@@ -320,7 +358,7 @@ export default function InsightsScreen() {
         <CategoryBreakdownCard
           categoryRows={insights.categoryRows}
           monthlyTotal={insights.monthlyTotal}
-          currency={items[0]?.currency ?? 'USD'}
+          currency={currency}
           colors={colors}
           formatMoney={formatMoney}
         />
@@ -366,39 +404,6 @@ export default function InsightsScreen() {
   );
 }
 
-function groupByCategory(items: ReturnType<typeof useSubscriptionListItems>) {
-  // Start with default categories initialized to empty arrays
-  const map: Record<string, typeof items> = {
-    Streaming: [],
-    Music: [],
-    Software: [],
-    Utilities: [],
-    Health: [],
-    Food: [],
-    Education: [],
-    Shopping: [],
-    AI: [],
-    Other: [],
-  };
-
-  for (const item of items) {
-    const cat = item.category;
-    // Initialize array for custom categories if not exists
-    if (!map[cat]) {
-      map[cat] = [];
-    }
-    map[cat].push(item);
-  }
-
-  return map;
-}
-
-function sum(nums: number[]): number {
-  let t = 0;
-  for (const n of nums) t += Number.isFinite(n) ? n : 0;
-  return t;
-}
-
 function formatMoney(amount: number, currency: string): string {
   try {
     return new Intl.NumberFormat(undefined, {
@@ -411,6 +416,12 @@ function formatMoney(amount: number, currency: string): string {
     const safe = Number.isFinite(amount) ? amount : 0;
     return `${safe.toFixed(2)} ${currency || 'USD'}`;
   }
+}
+
+function startOfToday(): number {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
 }
 
 function formatShortDate(iso: string): string {
